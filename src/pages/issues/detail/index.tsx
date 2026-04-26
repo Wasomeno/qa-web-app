@@ -1,0 +1,987 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ExternalLink,
+  Pin,
+  GitPullRequest,
+  Pencil,
+  Save,
+  Calendar,
+  Smile,
+  Reply,
+  Trash2,
+  Copy,
+  Check,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { Issue, updateIssue } from '@/api/issue';
+import { useGetProjectMembers } from '@/pages/issues/create/hooks/use-get-project-members';
+import { useGetProjectLabels } from '@/pages/issues/create/hooks/use-get-project-labels';
+import { AssigneePicker } from '@/pages/issues/create/components/assignee-picker';
+import { LabelPicker } from '@/pages/issues/create/components/label-picker';
+import { DescriptionEditor } from '@/pages/issues/create/components/description-editor';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePinnedIssues } from '@/hooks/use-pinned-issues';
+import { useGetIssue } from '../hooks/use-get-issue';
+import { useGetIssueComments } from '../hooks/use-get-issue-comments';
+import { ChildIssuesList } from '@/pages/issues/detail/components/child-issues-list';
+import { useIssueCommentMutations } from '@/pages/issues/hooks/use-issue-comment-mutations';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+
+interface IssueDetailPageProps {
+  issue?: Issue;
+  issueId?: number;
+  projectId?: number;
+  onBack: () => void;
+  portalContainer?: HTMLElement | null;
+}
+
+const statusConfig: Record<
+  string,
+  { color: string; bg: string; label: string }
+> = {
+  opened: { color: 'text-green-700', bg: 'bg-green-100', label: 'Open' },
+  closed: { color: 'text-gray-700', bg: 'bg-gray-100', label: 'Closed' },
+};
+
+const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+interface EditableSectionProps {
+  isEditing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onSave: () => void;
+  isSaving?: boolean;
+  title?: string;
+  children: React.ReactNode;
+  editComponent: React.ReactNode;
+  className?: string;
+}
+
+const EditableSection: React.FC<EditableSectionProps> = ({
+  isEditing,
+  onEdit,
+  onCancel,
+  onSave,
+  isSaving,
+  title,
+  children,
+  editComponent,
+  className,
+}) => {
+  return (
+    <div className={cn('group relative rounded-lg transition-all', className)}>
+      {title && (
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
+            {title}
+          </h3>
+          {!isEditing && (
+            <button
+              onClick={onEdit}
+              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
+            >
+              <Pencil className="w-3 h-3 text-gray-400" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {isEditing ? (
+        <div className="space-y-3 bg-white p-3 rounded-lg border border-blue-100 shadow-sm ring-2 ring-blue-50">
+          {editComponent}
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onCancel}
+              disabled={isSaving}
+              className="h-7 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={isSaving}
+              className="h-7 text-xs gap-1.5"
+            >
+              {isSaving ? (
+                'Saving...'
+              ) : (
+                <>
+                  <Save className="w-3 h-3" /> Save
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="relative">
+          {children}
+          {!title && (
+            <button
+              onClick={onEdit}
+              className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 p-1.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-full transition-all z-10"
+            >
+              <Pencil className="w-3 h-3 text-gray-400" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
+  issue,
+  issueId: propIssueId,
+  projectId: propProjectId,
+  onBack,
+  portalContainer,
+}) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const projectId = propProjectId || issue?.project_id;
+  const issueId = propIssueId || issue?.iid;
+
+  const { data: fetchedIssueData, isLoading: isFetching } = useGetIssue(
+    projectId!,
+    issueId!
+  );
+  
+  // Merge fetched data with initial issue, prioritizing fetched data but keeping label_details from initial issue
+  // This fixes the bug where fetched data loses label_details and causes colors to disappear
+  const currentIssue = useMemo(() => {
+    const fetched = fetchedIssueData?.data;
+    if (!fetched) return issue;
+    
+    // If fetched data lacks label_details but initial issue has them, preserve initial label_details
+    if (!fetched.label_details?.length && issue?.label_details?.length) {
+      return {
+        ...fetched,
+        label_details: issue.label_details,
+      };
+    }
+    
+    return fetched;
+  }, [fetchedIssueData, issue]);
+
+  const [editingField, setEditingField] = useState<
+    'description' | 'status' | 'assignee' | 'labels' | null
+  >(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { togglePin, isPinned } = usePinnedIssues();
+
+  const [description, setDescription] = useState(
+    currentIssue?.description || ''
+  );
+  const [status, setStatus] = useState<string>(
+    currentIssue?.state === 'closed' ? 'closed' : 'opened'
+  );
+
+  const comments = useGetIssueComments(projectId!, issueId!);
+  const [newComment, setNewComment] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentBody, setEditCommentBody] = useState('');
+
+  const {
+    createComment,
+    updateComment,
+    deleteComment,
+    isCreating,
+    isUpdating,
+  } = useIssueCommentMutations(projectId!, issueId!);
+
+  const handleCreateComment = async () => {
+    if (!newComment.trim()) return;
+    await createComment({ body: newComment });
+    setNewComment('');
+  };
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editCommentBody.trim()) return;
+    await updateComment({ commentId, data: { body: editCommentBody } });
+    setEditingCommentId(null);
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (confirm('Are you sure you want to delete this comment?')) {
+      await deleteComment(commentId);
+    }
+  };
+
+  const [selectedAssignee, setSelectedAssignee] = useState(
+    currentIssue?.assignees?.[0]
+      ? {
+          id: String(currentIssue.assignees[0].id),
+          name: currentIssue.assignees[0].name,
+          username: currentIssue.assignees[0].username,
+          avatarUrl: currentIssue.assignees[0].avatar_url,
+          webUrl: currentIssue.assignees[0].web_url,
+          state: currentIssue.assignees[0].state,
+        }
+      : undefined
+  );
+
+  const [selectedLabels, setSelectedLabels] = useState(
+    currentIssue?.label_details
+      ? currentIssue.label_details.map(l => ({
+          id: String(l.id),
+          name: l.name,
+          color: l.color,
+          textColor: l.text_color,
+          description: l.description,
+        }))
+      : (currentIssue?.labels || []).map(l => ({
+          id: String(l),
+          name: String(l),
+          color: '#ccc',
+          textColor: '#000',
+          description: '',
+        }))
+  );
+
+  const { data: members, isLoading: isLoadingMembers } = useGetProjectMembers(
+    projectId!
+  );
+  const { data: labels, isLoading: isLoadingLabels } = useGetProjectLabels(
+    projectId!
+  );
+
+  // Effect to sync fetched data with local state - only update when data changes to avoid overwriting prop-based data
+  useEffect(() => {
+    if (fetchedIssueData?.data) {
+      const data = fetchedIssueData.data;
+      
+      // Only update state if we don't have data from the prop (issue) already
+      // This prevents overwriting initial prop data when the API response lacks label_details
+      setDescription(data.description || "");
+      setStatus((data.state || 'opened') === 'closed' ? 'closed' : 'opened');
+      
+      // Only update assignee from fetched data
+      setSelectedAssignee(
+        data.assignees?.[0]
+          ? {
+              id: String(data.assignees[0].id),
+              name: data.assignees[0].name,
+              username: data.assignees[0].username,
+              avatarUrl: data.assignees[0].avatar_url,
+              webUrl: data.assignees[0].web_url,
+              state: data.assignees[0].state,
+            }
+          : undefined
+      );
+      
+      // Don't update selectedLabels from fetched data - currentIssue already has preserved label_details
+      // This prevents the bug where the API response (which lacks label_details) would 
+      // overwrite the initial prop data (which has label_details with colors)
+    }
+  }, [fetchedIssueData]);
+
+  if (isFetching && !currentIssue) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex-1 flex flex-col relative h-full overflow-hidden"
+      >
+        <div className="flex-none sticky bg-neutral-50 z-10 top-0 p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-[300px]" />
+                <Skeleton className="h-3 w-[200px]" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-8 h-8 rounded-lg" />
+              <Skeleton className="w-8 h-8 rounded-lg" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex min-h-0">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
+                Description
+              </h3>
+              <Skeleton className="h-40 w-full rounded-lg" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </div>
+          <div className="w-60 flex-shrink-0 border-l border-gray-100 bg-gray-50/50 p-4 space-y-4">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (!currentIssue) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-white gap-4 p-8">
+        <div className="text-gray-400">Issue not found</div>
+        <Button onClick={onBack} variant="outline" size="sm">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Go Back
+        </Button>
+      </div>
+    );
+  }
+
+  const handleUpdate = async () => {
+    if (!editingField) return;
+    setIsSaving(true);
+    try {
+      if (editingField === 'description') {
+        await updateIssue(projectId!, issueId!, { description });
+        toast.success('Description updated');
+      } else if (editingField === 'status') {
+        const event = status === 'closed' ? 'close' : 'reopen';
+        await updateIssue(projectId!, issueId!, { state_event: event });
+        toast.success('Status updated');
+      } else if (editingField === 'assignee') {
+        await updateIssue(projectId!, issueId!, {
+          assignee_ids: selectedAssignee ? [parseInt(selectedAssignee.id)] : [],
+        });
+        toast.success('Assignee updated');
+      } else if (editingField === 'labels') {
+        await updateIssue(projectId!, issueId!, {
+          labels: selectedLabels.map(l => l.name).join(','),
+        });
+        toast.success('Labels updated');
+      }
+      queryClient.invalidateQueries({ queryKey: ['issues'] });
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      setEditingField(null);
+    } catch (error) {
+      toast.error('Failed to update issue');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingField(null);
+    setDescription(currentIssue.description || "");
+    setStatus((currentIssue.state || '') === 'closed' ? 'closed' : 'opened');
+    setSelectedAssignee(
+      currentIssue.assignees?.[0]
+        ? {
+            id: String(currentIssue.assignees[0].id),
+            name: currentIssue.assignees[0].name,
+            username: currentIssue.assignees[0].username,
+            avatarUrl: currentIssue.assignees[0].avatar_url,
+            webUrl: currentIssue.assignees[0].web_url,
+            state: currentIssue.assignees[0].state,
+          }
+        : undefined
+    );
+    
+    // Only reset labels if we have label_details in currentIssue
+    // This fixes the bug where resetting would lose label colors
+    if (currentIssue.label_details && currentIssue.label_details.length > 0) {
+      setSelectedLabels(
+        currentIssue.label_details.map(l => ({
+          id: String(l.id),
+          name: l.name,
+          color: l.color,
+          textColor: l.text_color,
+          description: l.description,
+        }))
+      );
+    }
+  };
+
+  return (
+    <motion.div
+      ref={containerRef}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.2 }}
+      className="flex-1 flex flex-col relative h-full overflow-hidden"
+    >
+      <div className="flex-none sticky bg-neutral-50 z-10 top-0 p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="space-y-2">
+              <h1 className="text-lg font-semibold text-gray-900 mt-2 leading-snug truncate max-w-[400px]">
+                {currentIssue.title}
+              </h1>
+              <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-1">
+                <span className="font-medium text-gray-500">
+                  {currentIssue.project_name || (
+                    <Skeleton className="h-3 w-20 inline-block" />
+                  )}
+                </span>
+                <span>•</span>
+                <span>
+                  Created by{' '}
+                  {currentIssue.author?.name || (
+                    <Skeleton className="h-3 w-24 inline-block" />
+                  )}
+                </span>
+                <span>•</span>
+                <span>
+                  {currentIssue.created_at ? (
+                    formatDate(currentIssue.created_at)
+                  ) : (
+                    <Skeleton className="h-3 w-16 inline-block" />
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ duration: 0.1 }}
+                    onClick={() => {
+                      const content = [
+                        `# ${currentIssue.title}`,
+                        '',
+                        `**Description:**`,
+                        currentIssue.description || '_No description_',
+                        '',
+                        `**Labels:** ${currentIssue.labels?.join(', ') || 'None'}`,
+                        '',
+                        `**Assignees:** ${currentIssue.assignees?.map((a: any) => a.name).join(', ') || 'Unassigned'}`,
+                        '',
+                        `**Status:** ${currentIssue.state || 'Open'}`,
+                        '',
+                        `**Link:** ${currentIssue.web_url}`,
+                      ].filter(Boolean).join('\n');
+
+                      navigator.clipboard.writeText(content);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className={cn(
+                      'p-2 rounded-lg transition-colors',
+                      copied
+                        ? 'text-green-600'
+                        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'
+                    )}
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ duration: 0.1 }}
+                    onClick={() =>
+                      currentIssue.web_url &&
+                      window.open(currentIssue.web_url, '_blank')
+                    }
+                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Open in GitLab</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ duration: 0.1 }}
+                    onClick={() => togglePin(currentIssue)}
+                    className={cn(
+                      'p-2 rounded-lg transition-colors',
+                      isPinned(currentIssue.iid, currentIssue.project_id)
+                        ? 'bg-amber-100 text-amber-500 hover:bg-amber-200 hover:text-amber-600'
+                        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+                    )}
+                  >
+                    <Pin
+                      className={cn(
+                        'w-4 h-4',
+                        isPinned(currentIssue.iid, currentIssue.project_id) &&
+                          'fill-current'
+                      )}
+                    />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>
+                    {isPinned(currentIssue.iid, currentIssue.project_id)
+                      ? 'Unpin Issue'
+                      : 'Pin Issue'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex min-h-0">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <EditableSection
+            title="Description"
+            isEditing={editingField === 'description'}
+            onEdit={() => {
+              setDescription(currentIssue.description || "");
+              setEditingField('description');
+            }}
+            onCancel={cancelEdit}
+            onSave={handleUpdate}
+            isSaving={isSaving}
+            editComponent={
+              <DescriptionEditor
+                content={description}
+                onChange={setDescription}
+                className="min-h-[200px]"
+                portalContainer={portalContainer || containerRef.current}
+              />
+            }
+          >
+            <div className="group relative rounded-lg p-2 hover:bg-gray-50/50 transition-colors -m-2">
+              {isFetching && !currentIssue.description ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ) : (
+                <MarkdownRenderer content={currentIssue.description || ""} />
+              )}
+            </div>
+          </EditableSection>
+
+          <ChildIssuesList
+            parentIssue={currentIssue}
+            portalContainer={portalContainer}
+          />
+
+          <div className="space-y-6 pb-6">
+            <h2 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+              Comments
+              <span className="text-xs text-gray-400 font-normal">
+                {comments.data?.data?.length || 0}
+              </span>
+            </h2>
+            <div className="space-y-6">
+              {comments.isLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="border border-gray-200 rounded-lg bg-white">
+                          <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-t-lg border-b border-gray-100 h-9">
+                            <Skeleton className="h-4 w-32" />
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                : comments.data?.data?.map(comment => (
+                    <div key={comment.id} className="flex gap-3 group">
+                      <div className="flex-shrink-0">
+                        <img
+                          src={comment.author.avatar_url}
+                          alt={comment.author.name}
+                          className="w-8 h-8 rounded-full border border-gray-100"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="border border-gray-200 rounded-lg bg-white">
+                          <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-t-lg border-b border-gray-100">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-semibold text-gray-900">
+                                {comment.author.name}
+                              </span>
+                              <span className="text-gray-500">
+                                @{comment.author.username}
+                              </span>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-gray-500">
+                                {formatDate(comment.created_at)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="p-1 hover:bg-gray-200 rounded text-gray-400 hover:text-gray-600">
+                                <Smile className="w-3.5 h-3.5" />
+                              </button>
+                              <button className="p-1 hover:bg-gray-200 rounded text-gray-400 hover:text-gray-600">
+                                <Reply className="w-3.5 h-3.5" />
+                              </button>
+                              {editingCommentId !== comment.id && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setEditingCommentId(comment.id);
+                                      setEditCommentBody(comment.body);
+                                    }}
+                                    className="p-1 hover:bg-gray-200 rounded text-gray-400 hover:text-gray-600"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteComment(comment.id)
+                                    }
+                                    className="p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-600"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            {editingCommentId === comment.id ? (
+                              <div className="space-y-2">
+                                <DescriptionEditor
+                                  content={editCommentBody}
+                                  onChange={setEditCommentBody}
+                                  className="min-h-[100px]"
+                                  portalContainer={
+                                    portalContainer || containerRef.current
+                                  }
+                                />
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingCommentId(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleUpdateComment(comment.id)
+                                    }
+                                    disabled={isUpdating}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <MarkdownRenderer
+                                content={comment.body}
+                                className="text-xs"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+            </div>
+            <div className="pt-6 mt-2 border-t border-gray-100">
+              <h3 className="text-sm font-medium mb-3 text-gray-700">
+                Add a comment
+              </h3>
+              <div className="space-y-2">
+                <DescriptionEditor
+                  content={newComment}
+                  onChange={setNewComment}
+                  placeholder="Write a comment..."
+                  className="min-h-[120px]"
+                  portalContainer={portalContainer || containerRef.current}
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleCreateComment}
+                    disabled={isCreating || !newComment.trim()}
+                  >
+                    {isCreating ? 'Posting...' : 'Post Comment'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-60 flex-shrink-0 border-l border-gray-100 bg-gray-50/50 p-4 space-y-4 overflow-y-auto">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-4">
+            <EditableSection
+              title="Status"
+              isEditing={editingField === 'status'}
+              onEdit={() => {
+                setStatus(
+                  (currentIssue.state || '') === 'closed' ? 'closed' : 'opened'
+                );
+                setEditingField('status');
+              }}
+              onCancel={cancelEdit}
+              onSave={handleUpdate}
+              isSaving={isSaving}
+              editComponent={
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent
+                    container={portalContainer || containerRef.current}
+                  >
+                    <SelectItem value="opened">Open</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+              }
+            >
+              <div className="mt-1">
+                <span
+                  className={cn(
+                    'text-xs px-2 py-1 rounded-full font-medium',
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .bg,
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .color
+                  )}
+                >
+                  {
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .label
+                  }
+                </span>
+              </div>
+            </EditableSection>
+            <EditableSection
+              title="Assignee"
+              isEditing={editingField === 'assignee'}
+              onEdit={() => {
+                setSelectedAssignee(
+                  currentIssue.assignees?.[0]
+                    ? {
+                        id: String(currentIssue.assignees[0].id),
+                        name: currentIssue.assignees[0].name,
+                        username: currentIssue.assignees[0].username,
+                        avatarUrl: currentIssue.assignees[0].avatar_url,
+                        webUrl: currentIssue.assignees[0].web_url,
+                        state: currentIssue.assignees[0].state,
+                      }
+                    : undefined
+                );
+                setEditingField('assignee');
+              }}
+              onCancel={cancelEdit}
+              onSave={handleUpdate}
+              isSaving={isSaving}
+              editComponent={
+                <AssigneePicker
+                  members={members || []}
+                  isLoading={isLoadingMembers}
+                  selectedAssignee={selectedAssignee}
+                  onSelect={setSelectedAssignee}
+                  disabled={isSaving}
+                  portalContainer={containerRef.current}
+                />
+              }
+            >
+              <div className="mt-1 flex items-center gap-2">
+                {currentIssue.assignees?.[0] ? (
+                  <>
+                    <img
+                      src={currentIssue.assignees[0].avatar_url}
+                      className="w-5 h-5 rounded-full"
+                      alt=""
+                    />
+                    <span className="text-xs font-medium text-gray-900">
+                      {currentIssue.assignees[0].name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">
+                    Unassigned
+                  </span>
+                )}
+              </div>
+            </EditableSection>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100">
+            <EditableSection
+              title="Labels"
+              isEditing={editingField === 'labels'}
+              onEdit={() => {
+                setSelectedLabels(
+                  currentIssue.label_details
+                    ? currentIssue.label_details.map(l => ({
+                        id: String(l.id),
+                        name: l.name,
+                        color: l.color,
+                        textColor: l.text_color,
+                        description: l.description,
+                      }))
+                    : (currentIssue.labels || []).map(l => ({
+                        id: String(l),
+                        name: String(l),
+                        color: '#ccc',
+                        textColor: '#000',
+                        description: '',
+                      }))
+                );
+                setEditingField('labels');
+              }}
+              onCancel={cancelEdit}
+              onSave={handleUpdate}
+              isSaving={isSaving}
+              editComponent={
+                <LabelPicker
+                  labels={labels || []}
+                  isLoading={isLoadingLabels}
+                  selectedLabels={selectedLabels}
+                  onToggle={label => {
+                    const exists = selectedLabels.some(l => l.id === label.id);
+                    if (exists) {
+                      setSelectedLabels(prev =>
+                        prev.filter(l => l.id !== label.id)
+                      );
+                    } else {
+                      setSelectedLabels(prev => [...prev, label]);
+                    }
+                  }}
+                  disabled={isSaving}
+                  portalContainer={portalContainer || containerRef.current}
+                />
+              }
+            >
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {isFetching &&
+                (!currentIssue.label_details ||
+                  currentIssue.label_details.length === 0) &&
+                (!currentIssue.labels || currentIssue.labels.length === 0) ? (
+                  <>
+                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-4 w-3/4 rounded" />
+                  </>
+                ) : (currentIssue.label_details &&
+                    currentIssue.label_details.length > 0) ||
+                  (labels && labels.length > 0) ? (
+                  (currentIssue.label_details &&
+                  currentIssue.label_details.length > 0
+                    ? currentIssue.label_details
+                    : (currentIssue.labels || []).map(l => {
+                        const name = String(l);
+                        const detail = labels?.find(ld => ld.name === name);
+                        return (
+                          detail || {
+                            id: name,
+                            name,
+                            color: '#ccc',
+                            text_color: '#000',
+                          }
+                        );
+                      })
+                  ).map(label => (
+                    <div
+                      key={label.id}
+                      className="col-span-1 text-[10px] px-2 py-0.5 rounded border font-medium truncate"
+                      style={{
+                        backgroundColor: `${label.color}15`,
+                        color: label.color,
+                        borderColor: `${label.color}30`,
+                      }}
+                    >
+                      {label.name}
+                    </div>
+                  ))
+                ) : currentIssue.labels && currentIssue.labels.length > 0 ? (
+                  currentIssue.labels.map((label, i) => (
+                    <div
+                      key={i}
+                      className="col-span-1 text-[10px] px-2 py-0.5 rounded border font-medium bg-gray-100 text-gray-700 truncate"
+                    >
+                      {String(label)}
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400 italic">
+                    No labels
+                  </span>
+                )}
+              </div>
+            </EditableSection>
+          </div>
+          {currentIssue.due_date && (
+            <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-3">
+              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Due Date
+              </span>
+              <div className="mt-1 text-xs font-medium text-gray-900">
+                {formatDate(currentIssue.due_date)}
+              </div>
+            </div>
+          )}
+          {(currentIssue.merge_requests_count ?? 0) > 0 && (
+            <div className="bg-white rounded-xl p-4 border border-gray-100">
+              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
+                Merge Requests
+              </span>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                  <GitPullRequest className="w-3.5 h-3.5" />
+                  {currentIssue.merge_requests_count} Open
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
