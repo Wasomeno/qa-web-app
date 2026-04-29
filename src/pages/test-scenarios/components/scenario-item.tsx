@@ -60,8 +60,8 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
     }
   }, [isDeleting]);
 
-  const totalTestCases = (scenario.sheets || []).reduce(
-    (acc, sheet) => acc + (sheet.testCases?.length || 0),
+  const totalTestCases = scenario.stats?.totalTestCases || (scenario.sections || []).reduce(
+    (acc, section) => acc + (section.testCases?.length || 0),
     0
   );
 
@@ -70,7 +70,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
       onClick={onClick}
       className={cn(
         'group flex flex-col border rounded-xl overflow-hidden cursor-pointer transition-all duration-200',
-        'bg-white hover:border-zinc-300 hover:shadow-md h-full relative',
+        'bg-white border-zinc-100 hover:border-zinc-200 hover:shadow-sm h-full relative',
         isSelected && 'ring-2 ring-zinc-900 border-transparent shadow-md'
       )}
     >
@@ -162,9 +162,9 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           <div className="flex-1 min-w-0">
             <h3
               className="font-semibold text-zinc-900 truncate"
-              title={scenario.fileName}
+              title={scenario.title}
             >
-              {scenario.fileName}
+              {scenario.title}
             </h3>
             <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
               <span className="truncate">
@@ -232,9 +232,9 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
 
         {/* Stats */}
         <div className="flex items-center gap-4 text-sm text-zinc-600">
-          <div className="flex items-center gap-1.5" title="Total Sheets">
+          <div className="flex items-center gap-1.5" title="Total Sections">
             <FileText className="w-4 h-4" />
-            <span>{(scenario.sheets || []).length} sheets</span>
+            <span>{scenario.stats?.totalSections || (scenario.sections || []).length} sections</span>
           </div>
           <div className="flex items-center gap-1.5" title="Total Test Cases">
             <Info className="w-4 h-4" />
@@ -242,10 +242,10 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           </div>
           <div
             className="flex items-center gap-1.5"
-            title="Generated Recordings"
+            title="Automated Test Cases"
           >
             <Settings className="w-4 h-4" />
-            <span>{(scenario.generatedTests || []).length} generated</span>
+            <span>{scenario.stats?.automatedCount || 0} automated</span>
           </div>
         </div>
 

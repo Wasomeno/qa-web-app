@@ -11,11 +11,11 @@ import {
   ListFilter,
   Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { TestBlueprint } from '@/types/recording';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { MessageType } from '@/types/messages';
 
 interface GeneratedDetailProps {
   blueprint: TestBlueprint;
@@ -25,10 +25,8 @@ export const GeneratedDetailPage: React.FC<GeneratedDetailProps> = ({
   blueprint,
 }) => {
   const handleRunTest = () => {
-    chrome.runtime.sendMessage({
-      type: MessageType.START_PLAYBACK,
-      data: { blueprint, active: false },
-    });
+    // Playback requires a test runner service
+    toast.info('Playback feature requires a test runner service');
   };
 
   const getStepIcon = (action: string) => {

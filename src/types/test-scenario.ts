@@ -5,39 +5,79 @@ export interface AuthConfig {
   password?: string;
 }
 
-export interface ParsedStep {
-  action: string;
-  inputData: string;
-  expectedResult: string;
-}
+export type Priority = 'low' | 'medium' | 'high' | 'critical';
+export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
+export type ScenarioStatus = 'draft' | 'uploaded' | 'ready' | 'generating' | 'failed';
+export type AutomationStatus = 'idle' | 'running' | 'pass' | 'fail';
 
-export interface ParsedTestCase {
+export interface AutomationTest {
   id: string;
-  route?: string; // Route this test case targets (e.g., "/otc/invoice/create")
-  userStory?: string;
-  testType?: string;
   name: string;
-  preCondition: string;
-  steps: ParsedStep[];
-  status: string;
-  note: string;
+  status: AutomationStatus;
+  lastRunAt?: string;
+  runDurationMs?: number;
+  recordingId?: string;
+  screenshotUrl?: string;
+  errorMessage?: string;
+  failedStepIndex?: number;
 }
 
-export interface TestScenarioSheet {
-  name: string;
-  testCases: ParsedTestCase[];
+export interface TestStep {
+  id: string;
+  order: number;
+  action: string;
+  data?: string;
+  expected: string;
+}
+
+export interface TestCase {
+  id: string;
+  order: number;
+  code: string;
+  title: string;
+  description?: string;
+  preCondition?: string;
+  steps: TestStep[];
+  tags: string[];
+  priority: Priority;
+  type: string;
+  status: TestCaseStatus;
+  automationTest?: AutomationTest;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestSection {
+  id: string;
+  order: number;
+  title: string;
+  description?: string;
+  testCases: TestCase[];
+}
+
+export interface ScenarioStats {
+  totalSections: number;
+  totalTestCases: number;
+  totalSteps: number;
+  automatedCount: number;
+  passCount: number;
+  failCount: number;
+  draftCount: number;
 }
 
 export interface TestScenario {
   id: string;
-  fileName: string;
+  title: string;
+  description?: string;
+  sections?: TestSection[];
   projectId?: string;
   projectName?: string;
-  sheets: TestScenarioSheet[];
-  generatedTests: { id: string; name: string }[];
-  status: 'uploaded' | 'generating' | 'ready' | 'failed';
+  status: ScenarioStatus;
   error?: string;
-  authConfig: AuthConfig;
-  creatorId?: number;
+  stats?: ScenarioStats;
+  authConfig?: AuthConfig;
   createdAt: string;
+  updatedAt: string;
+  creatorId?: number;
 }

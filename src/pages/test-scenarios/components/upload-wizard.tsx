@@ -109,8 +109,8 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
       const details = await testScenarioApi.getScenario(res.id);
       setScenarioDetails(details);
 
-      if (details.sheets && details.sheets.length > 0) {
-        setSelectedSheets([details.sheets[0].name]);
+      if (details.sections && details.sections.length > 0) {
+        setSelectedSheets([details.sections[0].id]);
       }
 
       setStep(2);
@@ -125,7 +125,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
     if (!uploadedScenario?.id || selectedSheets.length === 0) return;
     try {
       setIsGenerating(true);
-      await testScenarioApi.generateTests(uploadedScenario.id, selectedSheets);
+      await testScenarioApi.generateTests(uploadedScenario.id, { sectionIds: selectedSheets });
       onSuccessRef.current();
       onCloseRef.current();
     } catch (err) {
@@ -309,25 +309,25 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     Scenario Parsed Successfully
                   </p>
                   <p className="text-xs mt-0.5 opacity-80">
-                    Found {scenarioDetails?.sheets.length} sheets in{' '}
-                    {scenarioDetails?.fileName}
+                    Found {scenarioDetails?.sections?.length || 0} sections in{' '}
+                    {scenarioDetails?.title}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label>Select Sheets to Generate</Label>
+                <Label>Select Sections to Generate</Label>
                 <div className="grid grid-cols-1 gap-2">
-                  {scenarioDetails?.sheets.map(sheet => {
-                    const isSelected = selectedSheets.includes(sheet.name);
+                  {scenarioDetails?.sections?.map(section => {
+                    const isSelected = selectedSheets.includes(section.id);
                     return (
                       <div
-                        key={sheet.name}
+                        key={section.id}
                         onClick={() => {
                           setSelectedSheets(prev =>
-                            prev.includes(sheet.name)
-                              ? prev.filter(s => s !== sheet.name)
-                              : [...prev, sheet.name]
+                            prev.includes(section.id)
+                              ? prev.filter(s => s !== section.id)
+                              : [...prev, section.id]
                           );
                         }}
                         className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -338,10 +338,10 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                       >
                         <div className="flex flex-col">
                           <span className="font-medium text-sm text-zinc-900">
-                            {sheet.name}
+                            {section.title}
                           </span>
                           <span className="text-xs text-zinc-500 mt-0.5">
-                            {sheet.testCases.length} Test Cases found
+                            {section.testCases?.length || 0} Test Cases found
                           </span>
                         </div>
                         <div

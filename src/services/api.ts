@@ -15,9 +15,14 @@ async function request<T>(
   try {
     const url = `/api${endpoint}`;
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+
+    // Only set JSON content-type when body is not FormData
+    // (FormData requires the browser to auto-set multipart/form-data with boundary)
+    const isFormData = options.body instanceof FormData;
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Add X-Session-ID header for web app auth (cookie alternative)
     const sessionId = localStorage.getItem('qa_webapp_session_id');
@@ -32,17 +37,8 @@ async function request<T>(
       });
     }
 
-    const isFormData = options.body instanceof FormData;
     let finalBody: any = options.body;
     let finalHeaders = { ...headers };
-
-    if (isFormData) {
-      // Background bridge cannot serialize FormData directly via sendMessage
-      // Instead of relying on api.post intercepting FormData, let's just use the normal JSON path
-      // if it's not FormData. Wait, for FormData we must extract the file to Base64 first!
-      // But `request` is sync (await bridgeFetch). We can't easily async iterate FormData here reliably without FileReader.
-      // So instead, we let the specific `uploadScenario` use the `TEST_SCENARIO_UPLOAD` message directly OR we fix API service.
-    }
 
     const resp = await bridgeFetch<T>({
       url,
@@ -91,7 +87,7 @@ export const api = {
     const resp = await request<T>(endpoint, {
       method: 'POST',
       ...rest,
-      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : (typeof body === 'string' ? body : (body ? JSON.stringify(body) : undefined)),
     });
 
     return resp;
@@ -116,7 +112,7 @@ export const api = {
     const { body, ...rest } = options || {};
     const resp = await request<T>(endpoint, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: typeof body === 'string' ? body : (body ? JSON.stringify(body) : undefined),
       ...rest,
     });
 
@@ -126,7 +122,7 @@ export const api = {
     const { body, ...rest } = options || {};
     const resp = await request<T>(endpoint, {
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: typeof body === 'string' ? body : (body ? JSON.stringify(body) : undefined),
       ...rest,
     });
 
