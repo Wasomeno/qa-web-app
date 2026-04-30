@@ -326,6 +326,9 @@ const LastRunPanel: React.FC<{
     name: string;
     lastRunAt?: string;
     runDurationMs?: number;
+    videoUrl?: string;
+    stepResults?: { stepIndex: number; status: string; error?: string }[];
+    log?: string;
     errorMessage?: string;
     failedStepIndex?: number;
   };
@@ -408,6 +411,58 @@ const LastRunPanel: React.FC<{
         </div>
       </div>
 
+      {/* Video */}
+      {test.videoUrl && (
+        <div className="px-4 py-3 border-b border-zinc-100">
+          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+            Recording
+          </p>
+          <video
+            src={test.videoUrl}
+            controls
+            className="w-full rounded-lg bg-zinc-900 max-h-[200px]"
+          />
+        </div>
+      )}
+
+      {/* Step Results */}
+      {test.stepResults && test.stepResults.length > 0 && (
+        <div className="px-4 py-3 border-b border-zinc-100">
+          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+            Step Results
+          </p>
+          <div className="space-y-1.5">
+            {test.stepResults.map((sr) => (
+              <div
+                key={sr.stepIndex}
+                className={cn(
+                  'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs',
+                  sr.status === 'success'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-red-50 text-red-700'
+                )}
+              >
+                <span className="font-mono text-[10px] w-5">{sr.stepIndex + 1}</span>
+                <span className="flex-1">{sr.status === 'success' ? 'Passed' : 'Failed'}</span>
+                {sr.error && <span className="text-[10px] opacity-80 truncate max-w-[200px]">{sr.error}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Log */}
+      {test.log && (
+        <div className="px-4 py-3 border-b border-zinc-100">
+          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+            Log
+          </p>
+          <pre className="text-[11px] text-zinc-600 bg-zinc-100 rounded-md p-2.5 overflow-auto max-h-[120px] whitespace-pre-wrap">
+            {test.log}
+          </pre>
+        </div>
+      )}
+
       {/* Error message */}
       {isFail && test.errorMessage && (
         <div className="px-4 py-3 bg-red-50/60 border-b border-red-100/60">
@@ -415,9 +470,9 @@ const LastRunPanel: React.FC<{
             Failure Details
           </p>
           <p className="text-sm text-red-800 leading-relaxed">{test.errorMessage}</p>
-          {test.failedStepIndex && (
+          {test.failedStepIndex !== undefined && (
             <p className="text-xs text-red-600 mt-1.5">
-              Failed at step {test.failedStepIndex}
+              Failed at step {test.failedStepIndex + 1}
             </p>
           )}
         </div>

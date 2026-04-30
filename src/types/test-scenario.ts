@@ -1,4 +1,4 @@
-import { RecordingStep } from './recording';
+import { RecordingStep, TestStepResult } from './recording';
 
 export interface AuthConfig {
   baseUrl: string;
@@ -19,7 +19,10 @@ export interface AutomationTest {
   lastRunAt?: string;
   runDurationMs?: number;
   steps?: RecordingStep[];
+  videoUrl?: string;
   screenshotUrl?: string;
+  stepResults?: TestStepResult[];
+  log?: string;
   errorMessage?: string;
   failedStepIndex?: number;
 }

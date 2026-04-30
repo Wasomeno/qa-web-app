@@ -1,4 +1,4 @@
-import { RecordingStep } from '@/types/recording';
+import { RecordingStep, TestStepResult } from '@/types/recording';
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
@@ -12,7 +12,10 @@ export interface AutomationTest {
   lastRunAt?: string;
   runDurationMs?: number;
   steps?: RecordingStep[];
+  videoUrl?: string;
   screenshotUrl?: string;     // Thumbnail of last state (pass or fail screenshot)
+  stepResults?: TestStepResult[];
+  log?: string;
   errorMessage?: string;      // Error excerpt for failed runs
   failedStepIndex?: number;   // Which step failed (1-based)
 }
