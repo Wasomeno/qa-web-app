@@ -10,7 +10,7 @@ import {
   Sparkles,
   ClipboardList,
 } from 'lucide-react';
-import { IssueStatus, PinColor, PinnedIssueMeta } from '@/types/issues';
+import { PinColor, PinnedIssueMeta } from '@/types/issues';
 import { Issue } from '@/api/issue';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,12 +26,14 @@ const PIN_COLOR_MAP: Record<PinColor, string> = {
   purple: 'bg-purple-500',
 };
 
-// Map for status colors
-const statusConfig: Record<string, { color: string; border: string }> = {
-  opened: { color: 'bg-green-500', border: 'border-l-green-500' },
-  closed: { color: 'bg-gray-500', border: 'border-l-gray-400' },
-  // Map other statuses if needed, default to opened
-};
+/** Convert hex to rgba for sleek muted label chips */
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 /**
  * Extended Issue type to support pinning metadata
@@ -67,7 +69,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
     <div
       onClick={() => onClick(issue)}
       className={cn(
-        'group relative p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer mb-2 overflow-hidden w-full',
+        'group relative p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-gray-200 hover:scale-[1.003] transition-all duration-200 cursor-pointer overflow-hidden w-full',
         className
       )}
     >
@@ -75,27 +77,27 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
       {showPinnedStyles && issue.pinnedMeta && (
         <div
           className={cn(
-            'absolute -left-[3px] top-0 bottom-0 w-[3px] rounded-l-lg',
+            'absolute left-0 top-3 bottom-3 w-[3px] rounded-full',
             PIN_COLOR_MAP[issue.pinnedMeta.pinColor]
           )}
         />
       )}
 
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         {/* Left Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono text-gray-500">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] font-mono tabular-nums text-gray-400">
               #{issue.iid}
             </span>
-            <h4 className="text-sm font-medium text-gray-900 truncate pr-4">
+            <h4 className="text-sm font-medium text-gray-900 truncate pr-6 leading-snug">
               {issue.title}
             </h4>
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
             {issue.project_name && (
-              <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md font-medium">
                 {issue.project_name}
               </span>
             )}
@@ -104,11 +106,11 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               ? issue.label_details.slice(0, 3).map(label => (
                   <span
                     key={label.id}
-                    className="text-[10px] px-1.5 py-0.5 rounded border"
+                    className="text-[11px] px-2 py-0.5 rounded-md border font-medium"
                     style={{
-                      backgroundColor: `${label.color}20`,
-                      color: label.color,
-                      borderColor: `${label.color}35`,
+                      backgroundColor: hexToRgba(label.color, 0.08),
+                      color: hexToRgba(label.color, 0.85),
+                      borderColor: hexToRgba(label.color, 0.15),
                     }}
                   >
                     {label.name}
@@ -117,7 +119,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               : issue.labels?.slice(0, 3).map((label, index) => (
                   <span
                     key={index}
-                    className="text-[10px] px-1.5 py-0.5 rounded border bg-gray-50 border-gray-200 text-gray-600"
+                    className="text-[11px] px-2 py-0.5 rounded-md border bg-gray-50 border-gray-200 text-gray-600 font-medium"
                   >
                     {label}
                   </span>
@@ -126,38 +128,38 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
             {hasChildIssues && (
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium',
-                  'bg-blue-100 text-blue-700'
+                  'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-medium',
+                  'bg-blue-50 text-blue-700 border border-blue-100'
                 )}
               >
                 <ClipboardList className="w-3 h-3" />
-                {issue.child!.amount} child issues
+                {issue.child!.amount}
               </span>
             )}
 
             {(issue.merge_requests_count ?? 0) > 0 && (
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium',
-                  'bg-green-100 text-green-700'
+                  'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-medium',
+                  'bg-green-50 text-green-700 border border-green-100'
                 )}
               >
                 <GitPullRequest className="w-3 h-3" />
-                {issue.merge_requests_count} MRs
+                {issue.merge_requests_count}
               </span>
             )}
           </div>
 
           {/* Author info */}
           {author && (
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center gap-1.5 mt-3">
               <img
                 src={author.avatar_url}
                 alt={author.name}
                 title={`Opened by ${author.name}`}
-                className="w-4 h-4 rounded-full border border-gray-200"
+                className="w-5 h-5 rounded-full border border-gray-100 ring-1 ring-gray-100"
               />
-              <span className="text-[10px] text-gray-500 truncate max-w-[150px]">
+              <span className="text-[11px] text-gray-500 truncate max-w-[150px]">
                 {author.name}
               </span>
             </div>
@@ -171,14 +173,14 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               src={assignee.avatar_url}
               alt={assignee.name}
               title={`Assigned to ${assignee.name}`}
-              className="w-6 h-6 rounded-full border border-gray-200"
+              className="w-7 h-7 rounded-full border border-gray-100 ring-1 ring-gray-100 shadow-sm"
             />
           ) : (
-            <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full border border-dashed border-gray-300 flex items-center justify-center bg-white">
               <span className="text-[10px] text-gray-400">?</span>
             </div>
           )}
-          <span className="text-[10px] text-gray-400 whitespace-nowrap">
+          <span className="text-[11px] text-gray-400 whitespace-nowrap tabular-nums">
             {formatDistanceToNow(new Date(issue.updated_at), {
               addSuffix: true,
             })}
@@ -188,9 +190,9 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
 
       {/* Note view */}
       {showPinnedStyles && issue.pinnedMeta?.note && (
-        <div className="mt-2 flex gap-2 items-start bg-black/5 p-2 rounded-md">
-          <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-          <p className="text-[11px] text-gray-600 italic line-clamp-2">
+        <div className="mt-3 flex gap-2 items-start bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+          <MessageSquare className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-gray-600 italic line-clamp-2 leading-relaxed">
             {issue.pinnedMeta.note}
           </p>
         </div>
@@ -198,7 +200,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
 
       {/* Action Overlay */}
       {actions && (
-        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-gray-100">
+        <div className="absolute right-3 top-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-sm rounded-lg p-1 shadow-md border border-gray-100/80">
           {actions}
         </div>
       )}

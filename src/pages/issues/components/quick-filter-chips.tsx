@@ -31,7 +31,7 @@ export const QuickFilterChips: React.FC<QuickFilterChipsProps> = ({
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar mask-gradient-right">
+    <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar mask-gradient-right">
       {chips.map(chip => {
         const isActive = filters[chip.key];
         const Icon = chip.icon;
@@ -41,16 +41,16 @@ export const QuickFilterChips: React.FC<QuickFilterChipsProps> = ({
             key={chip.key}
             onClick={() => onToggle(chip.key)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap border',
+              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all whitespace-nowrap border',
               isActive
-                ? 'bg-blue-100/80 text-blue-700 border-blue-200 shadow-sm'
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                ? 'bg-primary-50 text-primary-700 border-primary-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+                : 'bg-white/60 text-gray-600 border-gray-200/80 hover:bg-white hover:border-gray-300 hover:shadow-sm'
             )}
           >
             <Icon
               className={cn(
                 'w-3.5 h-3.5',
-                isActive ? 'text-blue-600' : 'text-gray-400'
+                isActive ? 'text-primary-500' : 'text-gray-400'
               )}
             />
             {chip.label}

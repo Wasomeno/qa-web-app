@@ -1,36 +1,24 @@
-import { MessageType } from "@/types/messages";
+import { api } from "@/services/api";
 
 export const uploadService = {
   /**
-   * Uploads a file or blob to Cloudflare R2 via background script to bypass CORS
+   * Uploads a file or blob directly to the backend API
    * @param file File or Blob to upload
-   * @param fileName Name of the file in the bucket
+   * @param fileName Name of the file
    * @returns The public/internal URL of the uploaded file
    */
   async uploadFile(file: File | Blob, fileName: string): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const body = new Uint8Array(arrayBuffer);
-
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          type: MessageType.R2_UPLOAD,
-          data: {
-            body: Array.from(body), // Convert to regular array for serialization
-            fileName,
-            contentType: file.type,
-          },
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else if (response.success) {
-            resolve(response.data);
-          } else {
-            reject(new Error(response.error || "R2 Upload failed"));
-          }
-        }
-      );
+    const formData = new FormData();
+    formData.append('file', file, fileName);
+    
+    const response = await api.post<{ url: string }>('/upload', {
+      body: formData as any,
     });
+    
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Upload failed');
+    }
+    
+    return response.data.url;
   },
 };

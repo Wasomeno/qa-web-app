@@ -1,3 +1,5 @@
+import { RecordingStep } from '@/types/recording';
+
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
 export type ScenarioStatus = 'draft' | 'ready' | 'generating' | 'failed';
@@ -9,7 +11,7 @@ export interface AutomationTest {
   status: AutomationStatus;
   lastRunAt?: string;
   runDurationMs?: number;
-  recordingId?: string;       // Links to /recordings/$id
+  steps?: RecordingStep[];
   screenshotUrl?: string;     // Thumbnail of last state (pass or fail screenshot)
   errorMessage?: string;      // Error excerpt for failed runs
   failedStepIndex?: number;   // Which step failed (1-based)
@@ -126,7 +128,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
             runDurationMs: 3200,
-            recordingId: 'rec-auth-001',
           },
           steps: [
             { id: 'st-001-1', order: 1, action: 'Navigate to /login page', expected: 'Login form is displayed with username and password fields' },
@@ -155,7 +156,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
             runDurationMs: 2800,
-            recordingId: 'rec-auth-002',
           },
           steps: [
             { id: 'st-002-1', order: 1, action: 'Navigate to /login page', expected: 'Login form is displayed' },
@@ -182,7 +182,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'fail',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
             runDurationMs: 15400,
-            recordingId: 'rec-auth-003',
             errorMessage: 'Email delivery timeout: Expected confirmation email within 60s, but inbox remained empty after 120s.',
             failedStepIndex: 4,
           },
@@ -230,7 +229,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
             runDurationMs: 5100,
-            recordingId: 'rec-auth-005',
           },
           steps: [
             { id: 'st-005-1', order: 1, action: 'Login in Chrome browser', expected: 'Session A created' },
@@ -292,7 +290,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
             runDurationMs: 2100,
-            recordingId: 'rec-auth-008',
           },
           steps: [
             { id: 'st-008-1', order: 1, action: 'Login as a user', expected: 'Dashboard loads' },
@@ -327,7 +324,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
             runDurationMs: 4200,
-            recordingId: 'rec-cat-001',
           },
           steps: [
             { id: 'st-009-1', order: 1, action: 'Navigate to /category/electronics', expected: 'Page loads with electronics products' },
@@ -353,7 +349,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 22).toISOString(),
             runDurationMs: 3600,
-            recordingId: 'rec-cat-002',
           },
           steps: [
             { id: 'st-010-1', order: 1, action: 'Click search bar', expected: 'Search input focused' },
@@ -419,7 +414,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
             runDurationMs: 2900,
-            recordingId: 'rec-cat-005',
           },
           steps: [
             { id: 'st-013-1', order: 1, action: 'Navigate to out-of-stock product page', expected: 'Product detail loads' },
@@ -508,7 +502,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
             runDurationMs: 2500,
-            recordingId: 'rec-cart-001',
           },
           steps: [
             { id: 'st-017-1', order: 1, action: 'Navigate to a product page', expected: 'Product detail loads' },
@@ -535,7 +528,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
             runDurationMs: 3100,
-            recordingId: 'rec-cart-002',
           },
           steps: [
             { id: 'st-018-1', order: 1, action: 'Add a product to cart', expected: 'Product in cart' },
@@ -562,7 +554,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
             runDurationMs: 2400,
-            recordingId: 'rec-cart-003',
           },
           steps: [
             { id: 'st-019-1', order: 1, action: 'Add two different products to cart', expected: 'Cart shows 2 items' },
@@ -625,7 +616,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'fail',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
             runDurationMs: 4800,
-            recordingId: 'rec-cart-006',
             errorMessage: 'Coupon service returned 500 Internal Server Error on POST /api/coupons/apply. Response: {"error":"service_unavailable"}.',
             failedStepIndex: 3,
           },
@@ -700,7 +690,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
             runDurationMs: 8900,
-            recordingId: 'rec-chk-001',
           },
           steps: [
             { id: 'st-025-1', order: 1, action: 'Add item to cart and proceed to checkout', expected: 'Checkout page loads with cart summary' },
@@ -747,7 +736,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
             runDurationMs: 5600,
-            recordingId: 'rec-chk-003',
           },
           steps: [
             { id: 'st-027-1', order: 1, action: 'Proceed to checkout', expected: 'Checkout page loaded' },
@@ -813,7 +801,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
             runDurationMs: 7200,
-            recordingId: 'rec-chk-006',
           },
           steps: [
             { id: 'st-030-1', order: 1, action: 'Complete a purchase', expected: 'Order confirmation page shown' },
@@ -866,7 +853,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             status: 'pass',
             lastRunAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
             runDurationMs: 4300,
-            recordingId: 'rec-ord-002',
           },
           steps: [
             { id: 'st-032-1', order: 1, action: 'Place a test order', expected: 'Order confirmed with status "Processing"' },

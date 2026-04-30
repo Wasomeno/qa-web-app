@@ -1,21 +1,16 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Terminal,
   Search,
   Plus,
   Loader2,
-  LayoutGrid,
-  List as ListIcon,
-  Info,
   Trash2,
-  X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { listRecordings, bulkDeleteRecordings } from '@/api/recording';
-import { storageService } from '@/services/storage';
+import { listRecordings, bulkDeleteRecordings, deleteRecording, updateRecording } from '@/api/recording';
 import {
   generatePlaywrightTest,
   generateTestFilename,
@@ -24,32 +19,24 @@ import {
 import { downloadTextFile, downloadJsonFile } from '@/lib/download';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { useNavigation } from '@/contexts/navigation-context';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { storageService } from '@/services/storage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { TestBlueprint } from '@/types/recording';
-import { MessageType } from '@/types/messages';
 import { RecordingItem } from './components/recording-item';
 import { ProjectSelect } from '@/components/project-select';
 import {
-  StyledCheckbox,
   SelectAllCheckbox,
+  StyledCheckbox,
 } from '@/components/ui/styled-checkbox';
 
 const RecordingSkeleton = () => {
   return (
-    <div className="flex flex-col border rounded-xl overflow-hidden bg-white shadow-sm h-full">
-      <div className="p-4 space-y-4">
+    <div className="flex flex-col border border-zinc-100 rounded-xl overflow-hidden bg-white h-full">
+      <div className="p-5 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-2">
             <Skeleton className="h-5 w-3/4" />
@@ -57,10 +44,9 @@ const RecordingSkeleton = () => {
           </div>
           <Skeleton className="h-8 w-8 rounded-full" />
         </div>
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <div className="flex items-center justify-between pt-2 border-t">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-3 w-16" />
+        <div className="flex items-center gap-3 pt-2">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
       </div>
     </div>
@@ -71,19 +57,18 @@ export const RecordingsPage: React.FC<{
   portalContainer?: HTMLElement | null;
 }> = ({ portalContainer }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const { push } = useNavigation();
 
-  // Track individual deletion states
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Use local project state for this page
   const [selectedProjectId, setSelectedProjectId] = useLocalStorage<
     string | null
-  >('qa-extension-recordings-project-id', null);
+  >('recordings-project-id', null);
 
   const handleProjectSelect = (
     project: { id: number; name: string } | null
@@ -109,7 +94,6 @@ export const RecordingsPage: React.FC<{
 
       const result = await listRecordings(params);
       console.log('API Response for recordings:', result);
-      // Handle both array response and paginated response { data: [...] }
       if (
         result &&
         typeof result === 'object' &&
@@ -122,50 +106,40 @@ export const RecordingsPage: React.FC<{
     },
   });
 
+  const isLoading = isBlueprintsLoading;
+
   const { data: lastBlueprint, refetch: refetchLastBlueprint } = useQuery({
     queryKey: ['last-blueprint'],
     queryFn: async () => {
-      return await storageService.get('lastBlueprint');
+      const data = await storageService.get('lastBlueprint');
+      return data || null;
     },
+    refetchOnMount: 'always',
   });
 
-  React.useEffect(() => {
-    const handleMessage = (message: any) => {
-      if (
-        message.type === MessageType.BLUEPRINT_GENERATED ||
-        message.type === MessageType.BLUEPRINT_PROCESSING ||
-        message.type === MessageType.BLUEPRINT_SAVED
-      ) {
-        refetchLastBlueprint();
-        refetchBlueprints();
+  const handleSaveLastBlueprint = async () => {
+    try {
+      const latestBlueprint = await storageService.get('lastBlueprint');
+      if (!latestBlueprint) {
+        toast.error('No recording to save. Please record a test first.');
+        return;
       }
-    };
-    chrome.runtime?.onMessage?.addListener(handleMessage);
-    return () => chrome.runtime?.onMessage?.removeListener(handleMessage);
-  }, [refetchLastBlueprint, refetchBlueprints]);
 
-  React.useEffect(() => {
-    const handleStorageChange = (changes: {
-      [key: string]: chrome.storage.StorageChange;
-    }) => {
-      if (changes['test-blueprints']) {
-        refetchBlueprints();
-      }
-      if (changes['lastBlueprint']) {
-        refetchLastBlueprint();
-      }
-    };
-    chrome.storage?.onChanged?.addListener(handleStorageChange);
-    return () => chrome.storage?.onChanged?.removeListener(handleStorageChange);
-  }, [refetchBlueprints, refetchLastBlueprint]);
+      const { saveRecording } = await import('@/api/recording');
+      await saveRecording(latestBlueprint);
 
-  const isLoading = isBlueprintsLoading;
+      queryClient.setQueryData(['last-blueprint'], null);
+      refetchLastBlueprint();
+      refetchBlueprints();
+      toast.success('Test recording saved successfully');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'Failed to save test recording');
+    }
+  };
 
   const handleRunTest = (blueprint: TestBlueprint) => {
-    chrome.runtime.sendMessage({
-      type: MessageType.START_PLAYBACK,
-      data: { blueprint, active: false },
-    });
+    toast.info('Playback feature requires a test runner service');
   };
 
   const handleDelete = async (id: string) => {
@@ -173,22 +147,7 @@ export const RecordingsPage: React.FC<{
     setDeleteError(null);
 
     try {
-      // Using chrome runtime message for deletion
-      await new Promise<void>((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          {
-            type: MessageType.DELETE_BLUEPRINT,
-            data: { id },
-          },
-          response => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else {
-              resolve();
-            }
-          }
-        );
-      });
+      await deleteRecording(id);
       toast.success('Test recording deleted successfully');
       refetchBlueprints();
     } catch (e: any) {
@@ -240,15 +199,14 @@ export const RecordingsPage: React.FC<{
   };
 
   const handleRename = async (id: string, newName: string) => {
-    chrome.runtime.sendMessage(
-      {
-        type: MessageType.UPDATE_BLUEPRINT,
-        data: { id, data: { name: newName } },
-      },
-      () => {
-        refetchBlueprints();
-      }
-    );
+    try {
+      await updateRecording(id, { name: newName } as any);
+      toast.success('Recording renamed');
+      refetchBlueprints();
+    } catch (error) {
+      toast.error('Failed to rename recording');
+      console.error('Failed to rename:', error);
+    }
   };
 
   const handleExportPlaywright = (blueprint: TestBlueprint) => {
@@ -283,47 +241,12 @@ export const RecordingsPage: React.FC<{
     }
   };
 
-  const handleSaveLastBlueprint = async () => {
-    try {
-      // CRITICAL: Fetch the LATEST blueprint from storage to ensure we have enriched xpath data
-      const latestBlueprint = await storageService.get('lastBlueprint');
-      if (!latestBlueprint) {
-        toast.error('No recording to save. Please record a test first.');
-        return;
-      }
-      chrome.runtime.sendMessage(
-        {
-          type: MessageType.SAVE_BLUEPRINT,
-          data: { blueprint: latestBlueprint },
-        },
-        () => {
-          refetchBlueprints();
-          refetchLastBlueprint();
-        }
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save blueprint');
-    }
-  };
-
   const handleViewDetails = (id: string) => {
     navigate({ to: '/recordings/$id', params: { id } });
   };
 
   const handleStartRecording = () => {
-    chrome.runtime.sendMessage({
-      type: MessageType.CLOSE_MAIN_MENU,
-    });
-    setTimeout(() => {
-      chrome.runtime.sendMessage({
-        type: MessageType.START_RECORDING,
-        data: {
-          projectId: selectedProjectId
-            ? parseInt(selectedProjectId)
-            : undefined,
-        },
-      });
-    }, 300);
+    toast.info('Recording feature requires browser extension');
   };
 
   const filteredItems = useMemo(() => {
@@ -345,44 +268,40 @@ export const RecordingsPage: React.FC<{
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Header & Filters */}
-      <div className="flex-none space-y-4 px-8 pt-8 pb-4 bg-white z-20">
-        <div className="flex items-center justify-between">
+      <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Test Recordings
-              </h1>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 rounded-full p-0 text-gray-400 hover:text-gray-600"
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="max-w-xs"
-                    
-                  >
-                    <p>
-                      Capture and manage browser interactions. AI generates test
-                      steps from your recordings for automated playback.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              Test Recordings
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">
               Manage and run your captured test flows
             </p>
           </div>
+          <div className="shrink-0 pt-1">
+            <AnimatePresence mode="wait">
+              {selectedIds.size === 0 && (
+                <motion.div
+                  key="create-btn"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Button
+                    variant="ghost"
+                    className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
+                    onClick={handleStartRecording}
+                  >
+                    <Plus className="w-5 h-5" /> Test Recording
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 mt-5">
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -402,91 +321,6 @@ export const RecordingsPage: React.FC<{
               extraOptions={{ allProjects: true }}
             />
           </div>
-
-          <AnimatePresence mode="wait">
-            {selectedIds.size > 0 ? (
-              <motion.div
-                initial={{ opacity: 0, x: 20, scale: 0.95 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="flex items-center gap-3"
-              >
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center gap-2"
-                >
-                  <span className="text-sm font-medium text-zinc-900 bg-zinc-100 px-3 py-1.5 rounded-full">
-                    {selectedIds.size} selected
-                  </span>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 }}
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="h-10 px-4 border-zinc-300 hover:bg-zinc-50 rounded-full"
-                  >
-                    Clear
-                  </Button>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    disabled={isDeleting}
-                    className="h-10 px-4 bg-red-600 hover:bg-red-700 border-none rounded-full shadow-lg shadow-red-600/20"
-                  >
-                    {isDeleting ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: 'linear',
-                        }}
-                      >
-                        <Loader2 className="w-4 h-4" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.div>
-                    )}
-                    <span className="ml-1">Delete</span>
-                  </Button>
-                </motion.div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Button
-                  variant="ghost"
-                  className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
-                  onClick={handleStartRecording}
-                >
-                  <Plus className="w-5 h-5" /> Test Recording
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
 
@@ -547,8 +381,8 @@ export const RecordingsPage: React.FC<{
 
                 {/* Recordings Section */}
                 <section>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {Array.from({ length: 8 }).map((_, i) => (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {Array.from({ length: 6 }).map((_, i) => (
                       <RecordingSkeleton key={i} />
                     ))}
                   </div>
@@ -616,15 +450,15 @@ export const RecordingsPage: React.FC<{
                       />
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {filteredItems.map((item, index) => (
                       <motion.div
                         key={item.id}
                         onClick={e => e.stopPropagation()}
                         className="relative"
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.2 }}
+                        transition={{ delay: index * 0.03, duration: 0.25 }}
                       >
                         <AnimatePresence>
                           {selectedIds.size > 0 && (
@@ -633,7 +467,7 @@ export const RecordingsPage: React.FC<{
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
                               transition={{ duration: 0.15 }}
-                              className="absolute bottom-3 right-3 z-20"
+                              className="absolute top-4 right-4 z-20"
                             >
                               <StyledCheckbox
                                 checked={selectedIds.has(item.id)}
@@ -641,7 +475,7 @@ export const RecordingsPage: React.FC<{
                                   e.stopPropagation();
                                   toggleSelection(item.id);
                                 }}
-                                size="lg"
+                                size="md"
                               />
                             </motion.div>
                           )}
@@ -701,6 +535,47 @@ export const RecordingsPage: React.FC<{
           </ScrollArea>
         </div>
       </div>
+
+      {/* Sticky Floating Bulk Action Bar */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
+          >
+            <div className="flex items-center gap-3 px-5 py-3 bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] pointer-events-auto">
+              <span className="text-sm font-medium text-zinc-900 bg-zinc-100 px-3 py-1.5 rounded-full tabular-nums">
+                {selectedIds.size} selected
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+                className="h-9 px-4 border-zinc-300 hover:bg-zinc-50 rounded-full text-xs"
+              >
+                Clear
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="h-9 px-4 bg-red-600 hover:bg-red-700 border-none rounded-full shadow-lg shadow-red-600/20 text-xs"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span className="ml-1.5">Delete</span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

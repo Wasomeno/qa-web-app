@@ -326,12 +326,10 @@ const LastRunPanel: React.FC<{
     name: string;
     lastRunAt?: string;
     runDurationMs?: number;
-    recordingId?: string;
     errorMessage?: string;
     failedStepIndex?: number;
   };
-  onViewRecording: (id: string) => void;
-}> = ({ test, onViewRecording }) => {
+}> = ({ test }) => {
   const isPass = test.status === 'pass';
   const isFail = test.status === 'fail';
 
@@ -408,22 +406,6 @@ const LastRunPanel: React.FC<{
             </div>
           </div>
         </div>
-        {test.recordingId && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'h-8 gap-1.5 text-xs font-medium rounded-lg',
-              isPass && 'text-emerald-700 hover:bg-emerald-100/50',
-              isFail && 'text-red-700 hover:bg-red-100/50',
-              !isPass && !isFail && 'text-zinc-600 hover:bg-zinc-100'
-            )}
-            onClick={() => onViewRecording(test.recordingId!)}
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            View Recording
-          </Button>
-        )}
       </div>
 
       {/* Error message */}
@@ -438,58 +420,6 @@ const LastRunPanel: React.FC<{
               Failed at step {test.failedStepIndex}
             </p>
           )}
-        </div>
-      )}
-
-      {/* Recording thumbnail */}
-      {test.recordingId && (
-        <div className="p-4">
-          <button
-            onClick={() => onViewRecording(test.recordingId!)}
-            className="w-full group relative rounded-lg overflow-hidden bg-zinc-900 aspect-video max-h-[180px] flex items-center justify-center hover:opacity-95 transition-opacity"
-          >
-            {/* Placeholder grid pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div
-                className="w-full h-full"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-                  backgroundSize: '20px 20px',
-                }}
-              />
-            </div>
-
-            {/* Play button */}
-            <div className="relative z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-            </div>
-
-            {/* Duration badge */}
-            {test.runDurationMs && (
-              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium">
-                {(test.runDurationMs / 1000).toFixed(1)}s
-              </div>
-            )}
-
-            {/* Status overlay */}
-            <div
-              className={cn(
-                'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider',
-                isPass && 'bg-emerald-500/90 text-white',
-                isFail && 'bg-red-500/90 text-white',
-                !isPass && !isFail && 'bg-zinc-500/90 text-white'
-              )}
-            >
-              {test.status}
-            </div>
-          </button>
-
-          {/* Test name */}
-          <div className="mt-2 flex items-center justify-between">
-            <span className="font-mono text-[11px] text-zinc-500">{test.name}</span>
-            <span className="text-[10px] text-zinc-400">{test.recordingId}</span>
-          </div>
         </div>
       )}
     </div>
@@ -1055,7 +985,6 @@ const SortableTestCase: React.FC<{
           status: result.status,
           lastRunAt: new Date().toISOString(),
           runDurationMs: result.durationMs,
-          recordingId: `rec-${Date.now()}`,
           errorMessage: result.errorMessage,
           failedStepIndex: result.errorMessage
             ? parseInt(result.errorMessage.match(/step (\d+)/)?.[1] || '1')
@@ -1218,7 +1147,6 @@ const SortableTestCase: React.FC<{
             <div className="mt-4">
               <LastRunPanel
                 test={testCase.automationTest}
-                onViewRecording={onViewAutomation}
               />
             </div>
           ) : null}

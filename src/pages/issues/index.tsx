@@ -4,6 +4,7 @@ import { IssueFilterState } from '@/types/issues';
 import { useDebounce } from '@/utils/useDebounce';
 import { IssueFilterBar } from './components/filter-bar';
 import { IssueList } from './components/issue-list';
+import { QuickFilterChips } from './components/quick-filter-chips';
 import { FixIssueModal } from './components/fix-issue-modal';
 import { useGetLabels } from '@/hooks/use-get-labels';
 import { useGetIssues } from './hooks/use-get-issues';
@@ -23,7 +24,7 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
 }) => {
   const navigate = useNavigate();
   const [filters, setFilters] = useLocalStorage<IssueFilterState>(
-    'qa-extension-issues-filters',
+    'issues-filters',
     {
       search: '',
       projectIds: [],
@@ -85,6 +86,18 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleQuickFilterToggle = (
+    key: keyof IssueFilterState['quickFilters']
+  ) => {
+    setFilters(prev => ({
+      ...prev,
+      quickFilters: {
+        ...prev.quickFilters,
+        [key]: !prev.quickFilters[key],
+      },
+    }));
+  };
+
   const selectedIssue = initialIssue || null;
 
   // If an initial issue is provided, redirect to the standalone route
@@ -99,14 +112,16 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
   console.log('ISSUEs', issues.data);
 
   return (
-    <div className="flex flex-1 w-full flex-col overflow-hidden">
+    <div className="flex flex-1 w-full flex-col overflow-hidden bg-[#F9FAFB]">
       {/* Header & Filters */}
-      <div className="flex-none space-y-4 px-8 pt-8 pb-4 border-b border-gray-100 bg-white z-10">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Issues</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage issues across your projects
-          </p>
+      <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Issues</h1>
+            <p className="text-sm text-gray-500 mt-1.5">
+              Manage issues across your projects
+            </p>
+          </div>
         </div>
         <IssueFilterBar
           filters={filters}
@@ -114,10 +129,14 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
           labelOptions={labelOptions}
           portalContainer={portalContainer}
         />
+        <QuickFilterChips
+          filters={filters.quickFilters}
+          onToggle={handleQuickFilterToggle}
+        />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col w-full overflow-y-auto overscroll-contain mt-2 px-8 pb-8">
+      <div className="flex-1 flex flex-col w-full overflow-y-auto overscroll-contain px-8 py-8">
         <IssueList
           issues={issues.data}
           isLoading={isInitialLoading}

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, ArrowUpDown } from 'lucide-react';
 import { IssueFilterState } from '@/types/issues';
 import { Input } from '@/components/ui/input';
 import { SearchablePicker } from './searchable-picker';
@@ -42,19 +42,19 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Search Input Row */}
+      {/* Search Input Row — Command Bar Hero */}
       <div className="relative w-full">
         <Search
           aria-hidden="true"
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10"
         />
         <Input
           type="text"
           aria-label="Search issues"
-          placeholder="Search issues…"
+          placeholder="Search issues by title, ID, or description…"
           value={filters.search}
           onChange={e => onFilterChange('search', e.target.value)}
-          className="pl-9 bg-white border-theme-border rounded-xl focus:ring-blue-500/20 focus:border-blue-500"
+          className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-2xl text-base placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 transition-all shadow-sm"
         />
       </div>
 
@@ -109,9 +109,9 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
             onFilterChange('sort', val as IssueFilterState['sort'])
           }
         >
-          <SelectTrigger className="bg-white border-theme-border rounded-xl text-theme-text focus:ring-blue-500/20 focus:border-blue-500 w-full">
+          <SelectTrigger className="bg-white border-theme-border rounded-xl text-theme-text focus:ring-blue-500/20 focus:border-blue-500 w-full h-10">
             <div className="flex items-center gap-2">
-              <Filter
+              <ArrowUpDown
                 aria-hidden="true"
                 className="w-3.5 h-3.5 text-gray-400"
               />

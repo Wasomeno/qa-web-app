@@ -33,29 +33,23 @@ import { BoardCard } from './board-card';
 import { updateIssue } from '@/api/issue';
 import { useQueryClient } from '@tanstack/react-query';
 
-interface PendingMove {
-  issueId: string;
-  iid: number;
-  sourceColId: string;
-  targetColId: string;
-  sourceLabel?: string;
-  targetLabel?: string;
-}
-
 interface ProjectBoardViewProps {
   project: ProjectBoard;
   projectId?: number;
   onPinIssue?: (issue: BoardIssue) => void;
   onOpenIssue?: (issue: BoardIssue) => void;
+  density?: 'comfortable' | 'compact';
 }
 
 // Droppable Wrapper for Column
 const DroppableColumn = ({
   column,
   children,
+  isDropTarget,
 }: {
   column: IBoardColumn;
   children: React.ReactNode;
+  isDropTarget?: boolean;
 }) => {
   const { setNodeRef } = useDroppable({
     id: column.id,
@@ -64,7 +58,11 @@ const DroppableColumn = ({
 
   return (
     <div ref={setNodeRef} className="flex-1 flex-col flex">
-      <BoardColumn column={column} issueCount={column.issues.length}>
+      <BoardColumn
+        column={column}
+        issueCount={column.issues.length}
+        isDropTarget={isDropTarget}
+      >
         {children}
       </BoardColumn>
     </div>
@@ -76,6 +74,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
   projectId,
   onPinIssue,
   onOpenIssue,
+  density = 'comfortable',
 }) => {
   const queryClient = useQueryClient();
   // Lift state to local component to allow reordering
@@ -85,6 +84,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
   const [activeIssue, setActiveIssue] = useState<BoardIssue | null>(null);
   const [startColumnId, setStartColumnId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [overColumnId, setOverColumnId] = useState<string | null>(null);
 
   // Ref to track if we're currently in a drag operation
   const isDraggingRef = useRef(false);
@@ -146,9 +146,16 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
   // Drag-over handler for cross-column moves (same-column reordering is handled in handleDragEnd)
   const onDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      setOverColumnId(null);
+      return;
+    }
     const activeId = active.id;
     const overId = over.id;
+
+    // Update drop target for visual feedback
+    const overColumn = findColumn(overId as string, columns);
+    setOverColumnId(overColumn?.id ?? null);
 
     setColumns(prev => {
       // Find columns from the latest state to avoid stale closure issues
@@ -199,7 +206,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
 
       return newColumns;
     });
-  }, []);
+  }, [columns, findColumn]);
 
   // Persist move with proper state handling - accepts snapshot of current columns
   const persistMoveOptimistically = useCallback(async (
@@ -254,6 +261,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     setActiveIssue(null);
+    setOverColumnId(null);
     isDraggingRef.current = false;
 
     if (!over) {
@@ -319,7 +327,8 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
     sideEffects: defaultDropAnimationSideEffects({
       styles: {
         active: {
-          opacity: '0.5',
+          opacity: '0.4',
+          transform: 'scale(0.98)',
         },
       },
     }),
@@ -336,7 +345,11 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
       <div className="flex flex-col w-full flex-1">
         <div className="flex flex-1 gap-4 px-6 py-4 min-w-min">
           {columns.map(column => (
-            <DroppableColumn key={column.id} column={column}>
+            <DroppableColumn
+              key={column.id}
+              column={column}
+              isDropTarget={overColumnId === column.id && overColumnId !== startColumnId}
+            >
               <SortableContext
                 items={column.issues.map(i => i.id)}
                 strategy={verticalListSortingStrategy}
@@ -347,6 +360,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
                     issue={issue}
                     onPin={onPinIssue}
                     onClick={onOpenIssue}
+                    density={density}
                   />
                 ))}
               </SortableContext>
@@ -356,7 +370,11 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
           <div className="w-2 flex-shrink-0" />
         </div>
         <DragOverlay dropAnimation={dropAnimation}>
-          {activeIssue ? <BoardCard issue={activeIssue} /> : null}
+          {activeIssue ? (
+            <div className="shadow-2xl scale-105 rotate-1">
+              <BoardCard issue={activeIssue} density={density} />
+            </div>
+          ) : null}
         </DragOverlay>
       </div>
     </DndContext>

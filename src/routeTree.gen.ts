@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestScenariosRouteImport } from './routes/test-scenarios'
+import { Route as SpecsRouteImport } from './routes/specs'
 import { Route as RecordingsRouteImport } from './routes/recordings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PinnedRouteImport } from './routes/pinned'
@@ -19,6 +20,10 @@ import { Route as FixSessionsRouteImport } from './routes/fix-sessions'
 import { Route as CreateIssueRouteImport } from './routes/create-issue'
 import { Route as BoardsRouteImport } from './routes/boards'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TestScenariosIndexRouteImport } from './routes/test-scenarios.index'
+import { Route as SpecsIndexRouteImport } from './routes/specs.index'
+import { Route as RecordingsIndexRouteImport } from './routes/recordings.index'
+import { Route as IssuesIndexRouteImport } from './routes/issues.index'
 import { Route as TestScenariosIdRouteImport } from './routes/test-scenarios.$id'
 import { Route as RecordingsIdRouteImport } from './routes/recordings.$id'
 import { Route as IssuesProjectIdIidRouteImport } from './routes/issues.$projectId.$iid'
@@ -26,6 +31,11 @@ import { Route as IssuesProjectIdIidRouteImport } from './routes/issues.$project
 const TestScenariosRoute = TestScenariosRouteImport.update({
   id: '/test-scenarios',
   path: '/test-scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpecsRoute = SpecsRouteImport.update({
+  id: '/specs',
+  path: '/specs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecordingsRoute = RecordingsRouteImport.update({
@@ -73,6 +83,26 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TestScenariosIndexRoute = TestScenariosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TestScenariosRoute,
+} as any)
+const SpecsIndexRoute = SpecsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpecsRoute,
+} as any)
+const RecordingsIndexRoute = RecordingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecordingsRoute,
+} as any)
+const IssuesIndexRoute = IssuesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => IssuesRoute,
+} as any)
 const TestScenariosIdRoute = TestScenariosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -99,9 +129,14 @@ export interface FileRoutesByFullPath {
   '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
   '/recordings': typeof RecordingsRouteWithChildren
+  '/specs': typeof SpecsRouteWithChildren
   '/test-scenarios': typeof TestScenariosRouteWithChildren
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
+  '/issues/': typeof IssuesIndexRoute
+  '/recordings/': typeof RecordingsIndexRoute
+  '/specs/': typeof SpecsIndexRoute
+  '/test-scenarios/': typeof TestScenariosIndexRoute
   '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
 }
 export interface FileRoutesByTo {
@@ -109,14 +144,15 @@ export interface FileRoutesByTo {
   '/boards': typeof BoardsRoute
   '/create-issue': typeof CreateIssueRoute
   '/fix-sessions': typeof FixSessionsRoute
-  '/issues': typeof IssuesRouteWithChildren
   '/login': typeof LoginRoute
   '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
-  '/recordings': typeof RecordingsRouteWithChildren
-  '/test-scenarios': typeof TestScenariosRouteWithChildren
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
+  '/issues': typeof IssuesIndexRoute
+  '/recordings': typeof RecordingsIndexRoute
+  '/specs': typeof SpecsIndexRoute
+  '/test-scenarios': typeof TestScenariosIndexRoute
   '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
 }
 export interface FileRoutesById {
@@ -130,9 +166,14 @@ export interface FileRoutesById {
   '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
   '/recordings': typeof RecordingsRouteWithChildren
+  '/specs': typeof SpecsRouteWithChildren
   '/test-scenarios': typeof TestScenariosRouteWithChildren
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
+  '/issues/': typeof IssuesIndexRoute
+  '/recordings/': typeof RecordingsIndexRoute
+  '/specs/': typeof SpecsIndexRoute
+  '/test-scenarios/': typeof TestScenariosIndexRoute
   '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
 }
 export interface FileRouteTypes {
@@ -147,9 +188,14 @@ export interface FileRouteTypes {
     | '/pinned'
     | '/profile'
     | '/recordings'
+    | '/specs'
     | '/test-scenarios'
     | '/recordings/$id'
     | '/test-scenarios/$id'
+    | '/issues/'
+    | '/recordings/'
+    | '/specs/'
+    | '/test-scenarios/'
     | '/issues/$projectId/$iid'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -157,14 +203,15 @@ export interface FileRouteTypes {
     | '/boards'
     | '/create-issue'
     | '/fix-sessions'
-    | '/issues'
     | '/login'
     | '/pinned'
     | '/profile'
-    | '/recordings'
-    | '/test-scenarios'
     | '/recordings/$id'
     | '/test-scenarios/$id'
+    | '/issues'
+    | '/recordings'
+    | '/specs'
+    | '/test-scenarios'
     | '/issues/$projectId/$iid'
   id:
     | '__root__'
@@ -177,9 +224,14 @@ export interface FileRouteTypes {
     | '/pinned'
     | '/profile'
     | '/recordings'
+    | '/specs'
     | '/test-scenarios'
     | '/recordings/$id'
     | '/test-scenarios/$id'
+    | '/issues/'
+    | '/recordings/'
+    | '/specs/'
+    | '/test-scenarios/'
     | '/issues/$projectId/$iid'
   fileRoutesById: FileRoutesById
 }
@@ -193,6 +245,7 @@ export interface RootRouteChildren {
   PinnedRoute: typeof PinnedRoute
   ProfileRoute: typeof ProfileRoute
   RecordingsRoute: typeof RecordingsRouteWithChildren
+  SpecsRoute: typeof SpecsRouteWithChildren
   TestScenariosRoute: typeof TestScenariosRouteWithChildren
 }
 
@@ -203,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/test-scenarios'
       fullPath: '/test-scenarios'
       preLoaderRoute: typeof TestScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/specs': {
+      id: '/specs'
+      path: '/specs'
+      fullPath: '/specs'
+      preLoaderRoute: typeof SpecsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recordings': {
@@ -268,6 +328,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/test-scenarios/': {
+      id: '/test-scenarios/'
+      path: '/'
+      fullPath: '/test-scenarios/'
+      preLoaderRoute: typeof TestScenariosIndexRouteImport
+      parentRoute: typeof TestScenariosRoute
+    }
+    '/specs/': {
+      id: '/specs/'
+      path: '/'
+      fullPath: '/specs/'
+      preLoaderRoute: typeof SpecsIndexRouteImport
+      parentRoute: typeof SpecsRoute
+    }
+    '/recordings/': {
+      id: '/recordings/'
+      path: '/'
+      fullPath: '/recordings/'
+      preLoaderRoute: typeof RecordingsIndexRouteImport
+      parentRoute: typeof RecordingsRoute
+    }
+    '/issues/': {
+      id: '/issues/'
+      path: '/'
+      fullPath: '/issues/'
+      preLoaderRoute: typeof IssuesIndexRouteImport
+      parentRoute: typeof IssuesRoute
+    }
     '/test-scenarios/$id': {
       id: '/test-scenarios/$id'
       path: '/$id'
@@ -293,10 +381,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface IssuesRouteChildren {
+  IssuesIndexRoute: typeof IssuesIndexRoute
   IssuesProjectIdIidRoute: typeof IssuesProjectIdIidRoute
 }
 
 const IssuesRouteChildren: IssuesRouteChildren = {
+  IssuesIndexRoute: IssuesIndexRoute,
   IssuesProjectIdIidRoute: IssuesProjectIdIidRoute,
 }
 
@@ -305,22 +395,36 @@ const IssuesRouteWithChildren =
 
 interface RecordingsRouteChildren {
   RecordingsIdRoute: typeof RecordingsIdRoute
+  RecordingsIndexRoute: typeof RecordingsIndexRoute
 }
 
 const RecordingsRouteChildren: RecordingsRouteChildren = {
   RecordingsIdRoute: RecordingsIdRoute,
+  RecordingsIndexRoute: RecordingsIndexRoute,
 }
 
 const RecordingsRouteWithChildren = RecordingsRoute._addFileChildren(
   RecordingsRouteChildren,
 )
 
+interface SpecsRouteChildren {
+  SpecsIndexRoute: typeof SpecsIndexRoute
+}
+
+const SpecsRouteChildren: SpecsRouteChildren = {
+  SpecsIndexRoute: SpecsIndexRoute,
+}
+
+const SpecsRouteWithChildren = SpecsRoute._addFileChildren(SpecsRouteChildren)
+
 interface TestScenariosRouteChildren {
   TestScenariosIdRoute: typeof TestScenariosIdRoute
+  TestScenariosIndexRoute: typeof TestScenariosIndexRoute
 }
 
 const TestScenariosRouteChildren: TestScenariosRouteChildren = {
   TestScenariosIdRoute: TestScenariosIdRoute,
+  TestScenariosIndexRoute: TestScenariosIndexRoute,
 }
 
 const TestScenariosRouteWithChildren = TestScenariosRoute._addFileChildren(
@@ -337,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   PinnedRoute: PinnedRoute,
   ProfileRoute: ProfileRoute,
   RecordingsRoute: RecordingsRouteWithChildren,
+  SpecsRoute: SpecsRouteWithChildren,
   TestScenariosRoute: TestScenariosRouteWithChildren,
 }
 export const routeTree = rootRouteImport

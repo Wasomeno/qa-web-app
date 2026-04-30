@@ -1,5 +1,38 @@
-import { InteractionEvent } from './messages';
 import { SessionTelemetry } from './telemetry';
+
+/**
+ * Represents a user interaction event during recording
+ */
+export interface InteractionEvent {
+  type: 'click' | 'input' | 'scroll' | 'hover' | 'focus' | 'navigation';
+  timestamp: number;
+  element: {
+    tagName: string;
+    id?: string;
+    className?: string;
+    selector: string;
+    selectorCandidates?: string[];
+    xpath?: string;
+    xpathCandidates?: string[];
+    textContent?: string;
+    attributes?: Record<string, string>;
+    parentInfo?: {
+      tagName: string;
+      id?: string;
+      selector?: string;
+      attributes?: Record<string, string>;
+    };
+    structuralInfo?: {
+      depth: number;
+      siblingIndex: number;
+      totalSiblings: number;
+    };
+  };
+  position?: { x: number; y: number };
+  value?: string;
+  url: string;
+  viewport: { width: number; height: number };
+}
 
 export interface RawEvent extends InteractionEvent {
   // Add any additional raw event properties here if needed
@@ -87,8 +120,6 @@ export interface TestRecording {
   name: string;
   description?: string;
   status: string;
-  source_type?: 'manual' | 'test_scenario'; // "manual" | "test_scenario"
-  source_id?: string; // Links to test_scenario ID if source_type is "test_scenario"
   project_id?: string;
   project_name?: string;
   projectDetails?: ProjectDetails;
@@ -105,7 +136,6 @@ export interface TestRecording {
 export interface ListRecordingsParams {
   project_id?: string;
   issue_id?: string;
-  source_type?: 'manual' | 'test_scenario';
   sort_by?: 'created_at' | 'name';
   order?: 'desc' | 'asc';
 }
@@ -148,8 +178,6 @@ export interface TestBlueprint {
   id: string;
   name: string;
   description: string;
-  source_type?: 'manual' | 'test_scenario'; // "manual" | "test_scenario"
-  source_id?: string; // Links to test_scenario ID if source_type is "test_scenario"
   baseUrl?: string;
   project_id?: number;
   project_name?: string;

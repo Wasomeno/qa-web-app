@@ -23,11 +23,13 @@ import { useGetIssues } from '@/pages/issues/hooks/use-get-issues';
 interface ChildIssuesListProps {
   parentIssue: Issue;
   portalContainer?: HTMLElement | null;
+  hideHeader?: boolean;
 }
 
 export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
   parentIssue,
   portalContainer,
+  hideHeader,
 }) => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -134,25 +136,27 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-          Child Tasks
-          <span className="text-xs text-gray-400 font-normal">
-            {childIssues?.length || 0}
-          </span>
-        </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs gap-1.5"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add
-        </Button>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+            Child Tasks
+            <span className="text-xs text-gray-400 font-normal">
+              {childIssues?.length || 0}
+            </span>
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add
+          </Button>
+        </div>
+      )}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
         {childIssues && childIssues.length > 0 ? (
           <div className="divide-y divide-gray-100">
             {childIssues.map((issue: ChildIssue) => (

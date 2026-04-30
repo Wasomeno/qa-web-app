@@ -68,7 +68,7 @@ export const SelectedProjectProvider: React.FC<SelectedProjectProviderProps> = (
     setSelectedProjectState(project);
     setSelectedProjectIdState(project?.id.toString() ?? null);
 
-    // Persist to chrome.storage.local
+    // Persist to localStorage
     if (project) {
       storageService.set(STORAGE_KEY, project);
       storageService.set(STORAGE_ID_KEY, project.id.toString());

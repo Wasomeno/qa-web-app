@@ -8,26 +8,34 @@ export interface ExtensionSettings {
   };
 }
 
+/**
+ * Storage service using localStorage
+ * Provides async interface for consistency with the previous Chrome storage implementation
+ */
 export const storageService = {
   get: async (key: string): Promise<any> => {
-    return new Promise((resolve) => {
-      chrome.storage.local.get([key], (result) => {
-        resolve(result[key]);
-      });
-    });
+    try {
+      const item = localStorage.getItem(key);
+      if (item === null) return undefined;
+      return JSON.parse(item);
+    } catch {
+      return undefined;
+    }
   },
+  
   set: async (key: string, value: any): Promise<void> => {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ [key]: value }, () => {
-        resolve();
-      });
-    });
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+    }
   },
+  
   remove: async (key: string): Promise<void> => {
-    return new Promise((resolve) => {
-      chrome.storage.local.remove(key, () => {
-        resolve();
-      });
-    });
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error('Failed to remove from localStorage:', error);
+    }
   }
 };

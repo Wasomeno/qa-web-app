@@ -5,7 +5,6 @@ import {
   GitLabProjectMember,
   GetProjectBoardsResponse,
 } from '@/types/project';
-import { MessageType } from '@/types/messages';
 
 export async function getProjects(searchParam?: string | any) {
   const search = typeof searchParam === 'string' ? searchParam : undefined;
@@ -68,9 +67,10 @@ export interface GitLabBranch {
   };
 }
 
-export async function getProjectBranches(projectId: number | string) {
+export async function getProjectBranches(projectId: number | string, search?: string) {
+  const params = search ? `?search=${encodeURIComponent(search)}` : '';
   const response = await api.get<{ branches: GitLabBranch[] }>(
-    `/projects/${projectId}/branches`
+    `/projects/${projectId}/branches${params}`
   );
   return response;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Rows3, Rows2, KanbanSquare } from 'lucide-react';
 import { ProjectFilter } from './components/project-filter';
 import { ProjectBoardView } from './components/project-board-view';
 import { useGetProjectBoards } from './hooks/use-get-project-boards';
@@ -8,6 +9,7 @@ import { updateIssue } from '@/api/issue';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { cn } from '@/lib/utils';
 
 interface BoardsPageProps {
   portalContainer?: HTMLDivElement | null;
@@ -20,7 +22,12 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
 }) => {
   const [selectedProjectId, setSelectedProjectId] = useLocalStorage<
     string | number | undefined
-  >('qa-extension-boards-project-id', undefined);
+  >('boards-project-id', undefined);
+
+  const [density, setDensity] = useLocalStorage<'comfortable' | 'compact'>(
+    'boards-density',
+    'comfortable'
+  );
 
   const activeProjectId = selectedProjectId;
 
@@ -131,43 +138,92 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
   const isBoardLoading = isLoadingBoards && !boards.length;
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Filter Bar */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-20">
-        <div className="flex items-center gap-4 min-w-0">
-          <h1 className="text-xl font-bold text-gray-900 shrink-0 whitespace-nowrap">Issue Boards</h1>
-          <div className="h-6 w-px bg-gray-200 shrink-0" />
-          {isBoardLoading ? (
-            <Skeleton className="h-9 w-[250px] shrink-0" />
-          ) : (
-            <ProjectFilter
-              selectedProjectIds={activeProjectId ? [activeProjectId] : []}
-              onSelect={handleProjectSelect}
-              portalContainer={portalContainer}
-              singleSelect={true}
-              className="w-[260px] shrink-0"
-            />
-          )}
+    <div className="h-full flex flex-col">
+      {/* Header & Filters */}
+      <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              Issue Boards
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">
+              Drag and drop issues to move them across your workflow
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Density Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-100">
+              <button
+                onClick={() => setDensity('comfortable')}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
+                  density === 'comfortable'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+                title="Comfortable view"
+              >
+                <Rows3 className="w-3.5 h-3.5" />
+                Comfortable
+              </button>
+              <button
+                onClick={() => setDensity('compact')}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
+                  density === 'compact'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+                title="Compact view"
+              >
+                <Rows2 className="w-3.5 h-3.5" />
+                Compact
+              </button>
+            </div>
+
+            <div className="h-6 w-px bg-gray-200" />
+
+            {isBoardLoading ? (
+              <Skeleton className="h-9 w-[250px] shrink-0" />
+            ) : (
+              <ProjectFilter
+                selectedProjectIds={activeProjectId ? [activeProjectId] : []}
+                onSelect={handleProjectSelect}
+                portalContainer={portalContainer}
+                singleSelect={true}
+                className="w-[260px] shrink-0"
+              />
+            )}
+          </div>
         </div>
       </div>
 
       {/* Boards Content */}
-      <div className="flex-1 flex flex-col w-full overflow-y-auto">
+      <div
+        className="flex-1 flex flex-col w-full overflow-hidden"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0)',
+          backgroundSize: '24px 24px',
+        }}
+      >
         <div className="flex flex-1 flex-col w-full">
           {isBoardLoading ? (
             <div className="flex flex-1 gap-4 px-6 py-4 min-w-min overflow-hidden">
-              <Skeleton className="w-[280px] rounded-lg" />
-              <Skeleton className="w-[280px] rounded-lg" />
-              <Skeleton className="w-[280px] rounded-lg" />
+              <Skeleton className="w-[280px] rounded-xl" />
+              <Skeleton className="w-[280px] rounded-xl" />
+              <Skeleton className="w-[280px] rounded-xl" />
             </div>
           ) : mappedBoard ? (
-            <div className="flex flex-1 flex-col w-full border-b border-gray-100 last:border-0">
+            <div className="flex flex-1 flex-col w-full">
               {/* Horizontal Board Area */}
-              <div className="flex-1 flex-col flex w-full overflow-x-auto">
+              <div className="flex-1 flex-col flex w-full overflow-x-auto custom-scrollbar">
                 <ProjectBoardView
                   key={mappedBoard.id}
                   project={mappedBoard}
                   projectId={activeProjectId ? Number(activeProjectId) : undefined}
+                  density={density}
                   onOpenIssue={issue => {
                     // Map BoardIssue to structure expected by IssueDetail
                     onNavigateToIssue?.({
@@ -205,10 +261,20 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-gray-500">
-              {activeProjectId
-                ? 'No boards found for this project.'
-                : 'Select a project to view boards.'}
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
+                <KanbanSquare className="w-8 h-8 text-gray-300" />
+              </div>
+              <p className="text-sm font-medium text-gray-600">
+                {activeProjectId
+                  ? 'No boards found for this project.'
+                  : 'Select a project to view boards.'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {activeProjectId
+                  ? 'Try selecting a different project.'
+                  : 'Choose a project from the filter above.'}
+              </p>
             </div>
           )}
         </div>

@@ -4,7 +4,6 @@ import { useChatSessions, ChatSession } from './hooks/use-chat-sessions';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  ArrowLeft, 
   Clock, 
   Trash2, 
   MessageSquare,
@@ -20,7 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const SessionsListPage: React.FC = () => {
-  const { push, pop } = useNavigation();
+  const { push } = useNavigation();
   const { sessions, deleteSession } = useChatSessions();
 
   // Format relative time
@@ -63,22 +62,11 @@ export const SessionsListPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full w-full bg-background relative">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 border-b bg-card/50 backdrop-blur-sm">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => pop()}
-          className="h-9 w-9"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
-          <h1 className="text-lg font-semibold">Chat Sessions</h1>
+      <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Fix Sessions</h1>
+          <p className="text-sm text-gray-500 mt-1.5">Review your AI fix sessions</p>
         </div>
-        <span className="ml-auto text-sm text-muted-foreground">
-          {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-        </span>
       </div>
 
       {/* Sessions List */}

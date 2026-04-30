@@ -1,5 +1,4 @@
 import { FixIssueRequest, FixSession, FixEvent, FixStep } from '@/types/agent-fix';
-import { MessageType } from '@/types/messages';
 import { api } from '@/services/api';
 
 export interface FixIssueCallbacks {
@@ -87,54 +86,4 @@ export async function deleteFixSession(sessionId: string): Promise<void> {
   if (!response.success) {
     throw new Error(response.error || 'Failed to delete fix session');
   }
-}
-
-// POST /agent/fix-issue with SSE streaming via background bridge (legacy direct streaming)
-// Follows the same pattern as agent-chat-sse
-export function fixIssueWithAgent(
-  projectId: number,
-  issueIid: number,
-  options: {
-    repoProjectId?: number;
-    targetBranch?: string;
-  } & FixIssueCallbacks
-): () => void {
-  const { repoProjectId, targetBranch, onEvent, onError, onComplete } = options;
-
-  // Connect to background via port for SSE streaming
-  const port = chrome.runtime.connect({ name: 'agent-fix-sse' });
-
-  const messageListener = (msg: { event: string; data: any }) => {
-    if (msg.event === 'fix_event' && msg.data) {
-      onEvent(msg.data as FixEvent);
-    } else if (msg.event === 'error') {
-      onError(msg.data);
-    }
-  };
-
-  const disconnectListener = () => {
-    onComplete();
-  };
-
-  port.onMessage.addListener(messageListener);
-  port.onDisconnect.addListener(disconnectListener);
-
-  // Send the fix request
-  port.postMessage({
-    type: MessageType.AGENT_FIX_ISSUE_SSE,
-    data: {
-      project_id: projectId,
-      issue_iid: issueIid,
-      repo_project_id: repoProjectId,
-      target_branch: targetBranch,
-      runner: 'pi',
-    },
-  });
-
-  // Return cancel function
-  return () => {
-    port.onMessage.removeListener(messageListener);
-    port.onDisconnect.removeListener(disconnectListener);
-    port.disconnect();
-  };
 }

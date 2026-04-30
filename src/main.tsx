@@ -1,4 +1,3 @@
-import './utils/mock-chrome';
 import { extractSessionIdFromUrl } from './utils/session';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';

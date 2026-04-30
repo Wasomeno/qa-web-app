@@ -1,4 +1,33 @@
-import { BackgroundFetchRequest, BackgroundFetchResponse } from '@/types/messages';
+/**
+ * Request options for bridge fetch
+ */
+export interface BackgroundFetchRequest {
+  url: string;
+  init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: any;
+    credentials?: RequestCredentials;
+    redirect?: RequestRedirect;
+    cache?: RequestCache;
+    mode?: RequestMode;
+  };
+  responseType?: 'json' | 'text' | 'arrayBuffer';
+  includeHeaders?: boolean;
+  timeoutMs?: number;
+}
+
+/**
+ * Response from bridge fetch
+ */
+export interface BackgroundFetchResponse<T = any> {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  url: string;
+  headers?: Record<string, string>;
+  body?: T;
+}
 
 // Simple direct fetch with timeout and response-type handling.
 export async function bridgeFetch<T = any>(

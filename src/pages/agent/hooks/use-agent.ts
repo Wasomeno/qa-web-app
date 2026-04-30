@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Message } from '../components/chat-message';
-import { MessageType } from '@/types/messages';
 import { useStreamEvents, StreamEvent } from './use-stream-events';
 
 interface UseAgentOptions {
@@ -40,7 +39,7 @@ export const useAgent = (options?: UseAgentOptions) => {
             setProgressMessage(event.message);
           }
         }
-        // For done stage, keep the current message briefly then it will be cleared by port
+        // For done stage, keep the current message briefly then it will be cleared
       }
     },
   });
@@ -59,7 +58,7 @@ export const useAgent = (options?: UseAgentOptions) => {
 
   const sendMessage = useCallback(
     async (content: string, files: File[] = []) => {
-      // Convert files to base64 for sending to background script and backend
+      // Convert files to base64 for sending to backend
       const base64Attachments: Array<{ name: string; mimeType: string; data: string }> = [];
       for (const file of files) {
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -105,108 +104,83 @@ export const useAgent = (options?: UseAgentOptions) => {
       const responseId = (Date.now() + 1).toString();
 
       try {
-        const port = chrome.runtime.connect({ name: 'agent-chat-sse' });
-
-        port.onMessage.addListener(msg => {
-          const { event, data } = msg;
-          console.log(`[useAgent] Received Port Event: "${event}"`, data);
-
-          switch (event) {
-            case 'progress':
-              if (data && data.message) {
-                console.log(`[useAgent] Progress update: ${data.message}`);
-                setProgressMessage(data.message);
-              }
-              break;
-
-            case 'final':
-              console.log('[useAgent] Final response received. Data:', data);
-              setIsAgentLoading(false);
-              setProgressMessage(null);
-              activeSessionIdRef.current = null;
-
-              const content =
-                data?.content ||
-                data?.response ||
-                (typeof data === 'string' ? data : null);
-
-              if (content) {
-                setMessages(prev => [
-                  ...prev,
-                  {
-                    id: responseId,
-                    role: 'assistant',
-                    content: content,
-                    timestamp: Date.now(),
-                  },
-                ]);
-              } else {
-                console.warn(
-                  '[useAgent] Final event received but no content found in data'
-                );
-              }
-
-              console.log('[useAgent] Disconnecting port after final event');
-              port.disconnect();
-              break;
-
-            case 'heartbeat':
-              console.log('[useAgent] Heartbeat received');
-              break;
-
-            case 'message':
-              console.log(
-                '[useAgent] Raw message event received (unexpected for this backend):',
-                data
-              );
-              break;
-
-            case 'error':
-              console.error('[useAgent] Error event received:', data);
-              setIsAgentLoading(false);
-              setProgressMessage(null);
-              activeSessionIdRef.current = null;
-              setMessages(prev => [
-                ...prev,
-                {
-                  id: responseId,
-                  role: 'error',
-                  content: `Error: ${data?.message || data || 'Unknown error'}`,
-                  timestamp: Date.now(),
-                },
-              ]);
-              port.disconnect();
-              break;
-
-            default:
-              console.log(`[useAgent] Unhandled event type: ${event}`);
-          }
-        });
-
-        port.onDisconnect.addListener(() => {
-          console.log('[useAgent] Port disconnected');
-          setIsAgentLoading(current => {
-            if (current) {
-              console.log(
-                '[useAgent] Port disconnected while loading, clearing loading state'
-              );
-              setProgressMessage(null);
-              activeSessionIdRef.current = null;
-              return false;
-            }
-            return current;
-          });
-        });
-
-        port.postMessage({
-          type: MessageType.AGENT_CHAT_SSE,
-          data: {
+        // Use direct fetch with POST to agent chat endpoint
+        const response = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             input: content,
             session_id: sessionId,
             attachments: base64Attachments.length > 0 ? base64Attachments : undefined,
-          },
+          }),
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Handle SSE stream response
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                console.log('[useAgent] SSE event:', data);
+
+                if (data.event === 'progress' && data.data?.message) {
+                  setProgressMessage(data.data.message);
+                } else if (data.event === 'final') {
+                  setIsAgentLoading(false);
+                  setProgressMessage(null);
+                  activeSessionIdRef.current = null;
+
+                  const responseContent = data.data?.content || data.data?.response || data.data;
+                  if (responseContent) {
+                    setMessages(prev => [
+                      ...prev,
+                      {
+                        id: responseId,
+                        role: 'assistant',
+                        content: typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent),
+                        timestamp: Date.now(),
+                      },
+                    ]);
+                  }
+                  return;
+                } else if (data.event === 'error') {
+                  throw new Error(data.data?.message || 'Agent error');
+                }
+              } catch (parseError) {
+                console.warn('[useAgent] Failed to parse SSE data:', parseError);
+              }
+            }
+          }
+        }
+
+        // If we get here without a final event, something went wrong
+        setIsAgentLoading(false);
+        setProgressMessage(null);
+        activeSessionIdRef.current = null;
+
       } catch (error: any) {
+        console.error('[useAgent] Error:', error);
         setMessages(prev => [
           ...prev,
           {

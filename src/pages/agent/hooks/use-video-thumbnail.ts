@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { MessageType } from '@/types/messages';
 
 export function useVideoThumbnail(videoUrl: string, timeInSeconds: number = 3) {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
@@ -12,22 +11,34 @@ export function useVideoThumbnail(videoUrl: string, timeInSeconds: number = 3) {
     let isMounted = true;
     setIsLoading(true);
 
-    // Request thumbnail from background script to bypass page CSP
-    chrome.runtime.sendMessage({
-      type: MessageType.GET_VIDEO_THUMBNAIL,
-      data: { url: videoUrl, timeInSeconds }
-    }, (response) => {
-      if (!isMounted) return;
+    // Request thumbnail from backend API
+    fetch(`/api/video/thumbnail?url=${encodeURIComponent(videoUrl)}&time=${timeInSeconds}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (!isMounted) return;
 
-      if (response?.success && response.data) {
-        setThumbnail(response.data);
-        setError(null);
-      } else {
-        console.error('Failed to get thumbnail from background:', response?.error);
-        setError(new Error(response?.error || 'Failed to generate thumbnail'));
-      }
-      setIsLoading(false);
-    });
+        if (data.thumbnail) {
+          setThumbnail(data.thumbnail);
+          setError(null);
+        } else {
+          setError(new Error(data.error || 'Failed to generate thumbnail'));
+        }
+      })
+      .catch(err => {
+        if (!isMounted) return;
+        console.error('Failed to get video thumbnail:', err);
+        setError(err);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       isMounted = false;

@@ -1044,7 +1044,7 @@ export function highlightElement(
   const {
     color = '#ff6b6b',
     duration = 2000,
-    className = 'extension-highlight',
+    className = 'qa-highlight',
   } = options;
 
   // Remove existing highlights
@@ -1070,9 +1070,9 @@ export function highlightElement(
   `;
 
   // Add pulse animation
-  if (!document.querySelector('#qa-extension-styles')) {
+  if (!document.querySelector('#qa-highlight-styles')) {
     const style = document.createElement('style');
-    style.id = 'extension-styles';
+    style.id = 'qa-highlight-styles';
     style.textContent = `
       @keyframes qa-pulse {
         0% { opacity: 0.6; transform: scale(1); }
@@ -1167,7 +1167,7 @@ export function captureElementScreenshot(element: Element): Promise<string> {
 
       // Use html2canvas-like approach or browser screenshot API
       // For now, return a placeholder - actual implementation would use
-      // chrome.tabs.captureVisibleTab and crop the image
+      // a screenshot service or canvas-based capture
       resolve('data:image/png;base64,placeholder');
     } catch (error) {
       reject(error);

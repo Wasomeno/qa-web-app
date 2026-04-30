@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 import { Issue } from '@/api/issue';
 import { IssueCard } from './issue-card';
@@ -8,7 +9,7 @@ interface IssueListProps {
   issues: Issue[];
   isProjectFiltered: boolean;
   onIssueClick: (issue: Issue) => void;
-  onPin?: (issue: Issue) => void; // Assuming IssueWithPin is compatible or Issue is used
+  onPin?: (issue: Issue) => void;
   isLoading?: boolean;
   isPinned?: (issueIid: number, projectId: number) => boolean;
   onFixIssue?: (issue: Issue) => void;
@@ -36,7 +37,7 @@ export const IssueList: React.FC<IssueListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <IssueCardSkeleton key={i} />
         ))}
@@ -68,12 +69,12 @@ export const IssueList: React.FC<IssueListProps> = ({
 
   if (issues.length === 0) {
     return (
-      <div className="flex flex-col flex-1 w-full items-center justify-center py-12 text-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-          <FolderOpen className="w-8 h-8 text-gray-300" />
+      <div className="flex flex-col flex-1 w-full items-center justify-center py-16 text-center">
+        <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+          <FolderOpen className="w-9 h-9 text-gray-300" />
         </div>
-        <h3 className="text-gray-900 font-medium">No issues found</h3>
-        <p className="text-sm text-gray-500 mt-1 max-w-xs">
+        <h3 className="text-gray-900 font-semibold text-lg">No issues found</h3>
+        <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
           Try adjusting your filters or search terms to find what you're looking
           for.
         </p>
@@ -84,14 +85,14 @@ export const IssueList: React.FC<IssueListProps> = ({
   // If a specific project is selected, just show the flat list without headers
   if (isProjectFiltered) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {issues.map(issue => (
           <IssueCard
             key={issue.id}
             issue={issue}
             onClick={onIssueClick}
             onPin={onPin}
-            onUnpin={onPin} // Both toggle
+            onUnpin={onPin}
             onFixIssue={onFixIssue}
             variant={
               isPinned?.(issue.iid, issue.project_id) ? 'pinned' : 'default'
@@ -103,50 +104,65 @@ export const IssueList: React.FC<IssueListProps> = ({
   }
 
   return (
-    <div className="space-y-4 pb-12 flex flex-1 flex-col w-full">
+    <div className="space-y-6 pb-12 flex flex-1 flex-col w-full">
       {projectGroups.map(group => {
         const isCollapsed = collapsedProjects[group.projectId];
 
         return (
-          <div key={group.projectId}>
+          <motion.div
+            key={group.projectId}
+            layout
+            className="bg-gray-50/60 border border-gray-100 rounded-2xl p-1"
+          >
             <button
               onClick={() => toggleProject(group.projectId)}
-              className="flex items-center gap-2 w-full text-left py-2 px-1 hover:bg-gray-50 rounded-lg transition-colors group mb-1"
+              className="flex items-center gap-2.5 w-full text-left py-2.5 px-3 hover:bg-white/60 rounded-xl transition-colors group"
             >
-              {isCollapsed ? (
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-              )}
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-gray-200 shadow-sm">
+                {isCollapsed ? (
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                )}
+              </div>
+              <span className="text-sm font-semibold text-gray-700">
                 {group.projectName}
               </span>
-              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-white border border-gray-100 text-gray-500 text-[11px] font-semibold rounded-full shadow-sm">
                 {group.issues.length}
               </span>
-              <div className="h-px bg-gray-100 flex-1 ml-2" />
             </button>
 
-            {!isCollapsed && (
-              <div className="space-y-2 pl-2">
-                {group.issues.map(issue => (
-                  <IssueCard
-                    key={issue.id}
-                    issue={issue}
-                    onClick={onIssueClick}
-                    onPin={onPin}
-                    onUnpin={onPin}
-                    onFixIssue={onFixIssue}
-                    variant={
-                      isPinned?.(issue.iid, issue.project_id)
-                        ? 'pinned'
-                        : 'default'
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            <AnimatePresence initial={false}>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-2.5 px-2 pb-2 pt-1">
+                    {group.issues.map(issue => (
+                      <IssueCard
+                        key={issue.id}
+                        issue={issue}
+                        onClick={onIssueClick}
+                        onPin={onPin}
+                        onUnpin={onPin}
+                        onFixIssue={onFixIssue}
+                        variant={
+                          isPinned?.(issue.iid, issue.project_id)
+                            ? 'pinned'
+                            : 'default'
+                        }
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         );
       })}
     </div>

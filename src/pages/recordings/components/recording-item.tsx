@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Terminal,
-  Zap,
   MoreVertical,
   Clock,
   Bot,
@@ -11,16 +10,12 @@ import {
   Trash2,
   Download,
   Pencil,
-  Check,
-  X,
   Loader2,
   AlertCircle,
   Link,
-  FileText,
-  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +32,8 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { ProjectSelect } from '@/components/project-select';
-import { MessageType } from '@/types/messages';
+import { updateRecording } from '@/api/recording';
+import { StyledCheckbox } from '@/components/ui/styled-checkbox';
 
 interface RecordingItemProps {
   recording: TestBlueprint;
@@ -54,6 +50,10 @@ interface RecordingItemProps {
   portalContainer?: HTMLElement | null;
   isDeleting?: boolean;
   deleteError?: string | null;
+  // List-view selection props
+  isSelected?: boolean;
+  onToggleSelect?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectionActive?: boolean;
 }
 
 export const RecordingItem: React.FC<RecordingItemProps> = ({
@@ -71,29 +71,29 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
   portalContainer,
   isDeleting = false,
   deleteError = null,
+  isSelected = false,
+  onToggleSelect,
+  selectionActive = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editName, setEditName] = useState(recording.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Close confirmation dialog when deletion starts
   useEffect(() => {
     if (isDeleting) {
       setIsConfirmingDelete(false);
     }
   }, [isDeleting]);
 
-  const handleUpdateProject = (project: any) => {
-    chrome.runtime.sendMessage(
-      {
-        type: MessageType.UPDATE_BLUEPRINT,
-        data: { id: recording.id, data: { project_id: project?.id ?? null } },
-      },
-      () => {
-        // This should trigger refetching if set up correctly in the parent list
-      }
-    );
+  const handleUpdateProject = async (project: any) => {
+    try {
+      await updateRecording(recording.id, { project_id: project?.id ?? null } as any);
+      toast.success('Project updated');
+    } catch (error) {
+      toast.error('Failed to update project');
+      console.error('Failed to update project:', error);
+    }
   };
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         <DropdownMenuItem className="gap-2" onClick={onCopyScript}>
           <Copy className="w-4 h-4" /> Copy Test Script
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           className="gap-2"
           onClick={(e) => {
             e.stopPropagation();
@@ -196,140 +196,104 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
     </DropdownMenu>
   );
 
-  const DeleteConfirmation = () => (
-    <div
-      className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md border border-red-100"
-      onClick={e => e.stopPropagation()}
-    >
-      <span className="text-xs font-bold text-red-600 uppercase tracking-tighter mr-1">
-        Delete?
-      </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 text-red-600 hover:bg-red-100"
-        onClick={onDelete}
-      >
-        <Check className="w-3.5 h-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 text-zinc-500 hover:bg-zinc-100"
-        onClick={e => {
-          e.stopPropagation();
-          setIsConfirmingDelete(false);
-        }}
-      >
-        <X className="w-3.5 h-3.5" />
-      </Button>
-    </div>
-  );
+  // ─── List view ───
+  if (viewMode === 'list') {
+    const statusColor = cn(
+      recording.status === 'ready' && 'bg-emerald-400',
+      recording.status === 'processing' && 'bg-amber-400',
+      recording.status === 'failed' && 'bg-red-400',
+      !recording.status && 'bg-zinc-300'
+    );
 
-  return (
-    <div
-      role="button"
-      className={cn(
-        'flex flex-col border rounded-xl overflow-hidden hover:shadow-lg hover:border-zinc-300 cursor-pointer transition-all bg-white group relative h-full',
-        'border-zinc-200'
-      )}
-      onClick={onClick}
-    >
-      {recording.created_at && (
-        <span className="absolute top-2 right-5 text-[10px] text-zinc-400 font-medium">
-          {new Date(recording.created_at).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </span>
-      )}
-      {isConfirmingDelete && (
-        <div
-          className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-5 text-center animate-in fade-in duration-200"
-          onClick={e => e.stopPropagation()}
-        >
-          {isDeleting ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <Loader2 className="w-8 h-8 text-zinc-600 mb-2" />
-              </motion.div>
-              <p className="text-sm font-semibold text-zinc-900 mb-1">
-                Deleting...
-              </p>
-              <p className="text-xs text-zinc-500">
-                Please wait while we remove this recording.
-              </p>
-            </>
-          ) : deleteError ? (
-            <>
-              <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-zinc-900 mb-1">
-                Failed to delete
-              </p>
-              <p className="text-xs text-red-600 mb-4 max-w-[200px]">
-                {deleteError}
-              </p>
-              <div className="flex items-center gap-2 w-full">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-9 text-xs"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setIsConfirmingDelete(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="flex-1 h-9 text-xs bg-red-600 hover:bg-red-700"
-                  onClick={onDelete}
-                >
-                  Retry
-                </Button>
+    return (
+      <div
+        role="button"
+        className="flex items-center gap-4 py-4 px-6 border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors group cursor-pointer relative"
+        onClick={onClick}
+      >
+        {/* Delete confirmation / error overlay */}
+        <AnimatePresence>
+          {(isConfirmingDelete || isDeleting || deleteError) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-0 bg-red-50/95 backdrop-blur-sm z-10 flex items-center gap-3 px-6"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 text-red-500 animate-spin shrink-0" />
+                ) : deleteError ? (
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                ) : (
+                  <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
+                )}
+                <span className="text-sm text-red-700 truncate">
+                  {isDeleting ? 'Deleting...' : deleteError ? deleteError : 'Delete this recording?'}
+                </span>
               </div>
-            </>
-          ) : (
-            <>
-              <Trash2 className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-zinc-900 mb-1">
-                Delete this test script?
-              </p>
-              <p className="text-xs text-zinc-500 mb-4">
-                This action cannot be undone.
-              </p>
-              <div className="flex items-center gap-2 w-full">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-9 text-xs"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setIsConfirmingDelete(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="flex-1 h-9 text-xs bg-red-600 hover:bg-red-700"
-                  onClick={onDelete}
-                >
-                  Delete
-                </Button>
-              </div>
-            </>
+              {!isDeleting && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-3 text-xs text-zinc-600 hover:bg-white/80"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setIsConfirmingDelete(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 px-3 text-xs bg-red-600 hover:bg-red-700"
+                    onClick={onDelete}
+                  >
+                    {deleteError ? 'Retry' : 'Delete'}
+                  </Button>
+                </div>
+              )}
+            </motion.div>
           )}
-        </div>
-      )}
+        </AnimatePresence>
 
-      <div className="p-5 flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex-1 min-w-0">
+        {/* Left: Checkbox + Status */}
+        <div className="relative w-5 h-5 shrink-0 flex items-center justify-center">
+          {/* Checkbox layer */}
+          <div
+            className={cn(
+              'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
+              selectionActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}
+          >
+            <StyledCheckbox
+              checked={isSelected}
+              onChange={e => {
+                e.stopPropagation();
+                onToggleSelect?.(e);
+              }}
+              size="sm"
+            />
+          </div>
+
+          {/* Status dot layer */}
+          <div
+            className={cn(
+              'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
+              selectionActive ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'
+            )}
+          >
+            <div className={cn('w-1.5 h-1.5 rounded-full', statusColor)} />
+          </div>
+        </div>
+
+        {/* Middle: Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
             {isEditing ? (
               <Input
                 ref={inputRef}
@@ -338,89 +302,202 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
                 onClick={e => e.stopPropagation()}
-                className="h-7 text-sm py-0 mb-1"
+                className="h-7 text-sm py-0 w-full max-w-md"
               />
             ) : (
-              <p className="font-semibold text-zinc-900 truncate group-hover:text-zinc-900 transition-colors">
+              <span className="text-sm font-medium text-zinc-900 truncate">
                 {recording.name}
-              </p>
+              </span>
             )}
-            <p className="text-xs text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
+          </div>
+          <div className="flex items-center gap-3 mt-0.5">
+            {recording.description && (
+              <span className="text-xs text-zinc-400 truncate max-w-[320px]">
+                {recording.description}
+              </span>
+            )}
+            <span className="text-[11px] text-zinc-400 tabular-nums">
+              {recording.steps.length} steps
+            </span>
+            {recording.project_name && (
+              <span className="text-[11px] text-zinc-400">
+                {recording.project_name}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Date + Actions */}
+        <div className="flex items-center gap-4 shrink-0">
+          {recording.created_at && (
+            <span className="text-[11px] text-zinc-400 tabular-nums">
+              {new Date(recording.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+          )}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <Actions />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Grid view (clean, lightweight) ───
+  return (
+    <div
+      role="button"
+      className={cn(
+        'flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all bg-white group relative h-full',
+        'border border-zinc-100 hover:border-zinc-200 hover:shadow-sm',
+      )}
+      onClick={onClick}
+    >
+      {/* Top-right date */}
+      {recording.created_at && (
+        <span className="absolute top-3 right-3 text-[10px] text-zinc-400 font-medium tabular-nums">
+          {new Date(recording.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          })}
+        </span>
+      )}
+
+      {/* Delete confirmation banner */}
+      <AnimatePresence>
+        {(isConfirmingDelete || isDeleting || deleteError) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-red-50 border-b border-red-100">
+              <div className="flex items-center gap-2 min-w-0">
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin shrink-0" />
+                ) : deleteError ? (
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                )}
+                <span className="text-xs font-semibold text-red-700 truncate">
+                  {isDeleting ? 'Deleting...' : deleteError ? deleteError : 'Delete this recording?'}
+                </span>
+              </div>
+              {!isDeleting && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] text-zinc-600 hover:bg-white/80"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setIsConfirmingDelete(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] bg-red-600 hover:bg-red-700"
+                    onClick={onDelete}
+                  >
+                    {deleteError ? 'Retry' : 'Delete'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="p-5 flex flex-col h-full">
+        {/* Header: Title + Actions */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0 pr-8">
+            {isEditing ? (
+              <Input
+                ref={inputRef}
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+                onClick={e => e.stopPropagation()}
+                className="h-7 text-sm py-0"
+              />
+            ) : (
+              <h3 className="font-semibold text-zinc-900 truncate leading-tight">
+                {recording.name}
+              </h3>
+            )}
+            <p className="text-xs text-zinc-500 mt-1 line-clamp-1">
               {recording.description || 'No description'}
             </p>
           </div>
-          <Actions />
+          {/* Actions - hover only, positioned absolute to not push title */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute top-3 right-3">
+            <Actions />
+          </div>
         </div>
 
-        {/* Source Type Indicator */}
-        {recording.source_type && (
-          <div className="mb-3">
-            {recording.source_type === 'test_scenario' ? (
-              <Badge variant="secondary" className="gap-1 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50">
-                <FileText className="w-3 h-3" />
-                From Test Scenario
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="gap-1 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50">
-                <User className="w-3 h-3" />
-                Manual Recording
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Steps Snippet */}
-        <div className="flex-1 min-h-[80px] bg-zinc-50/50 rounded-xl p-4 border border-zinc-50 mb-4 group-hover:bg-zinc-100/50 transition-colors">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Terminal className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-[10px] tracking-widest text-zinc-400 uppercase">
-              Test Steps
-            </span>
-          </div>
-          <div className="space-y-2">
-            {recording.steps.slice(0, 4).map((step, idx) => (
-              <div key={idx} className="flex gap-2 text-xs">
-                <span className="text-zinc-400 font-medium tabular-nums shrink-0">
+        {/* Compact Steps Preview */}
+        <div className="mt-4 flex-1 min-h-[60px]">
+          <div className="space-y-1.5">
+            {recording.steps.slice(0, 3).map((step, idx) => (
+              <div key={idx} className="flex gap-2 text-[11px]">
+                <span className="text-zinc-400 font-medium tabular-nums shrink-0 w-4">
                   {idx + 1}.
                 </span>
-                <span className="text-zinc-600 truncate leading-tight">
+                <span className="text-zinc-500 truncate">
                   {step.description || step.action}
                 </span>
               </div>
             ))}
-            {recording.steps.length > 4 && (
-              <div className="flex gap-2 text-xs text-zinc-400 italic pl-5 mt-1">
-                + {recording.steps.length - 4} more steps
-              </div>
+            {recording.steps.length > 3 && (
+              <p className="text-[11px] text-zinc-400 pl-5">
+                + {recording.steps.length - 3} more
+              </p>
             )}
             {recording.steps.length === 0 && (
-              <div className="text-xs text-zinc-400 italic py-2 text-center">
+              <p className="text-[11px] text-zinc-400 italic py-2">
                 No steps recorded
-              </div>
+              </p>
             )}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-zinc-50">
-          <div className="flex items-center gap-4">
-            <span className="bg-zinc-100/80 px-2 py-0.5 rounded-full text-[10px] font-medium text-zinc-500 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-zinc-400" /> {recording.steps.length} steps
+        {/* Footer: Metadata */}
+        <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-50">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-[11px] text-zinc-500">
+              <Clock className="w-3 h-3 text-zinc-400" />
+              {recording.steps.length} steps
             </span>
-            <ProjectSelect
-              value={recording.project_id ?? null}
-              projectName={recording.project_name}
-              projectDetails={recording.projectDetails ?? null}
-              onSelect={project => {
-                const newProjectId = project?.id ?? null;
-                handleUpdateProject({ id: recording.id, project_id: newProjectId });
-              }}
-              mode="single"
-              size="compact"
-              portalContainer={portalContainer}
-              stopPropagation
-            />
+            {recording.project_name && (
+              <span className="text-[11px] text-zinc-400 truncate max-w-[120px]">
+                {recording.project_name}
+              </span>
+            )}
           </div>
+          <ProjectSelect
+            value={recording.project_id ?? null}
+            projectName={recording.project_name}
+            projectDetails={recording.projectDetails ?? null}
+            onSelect={project => {
+              const newProjectId = project?.id ?? null;
+              handleUpdateProject({ id: recording.id, project_id: newProjectId });
+            }}
+            mode="single"
+            size="compact"
+            portalContainer={portalContainer}
+            stopPropagation
+          />
         </div>
       </div>
     </div>

@@ -17,153 +17,27 @@ import {
   Copy,
   Eye,
   EyeOff,
-  FileText,
-  User,
   Terminal,
   Globe,
   Bug,
   FileCode,
-  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigation } from '@/contexts/navigation-context';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from '@tanstack/react-router';
 import { TestBlueprint } from '@/types/recording';
 import { generateLLMTranscript } from '@/types/telemetry';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { MessageType } from '@/types/messages';
+import { Skeleton } from '@/components/ui/skeleton';
 
-type TabId = 'steps' | 'console' | 'network' | 'errors' | 'export';
+/* ─────────────────────────── types ─────────────────────────── */
 
+type RightTabId = 'steps' | 'console' | 'network' | 'errors' | 'export';
 type NetSubTab = 'request-headers' | 'request-payload' | 'response-headers' | 'response-payload';
 
-interface ExpandableNetworkRequestProps {
-  req: import('@/types/telemetry').NetworkRequestEntry;
-}
-
-const ExpandableNetworkRequest: React.FC<ExpandableNetworkRequestProps> = ({ req }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [subTab, setSubTab] = useState<NetSubTab>('request-headers');
-  const hasRequestPayload = !!req.requestPayload;
-  const hasResponsePayload = !!req.responsePayload;
-  const hasRequestHeaders = !!req.requestHeaders && Object.keys(req.requestHeaders).length > 0;
-  const hasResponseHeaders = !!req.responseHeaders && Object.keys(req.responseHeaders).length > 0;
-
-  const subTabs: { id: NetSubTab; label: string; count?: number }[] = [];
-  if (hasRequestHeaders || hasResponseHeaders) {
-    subTabs.push({ id: 'request-headers', label: 'Headers' });
-  }
-  if (hasRequestPayload) {
-    subTabs.push({ id: 'request-payload', label: 'Payload' });
-  }
-  if (hasResponsePayload) {
-    subTabs.push({ id: 'response-payload', label: 'Response' });
-  }
-
-  React.useEffect(() => {
-    if (!expanded) return;
-    const available: NetSubTab[] = [];
-    if (hasRequestHeaders || hasResponseHeaders) available.push('request-headers');
-    if (hasRequestPayload) available.push('request-payload');
-    if (hasResponsePayload) available.push('response-payload');
-    if (available.length > 0 && !available.includes(subTab)) {
-      setSubTab(available[0]);
-    }
-  }, [expanded]);
-
-  return (
-    <div className={`border rounded ${
-      req.status && req.status >= 400 ? 'bg-red-50 border-red-100' :
-      req.status && req.status >= 300 ? 'bg-amber-50 border-amber-100' :
-      'bg-gray-50 border-gray-100'
-    }`}>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 text-xs p-2 w-full text-left"
-      >
-        <span className="shrink-0">
-          {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-        </span>
-        <span className="font-mono text-[10px] opacity-50 whitespace-nowrap">
-          {new Date(req.timestamp).toISOString().split('T')[1].slice(0, -1)}
-        </span>
-        <span className={`font-bold w-12 shrink-0 ${
-          req.method === 'GET' ? 'text-blue-600' :
-          req.method === 'POST' ? 'text-emerald-600' :
-          req.method === 'DELETE' ? 'text-red-600' :
-          'text-gray-600'
-        }`}>{req.method}</span>
-        <span className="flex-1 truncate text-gray-700">{req.url}</span>
-        {req.status && (
-          <span className={`font-bold w-10 text-right ${
-            req.status >= 400 ? 'text-red-600' :
-            req.status >= 300 ? 'text-amber-600' :
-            'text-emerald-600'
-          }`}>{req.status}</span>
-        )}
-        {req.durationMs && (
-          <span className="text-[10px] text-gray-400 w-14 text-right shrink-0">{req.durationMs}ms</span>
-        )}
-        {(hasRequestPayload || hasResponsePayload) && (
-          <span className="text-[10px] text-gray-400 shrink-0">
-            <FileText className="w-3 h-3 inline" />
-          </span>
-        )}
-      </button>
-      {expanded && subTabs.length > 0 && (
-        <div className="px-3 pb-3 border-t border-gray-200 pt-2">
-          <div className="flex gap-0.5 mb-2 border-b border-gray-200">
-            {subTabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setSubTab(tab.id)}
-                className={`text-[10px] font-medium px-2.5 py-1.5 rounded-t transition-colors ${
-                  subTab === tab.id
-                    ? 'text-blue-700 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 bg-gray-50/50'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {subTab === 'request-headers' && (
-            <div className="space-y-1.5">
-              {hasRequestHeaders && (
-                <div>
-                  <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Request</span>
-                  <pre className="text-[10px] mt-0.5 bg-white p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
-                    {Object.entries(req.requestHeaders!).map(([k, v]) => `${k}: ${v}`).join('\n')}
-                  </pre>
-                </div>
-              )}
-              {hasResponseHeaders && (
-                <div className="mt-1.5">
-                  <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Response</span>
-                  <pre className="text-[10px] mt-0.5 bg-white p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
-                    {Object.entries(req.responseHeaders!).map(([k, v]) => `${k}: ${v}`).join('\n')}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )}
-          {subTab === 'request-payload' && hasRequestPayload && (
-            <pre className="text-[10px] bg-white p-2 rounded overflow-x-auto max-h-64 overflow-y-auto font-mono">
-              {formatPayload(req.requestPayload!)}
-            </pre>
-          )}
-          {subTab === 'response-payload' && hasResponsePayload && (
-            <pre className="text-[10px] bg-white p-2 rounded overflow-x-auto max-h-64 overflow-y-auto font-mono">
-              {formatPayload(req.responsePayload!)}
-            </pre>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+/* ─────────────────────────── helpers ─────────────────────────── */
 
 function formatPayload(payload: string): string {
   try {
@@ -182,25 +56,390 @@ function formatDuration(ms: number): string {
   return secs > 0 ? `${minutes}m ${secs}s` : `${minutes}m`;
 }
 
+function getStepIcon(action: string) {
+  switch (action) {
+    case 'click':
+      return <MousePointer2 className="w-4 h-4" />;
+    case 'type':
+      return <Type className="w-4 h-4" />;
+    case 'navigate':
+      return <Navigation className="w-4 h-4" />;
+    case 'select':
+      return <ListFilter className="w-4 h-4" />;
+    case 'assert':
+      return <CheckCircle2 className="w-4 h-4" />;
+    default:
+      return <Database className="w-4 h-4" />;
+  }
+}
+
+/* ─────────────────────── StatusDot ─────────────────────────── */
+
+const StatusDot: React.FC<{ status?: number }> = ({ status }) => {
+  if (!status) return <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 shrink-0" />;
+  if (status >= 400) return <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />;
+  if (status >= 300) return <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />;
+  return <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />;
+};
+
+/* ─────────────────────── PlayheadStep (left pane) ──────────── */
+
+interface PlayheadStepProps {
+  step: TestBlueprint['steps'][number];
+  index: number;
+  isLast: boolean;
+  isActive: boolean;
+  onClick: () => void;
+  stepContext?: import('@/types/telemetry').StepContext;
+}
+
+const PlayheadStep: React.FC<PlayheadStepProps> = ({
+  step,
+  index,
+  isLast,
+  isActive,
+  onClick,
+  stepContext,
+}) => {
+  const errorCount = stepContext?.surroundingErrors?.length ?? 0;
+  const failedReqCount = stepContext?.surroundingRequests?.filter((r) => r.status && r.status >= 400).length ?? 0;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group relative flex items-start gap-3 w-full text-left py-3.5 px-4 transition-colors rounded-r-lg ${
+        isActive
+          ? 'bg-zinc-50 border-l-2 border-zinc-900'
+          : 'border-l-2 border-transparent hover:border-zinc-300 hover:bg-zinc-50/50'
+      }`}
+    >
+      {/* Step number */}
+      <span
+        className={`mt-0.5 text-xs font-mono font-medium w-5 text-right shrink-0 ${
+          isActive ? 'text-zinc-900' : 'text-zinc-400 group-hover:text-zinc-600'
+        }`}
+      >
+        {index + 1}
+      </span>
+
+      {/* Icon */}
+      <span
+        className={`mt-0.5 shrink-0 ${
+          isActive ? 'text-zinc-700' : 'text-zinc-400 group-hover:text-zinc-600'
+        }`}
+      >
+        {getStepIcon(step.action)}
+      </span>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-medium capitalize ${isActive ? 'text-zinc-900' : 'text-zinc-700'}`}>
+            {step.action}
+          </span>
+          {step.value && (
+            <span className="text-xs text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded font-mono truncate max-w-[160px]">
+              {step.value}
+            </span>
+          )}
+        </div>
+        <p className={`text-sm truncate ${isActive ? 'text-zinc-600' : 'text-zinc-500'}`}>
+          {step.description}
+        </p>
+      </div>
+
+      {/* Inline indicators */}
+      <div className="flex items-center gap-2 shrink-0 mt-0.5">
+        {errorCount > 0 && (
+          <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded">
+            <Bug className="w-3 h-3" />
+            {errorCount}
+          </span>
+        )}
+        {failedReqCount > 0 && (
+          <span className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+            <Globe className="w-3 h-3" />
+            {failedReqCount}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+};
+
+/* ─────────────────────── ExpandableNetworkRow ──────────────── */
+
+const ExpandableNetworkRow: React.FC<{
+  req: import('@/types/telemetry').NetworkRequestEntry;
+}> = ({ req }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [subTab, setSubTab] = useState<NetSubTab>('request-headers');
+
+  const hasRequestPayload = !!req.requestPayload;
+  const hasResponsePayload = !!req.responsePayload;
+  const hasRequestHeaders = !!req.requestHeaders && Object.keys(req.requestHeaders).length > 0;
+  const hasResponseHeaders = !!req.responseHeaders && Object.keys(req.responseHeaders).length > 0;
+
+  const subTabs: { id: NetSubTab; label: string }[] = [];
+  if (hasRequestHeaders || hasResponseHeaders) subTabs.push({ id: 'request-headers', label: 'Headers' });
+  if (hasRequestPayload) subTabs.push({ id: 'request-payload', label: 'Payload' });
+  if (hasResponsePayload) subTabs.push({ id: 'response-payload', label: 'Response' });
+
+  return (
+    <div className="group">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2.5 w-full text-left py-2.5 px-2 hover:bg-zinc-50/50 transition-colors"
+      >
+        <StatusDot status={req.status} />
+        <span className="shrink-0">
+          {expanded ? (
+            <ChevronDown className="w-3 h-3 text-zinc-400" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-zinc-400" />
+          )}
+        </span>
+        <span
+          className={`font-semibold text-xs w-10 shrink-0 ${
+            req.method === 'GET'
+              ? 'text-blue-600'
+              : req.method === 'POST'
+                ? 'text-emerald-600'
+                : req.method === 'DELETE'
+                  ? 'text-red-600'
+                  : 'text-zinc-500'
+          }`}
+        >
+          {req.method}
+        </span>
+        <span className="flex-1 truncate text-sm text-zinc-700 font-mono">{req.url}</span>
+        {req.status && (
+          <span
+            className={`text-xs font-medium w-10 text-right shrink-0 ${
+              req.status >= 400 ? 'text-red-600' : req.status >= 300 ? 'text-amber-600' : 'text-emerald-600'
+            }`}
+          >
+            {req.status}
+          </span>
+        )}
+        {req.durationMs && (
+          <span className="text-xs text-zinc-400 w-14 text-right shrink-0">{req.durationMs}ms</span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {expanded && subTabs.length > 0 && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="pl-6 pr-1 pb-3">
+              <div className="flex gap-0.5 mb-2 border-b border-zinc-800">
+                {subTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSubTab(tab.id);
+                    }}
+                    className={`text-xs font-medium px-2.5 py-1.5 rounded-t transition-colors ${
+                      subTab === tab.id
+                        ? 'text-zinc-100 bg-zinc-800 border-b-2 border-zinc-500'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {subTab === 'request-headers' && (
+                <div className="space-y-1.5">
+                  {hasRequestHeaders && (
+                    <div>
+                      <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Request</span>
+                      <pre className="text-xs mt-0.5 bg-zinc-950 p-2 rounded overflow-x-auto max-h-48 overflow-y-auto text-zinc-300">
+                        {Object.entries(req.requestHeaders!).map(([k, v]) => `${k}: ${v}`).join('\n')}
+                      </pre>
+                    </div>
+                  )}
+                  {hasResponseHeaders && (
+                    <div className="mt-1.5">
+                      <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Response</span>
+                      <pre className="text-xs mt-0.5 bg-zinc-950 p-2 rounded overflow-x-auto max-h-48 overflow-y-auto text-zinc-300">
+                        {Object.entries(req.responseHeaders!).map(([k, v]) => `${k}: ${v}`).join('\n')}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+              {subTab === 'request-payload' && hasRequestPayload && (
+                <pre className="text-xs bg-zinc-950 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto font-mono text-zinc-300">
+                  {formatPayload(req.requestPayload!)}
+                </pre>
+              )}
+              {subTab === 'response-payload' && hasResponsePayload && (
+                <pre className="text-xs bg-zinc-950 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto font-mono text-zinc-300">
+                  {formatPayload(req.responsePayload!)}
+                </pre>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ─────────────────────── ConsoleLogRow ─────────────────────── */
+
+const ConsoleLogRow: React.FC<{ log: import('@/types/telemetry').ConsoleLogEntry }> = ({ log }) => (
+  <div className="flex gap-2.5 text-sm py-1.5 font-mono">
+    <span className="text-xs text-zinc-600 whitespace-nowrap shrink-0">
+      {new Date(log.timestamp).toISOString().split('T')[1].slice(0, -1)}
+    </span>
+    <span
+      className={`font-semibold uppercase w-10 shrink-0 text-xs ${
+        log.level === 'error' ? 'text-red-400' : log.level === 'warn' ? 'text-amber-400' : 'text-emerald-400'
+      }`}
+    >
+      {log.level}
+    </span>
+    <span className="break-all text-zinc-300">{log.message}</span>
+  </div>
+);
+
+/* ─────────────────────── Tab definitions ───────────────────── */
+
+interface TabDef {
+  id: RightTabId;
+  icon: React.ReactNode;
+  label: string;
+  count?: number;
+}
+
+/* ─────────────────────── RecordingDetailSkeleton ───────────── */
+
+export const RecordingDetailSkeleton: React.FC = () => {
+  return (
+    <div className="flex flex-col h-full bg-white overflow-hidden">
+      {/* Header Skeleton */}
+      <header className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 shrink-0 mt-0.5 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-64 rounded-md" />
+              <Skeleton className="h-4 w-40 rounded-md" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 pt-1">
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="h-9 w-24 rounded-md" />
+          </div>
+        </div>
+      </header>
+
+          {/* Main Split Pane Skeleton */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Pane */}
+        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/30">
+          <ScrollArea className="flex-1">
+            <div className="p-8 space-y-6 max-w-3xl">
+              {/* Metadata */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Skeleton className="h-7 w-28 rounded-md" />
+                <Skeleton className="h-5 w-24 rounded-md" />
+                <Skeleton className="h-5 w-32 rounded-md" />
+              </div>
+
+              {/* Video Skeleton */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-24 rounded-md" />
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                </div>
+                <Skeleton className="aspect-video w-full rounded-lg" />
+              </div>
+
+              {/* Steps Skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-28 rounded-md" />
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 py-4 px-4">
+                    <Skeleton className="h-5 w-5 rounded-md" />
+                    <Skeleton className="h-5 w-5 rounded-md" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-3/4 rounded-md" />
+                      <Skeleton className="h-4 w-1/2 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px bg-zinc-200 shrink-0" />
+
+        {/* Right Pane */}
+        <div className="w-[480px] flex shrink-0 bg-white">
+          {/* Vertical Tab Strip */}
+          <div className="w-14 border-r border-zinc-200 flex flex-col items-center py-3 gap-1 shrink-0 bg-zinc-50/50">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-10 w-10 rounded-md" />
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between shrink-0">
+              <Skeleton className="h-5 w-24 rounded-md" />
+            </div>
+            <div className="flex-1 p-5 space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Bar Skeleton */}
+      <div className="shrink-0 border-t border-zinc-200 bg-zinc-50 px-6 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="h-4 w-20 rounded-md" />
+          <Skeleton className="h-4 w-24 rounded-md" />
+        </div>
+        <Skeleton className="h-7 w-24 rounded-md" />
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────── RecordingDetailPage ───────────────── */
+
 interface RecordingDetailProps {
   blueprint: TestBlueprint;
 }
 
-export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({
-  blueprint,
-}) => {
-  const { pop } = useNavigation();
+export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }) => {
+  const navigate = useNavigate();
   const [showVideo, setShowVideo] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('steps');
+  const [activeTab, setActiveTab] = useState<RightTabId>('steps');
+  const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
 
   const telemetry = blueprint.telemetry;
   const hasTelemetry = !!telemetry;
 
   const handleRunTest = () => {
-    chrome.runtime.sendMessage({
-      type: MessageType.START_PLAYBACK,
-      data: { blueprint, active: false },
-    });
+    // Playback functionality requires a test runner
+    // This would need to be implemented via a backend service
+    toast.info('Playback feature requires a test runner service');
   };
 
   const handleCopyVideoLink = () => {
@@ -219,7 +458,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({
     }
     const transcript = generateLLMTranscript(
       telemetry,
-      blueprint.steps.map(s => ({
+      blueprint.steps.map((s) => ({
         action: s.action,
         description: s.description,
         value: s.value,
@@ -230,487 +469,459 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({
     toast.success('LLM transcript copied to clipboard');
   };
 
-  const getStepIcon = (action: string) => {
-    switch (action) {
-      case 'click':
-        return <MousePointer2 className="w-4 h-4" />;
-      case 'type':
-        return <Type className="w-4 h-4" />;
-      case 'navigate':
-        return <Navigation className="w-4 h-4" />;
-      case 'select':
-        return <ListFilter className="w-4 h-4" />;
-      case 'assert':
-        return <CheckCircle2 className="w-4 h-4 text-zinc-600" />;
-      default:
-        return <Database className="w-4 h-4" />;
-    }
-  };
-
-  const tabs: { id: TabId; label: string; icon: React.ReactNode; count?: number }[] = [
-    { id: 'steps', label: 'Steps', icon: <ListFilter className="w-3.5 h-3.5" /> },
+  const tabs: TabDef[] = [
+    { id: 'steps', icon: <ListFilter className="w-[18px] h-[18px]" />, label: 'Steps', count: blueprint.steps.length },
     ...(hasTelemetry
-      ? [
+      ? ([
           {
-            id: 'console' as TabId,
+            id: 'console' as RightTabId,
+            icon: <Terminal className="w-[18px] h-[18px]" />,
             label: 'Console',
-            icon: <Terminal className="w-3.5 h-3.5" />,
             count: telemetry?.consoleLogs?.length,
           },
           {
-            id: 'network' as TabId,
+            id: 'network' as RightTabId,
+            icon: <Globe className="w-[18px] h-[18px]" />,
             label: 'Network',
-            icon: <Globe className="w-3.5 h-3.5" />,
             count: telemetry?.networkRequests?.length,
           },
           {
-            id: 'errors' as TabId,
+            id: 'errors' as RightTabId,
+            icon: <Bug className="w-[18px] h-[18px]" />,
             label: 'Errors',
-            icon: <Bug className="w-3.5 h-3.5" />,
             count: telemetry?.jsErrors?.length,
           },
           {
-            id: 'export' as TabId,
-            label: 'Export LLM',
-            icon: <FileCode className="w-3.5 h-3.5" />,
+            id: 'export' as RightTabId,
+            icon: <FileCode className="w-[18px] h-[18px]" />,
+            label: 'Export',
           },
-        ]
+        ] as TabDef[])
       : []),
   ];
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
-      <header className="px-4 py-3 border-b flex items-center gap-3 bg-white shrink-0 z-10">
-        <Button variant="ghost" size="icon" onClick={pop} className="h-8 w-8">
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-semibold text-gray-900 truncate">
-            {blueprint.name}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={handleCopyVideoLink}
-            disabled={!blueprint.video_url}
-          >
-            <Link className="w-3 h-3" />
-            Copy Video Link
-          </Button>
-          <Button size="sm" className="gap-2" onClick={handleRunTest}>
-            <Play className="w-3 h-3 fill-current" />
-            Run Live
-          </Button>
+      {/* Header */}
+      <header className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/recordings' })} className="h-9 w-9 shrink-0 mt-0.5">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold tracking-tight text-gray-900 truncate">{blueprint.name}</h1>
+              <p className="text-sm text-gray-500 mt-1.5">
+                {blueprint.steps.length} steps · Manual Recording
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 h-9 text-sm rounded-md border-zinc-200"
+              onClick={handleCopyVideoLink}
+              disabled={!blueprint.video_url}
+            >
+              <Link className="w-4 h-4" />
+              Copy Video Link
+            </Button>
+            <Button
+              size="sm"
+              className="gap-2 h-9 text-sm rounded-md bg-zinc-900 hover:bg-black text-white"
+              onClick={handleRunTest}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              Run Live
+            </Button>
+          </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden bg-zinc-50">
-        {/* Left Pane: Video and Meta */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto p-6 relative">
-          <div className="max-w-6xl mx-auto w-full space-y-6">
-          {/* Video Player Section */}
-          {blueprint.video_url && (
-            <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <Video className="w-4 h-4" /> Recording Playback
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5 text-zinc-500 hover:text-zinc-700"
-                  onClick={() => setShowVideo(!showVideo)}
-                >
-                  {showVideo ? (
-                    <>
-                      <EyeOff className="w-3.5 h-3.5" />
-                      Hide Video
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3.5 h-3.5" />
-                      Show Video
-                    </>
-                  )}
-                </Button>
-              </div>
-              {showVideo ? (
-                <div className="aspect-video w-full overflow-hidden rounded-xl border border-zinc-200 bg-black shadow-sm">
-                  <video
-                    src={blueprint.video_url}
-                    controls
-                    className="h-full w-full object-contain"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              ) : (
-                <div className="flex aspect-video w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-200 bg-zinc-50 text-zinc-400">
-                  <Video className="mb-2 h-8 w-8 opacity-30" />
-                  <span className="text-xs">Video hidden - click "Show Video" to view</span>
-                </div>
-              )}
-            </section>
-          )}
+      {/* Main Split Pane */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* ───── Left Pane: Video + Playhead Steps ───── */}
+        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/30">
+          <ScrollArea className="flex-1">
+            <div className="p-8 space-y-6 max-w-3xl">
+              {/* Metadata */}
+              <section className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-zinc-500 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {telemetry?.endTime
+                    ? formatDuration(telemetry.endTime - telemetry.startTime)
+                    : `${blueprint.steps.length} steps`}
+                </span>
+                <span className="text-sm text-zinc-500 flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5" />
+                  {blueprint.projectDetails?.nameWithNamespace ||
+                    blueprint.project_name ||
+                    blueprint.project_id?.toString() ||
+                    'Unassigned'}
+                </span>
+              </section>
 
-          
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-4 flex-1">
+              {/* Video */}
+              {blueprint.video_url && (
+                <section className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-zinc-700 flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-zinc-500" />
+                      Playback
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1.5 text-zinc-500 hover:text-zinc-700 rounded-md"
+                      onClick={() => setShowVideo(!showVideo)}
+                    >
+                      {showVideo ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5" />
+                          Show
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <AnimatePresence mode="wait">
+                    {showVideo ? (
+                      <motion.div
+                        key="video"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="aspect-video w-full overflow-hidden rounded-lg border border-zinc-200 bg-black"
+                      >
+                        <video src={blueprint.video_url} controls className="h-full w-full object-contain">
+                          Your browser does not support the video tag.
+                        </video>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        key="placeholder"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex aspect-video w-full flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400 cursor-pointer hover:bg-zinc-100 transition-colors"
+                        onClick={() => setShowVideo(true)}
+                      >
+                        <Video className="mb-1.5 h-6 w-6 opacity-30" />
+                        <span className="text-sm font-medium">Click to show video</span>
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </section>
+              )}
+
               {/* Description */}
-          {blueprint.description && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Description
-              </h2>
-              <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-100">
-                {blueprint.description}
-              </p>
-            </section>
-          )}
-
-          
-              {/* Source Type Indicator */}
-          {blueprint.source_type && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Source
-              </h2>
-              {blueprint.source_type === 'test_scenario' ? (
-                <Badge variant="secondary" className="gap-1 bg-purple-50 text-purple-700 border-purple-200">
-                  <FileText className="w-3 h-3" />
-                  Generated from Test Scenario
-                  {blueprint.source_id && (
-                    <span className="text-[10px] opacity-70 ml-1">({blueprint.source_id.slice(0, 8)}...)</span>
-                  )}
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="gap-1 bg-blue-50 text-blue-700 border-blue-200">
-                  <User className="w-3 h-3" />
-                  Manual Recording
-                </Badge>
+              {blueprint.description && (
+                <p className="text-base text-zinc-600 leading-relaxed">{blueprint.description}</p>
               )}
-            </section>
-          )}
 
-          
+              {/* Playhead Steps */}
+              <section>
+                <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-3 px-4">
+                  Test Steps
+                </h2>
+                <div className="space-y-0">
+                  {blueprint.steps.map((step, index) => (
+                    <PlayheadStep
+                      key={index}
+                      step={step}
+                      index={index}
+                      isLast={index === blueprint.steps.length - 1}
+                      isActive={activeStepIndex === index}
+                      onClick={() => setActiveStepIndex(index)}
+                      stepContext={telemetry?.stepsWithContext?.find((c) => c.stepIndex === index)}
+                    />
+                  ))}
+                </div>
+              </section>
             </div>
-          </div>
-
-          {/* Metadata */}
-          <div className="flex gap-4">
-            <div className="flex-1 p-3 bg-zinc-50 rounded-lg border border-zinc-100">
-              <div className="text-xs text-zinc-500 font-medium mb-1 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Duration
-              </div>
-              <div className="text-sm font-semibold text-zinc-900">
-                {telemetry?.endTime
-                  ? formatDuration(telemetry.endTime - telemetry.startTime)
-                  : `${blueprint.steps.length} Steps`}
-              </div>
-            </div>
-            <div className="flex-1 p-3 bg-zinc-50 rounded-lg border border-zinc-100">
-              <div className="text-xs text-zinc-500 font-medium mb-1 flex items-center gap-1">
-                <Database className="w-3 h-3" /> Project
-              </div>
-              <div className="text-sm font-semibold text-zinc-900 truncate" title={blueprint.projectDetails?.nameWithNamespace || blueprint.project_name || ''}>
-                {blueprint.projectDetails?.nameWithNamespace || blueprint.project_name || blueprint.project_id?.toString() || 'Unassigned'}
-              </div>
-            </div>
-          </div>
-
-          {/* Telemetry Stats Bar */}
-          {hasTelemetry && (
-            <div className="grid grid-cols-4 gap-2">
-              <div className="p-2 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                <div className="text-lg font-bold text-blue-700">{telemetry?.consoleLogs?.length || 0}</div>
-                <div className="text-[10px] text-blue-500 font-medium">Console Logs</div>
-              </div>
-              <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100 text-center">
-                <div className="text-lg font-bold text-emerald-700">{telemetry?.networkRequests?.length || 0}</div>
-                <div className="text-[10px] text-emerald-500 font-medium">Network</div>
-              </div>
-              <div className={`p-2 rounded-lg border text-center ${(telemetry?.jsErrors?.length || 0) > 0 ? 'bg-red-50 border-red-100' : 'bg-zinc-50 border-zinc-100'}`}>
-                <div className={`text-lg font-bold ${(telemetry?.jsErrors?.length || 0) > 0 ? 'text-red-700' : 'text-zinc-700'}`}>{telemetry?.jsErrors?.length || 0}</div>
-                <div className={`text-[10px] font-medium ${(telemetry?.jsErrors?.length || 0) > 0 ? 'text-red-500' : 'text-zinc-500'}`}>JS Errors</div>
-              </div>
-              <div className="p-2 bg-amber-50 rounded-lg border border-amber-100 text-center">
-                <div className="text-lg font-bold text-amber-700">{telemetry?.domMutations?.length || 0}</div>
-                <div className="text-[10px] text-amber-500 font-medium">DOM Mutations</div>
-              </div>
-            </div>
-          )}
-
-          </div>
+          </ScrollArea>
         </div>
 
-        {/* Right Pane: Sidebar with Tabs */}
-        <div className="w-[450px] border-l bg-white flex flex-col shrink-0 z-10 shadow-[-4px_0_24px_-16px_rgba(0,0,0,0.05)]">
-          {/* Tabs */}
-          <div className="flex gap-1 border-b border-gray-200 px-2 pt-2 pb-0 overflow-x-auto shrink-0 bg-gray-50/80">
-            {tabs.map(tab => (
+        {/* Divider */}
+        <div className="w-px bg-zinc-200 shrink-0" />
+
+        {/* ───── Right Pane: Sidebar with Vertical Tabs ───── */}
+        <div className="w-[480px] flex shrink-0 bg-white">
+          {/* Vertical Tab Strip */}
+          <div className="w-14 border-r border-zinc-200 flex flex-col items-center py-3 gap-1 shrink-0 bg-zinc-50/50">
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors whitespace-nowrap ${
+                title={tab.label}
+                className={`relative w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
                   activeTab === tab.id
-                    ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? 'bg-white text-zinc-900 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
                 }`}
               >
                 {tab.icon}
-                {tab.label}
                 {typeof tab.count === 'number' && tab.count > 0 && (
-                  <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-                    activeTab === tab.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {tab.count}
+                  <span
+                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[10px] font-bold px-1 ${
+                      tab.id === 'errors' && tab.count > 0
+                        ? 'bg-red-500 text-white'
+                        : activeTab === tab.id
+                          ? 'bg-zinc-900 text-white'
+                          : 'bg-zinc-300 text-white'
+                    }`}
+                  >
+                    {tab.count > 99 ? '99+' : tab.count}
                   </span>
                 )}
               </button>
             ))}
           </div>
 
-          <ScrollArea className="flex-1">
-            <div className="p-4">
           {/* Tab Content */}
-          {activeTab === 'steps' && (
-            <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Test Steps
-              </h2>
-              <div className="space-y-3">
-                {blueprint.steps.map((step, index) => (
-                  <div key={index} className="flex gap-3 group">
-                    <div className="flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center border border-gray-200">
-                        {index + 1}
-                      </div>
-                      {index < blueprint.steps.length - 1 && (
-                        <div className="w-px flex-1 bg-gray-200 my-1" />
-                      )}
-                    </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="p-1 bg-gray-100 rounded text-gray-600">
-                          {getStepIcon(step.action)}
-                        </span>
-                        <span className="text-sm font-medium text-gray-900 capitalize">
-                          {step.action}
-                        </span>
-                        {step.value && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] py-0 font-normal whitespace-normal break-words max-w-full"
-                          >
-                            {step.value}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {step.description}
-                      </p>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[9px] text-gray-400 uppercase">CSS:</span>
-                          <code className="text-[10px] bg-gray-50 text-blue-600 px-1.5 py-0.5 rounded border border-gray-100 block truncate max-w-full">
-                            {step.selector}
-                          </code>
-                        </div>
-                        {step.xpath && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-[9px] text-gray-400 uppercase">XPath:</span>
-                            <code className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-100 block truncate max-w-full">
-                              {step.xpath}
-                            </code>
-                          </div>
-                        )}
-                        {step.xpathCandidates && step.xpathCandidates.length > 0 && (
-                          <details className="group">
-                            <summary className="text-[9px] text-amber-500 uppercase cursor-pointer hover:text-amber-600">
-                              {step.xpathCandidates.length} XPath candidates
-                            </summary>
-                            <div className="mt-1 space-y-0.5 pl-3">
-                              {step.xpathCandidates.map((xpath, i) => (
-                                <code key={i} className="text-[10px] bg-amber-50/50 text-amber-600 px-1 py-0.5 rounded block truncate max-w-full">
-                                  {i + 1}. {xpath}
-                                </code>
-                              ))}
-                            </div>
-                          </details>
-                        )}
-                        {step.selectorCandidates && step.selectorCandidates.length > 0 && (
-                          <details className="group">
-                            <summary className="text-[9px] text-blue-400 uppercase cursor-pointer hover:text-blue-500">
-                              {step.selectorCandidates.length} CSS candidates
-                            </summary>
-                            <div className="mt-1 space-y-0.5 pl-3">
-                              {step.selectorCandidates.map((sel, i) => (
-                                <code key={i} className="text-[10px] bg-blue-50/50 text-blue-600 px-1 py-0.5 rounded block truncate max-w-full">
-                                  {i + 1}. {sel}
-                                </code>
-                              ))}
-                            </div>
-                          </details>
-                        )}
-                      </div>
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Tab header */}
+            <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between shrink-0">
+              <span className="text-sm font-semibold text-zinc-700">
+                {tabs.find((t) => t.id === activeTab)?.label}
+              </span>
+              {activeTab === 'export' && (
+                <Button
+                  size="sm"
+                  className="h-7 text-xs gap-1.5 rounded-md bg-zinc-900 hover:bg-black text-white"
+                  onClick={handleExportLLM}
+                  disabled={!hasTelemetry}
+                >
+                  <Copy className="w-3 h-3" />
+                  Copy
+                </Button>
+              )}
+            </div>
 
-                      {/* Step Context from Telemetry */}
-                      {telemetry?.stepsWithContext?.find(c => c.stepIndex === index) && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-100 space-y-1">
-                          {(() => {
-                            const ctx = telemetry.stepsWithContext!.find(c => c.stepIndex === index)!;
-                            return (
-                              <>
+            <ScrollArea className="flex-1">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="p-5"
+                >
+                  {/* Steps Tab */}
+                  {activeTab === 'steps' && (
+                    <div className="space-y-4">
+                      {blueprint.steps.map((step, index) => {
+                        const ctx = telemetry?.stepsWithContext?.find((c) => c.stepIndex === index);
+                        return (
+                          <div
+                            key={index}
+                            className={`p-4 rounded-lg border transition-colors ${
+                              activeStepIndex === index
+                                ? 'bg-zinc-50 border-zinc-300'
+                                : 'bg-white border-zinc-100 hover:border-zinc-200'
+                            }`}
+                            onClick={() => setActiveStepIndex(index)}
+                          >
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-sm font-mono text-zinc-400 w-5">{index + 1}</span>
+                              <span className="p-1 bg-zinc-100 rounded text-zinc-500">{getStepIcon(step.action)}</span>
+                              <span className="text-sm font-semibold text-zinc-900 capitalize">{step.action}</span>
+                              {step.value && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs py-0 font-normal bg-zinc-100 text-zinc-600 border-zinc-200"
+                                >
+                                  {step.value}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-zinc-600 mb-2 pl-7">{step.description}</p>
+                            <div className="pl-7 space-y-1">
+                              <code className="text-xs bg-zinc-50 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-100 block truncate font-mono">
+                                {step.selector}
+                              </code>
+                              {step.xpath && (
+                                <code className="text-xs bg-zinc-50 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-100 block truncate font-mono">
+                                  {step.xpath}
+                                </code>
+                              )}
+                            </div>
+                            {ctx && (
+                              <div className="pl-7 mt-2.5 flex flex-wrap gap-2">
                                 {(ctx.surroundingErrors?.length || 0) > 0 && (
-                                  <div className="flex items-center gap-1.5">
-                                    <Bug className="w-3 h-3 text-red-500" />
-                                    <span className="text-[10px] text-red-600 font-medium">{ctx.surroundingErrors!.length} error(s) near this step</span>
-                                  </div>
+                                  <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded">
+                                    {ctx.surroundingErrors!.length} errors
+                                  </span>
                                 )}
-                                {(ctx.surroundingRequests?.filter(r => r.status && r.status >= 400).length || 0) > 0 && (
-                                  <div className="flex items-center gap-1.5">
-                                    <Globe className="w-3 h-3 text-amber-500" />
-                                    <span className="text-[10px] text-amber-600 font-medium">
-                                      {ctx.surroundingRequests?.filter(r => r.status && r.status >= 400).length || 0} failed request(s)
-                                    </span>
-                                  </div>
+                                {(ctx.surroundingRequests?.filter((r) => r.status && r.status >= 400).length || 0) >
+                                  0 && (
+                                  <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                                    {ctx.surroundingRequests!.filter((r) => r.status && r.status >= 400).length} failed
+                                  </span>
                                 )}
                                 {ctx.domMutationCount > 0 && (
-                                  <div className="flex items-center gap-1.5">
-                                    <Database className="w-3 h-3 text-blue-500" />
-                                    <span className="text-[10px] text-blue-600 font-medium">{ctx.domMutationCount} DOM mutation(s)</span>
-                                  </div>
+                                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                    {ctx.domMutationCount} mutations
+                                  </span>
                                 )}
-                              </>
-                            );
-                          })()}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Console Tab — Dark */}
+                  {activeTab === 'console' && telemetry && (
+                    <div className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-zinc-500" />
+                        <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                          Console
+                        </span>
+                      </div>
+                      <div className="p-4 max-h-[600px] overflow-y-auto">
+                        {(telemetry.consoleLogs || []).length === 0 ? (
+                          <p className="text-sm text-zinc-600 italic">No console logs captured.</p>
+                        ) : (
+                          <div className="space-y-0">
+                            {(telemetry.consoleLogs || []).map((log, i) => (
+                              <ConsoleLogRow key={i} log={log} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Network Tab */}
+                  {activeTab === 'network' && telemetry && (
+                    <div className="space-y-0">
+                      {(telemetry.networkRequests || []).length === 0 ? (
+                        <p className="text-base text-zinc-400 italic py-4">No network requests captured.</p>
+                      ) : (
+                        <div className="divide-y divide-zinc-100">
+                          {(telemetry.networkRequests || []).map((req, i) => (
+                            <ExpandableNetworkRow key={i} req={req} />
+                          ))}
                         </div>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'console' && telemetry && (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <Terminal className="w-4 h-4" /> Console Logs
-                </h2>
-              </div>
-              <div className="space-y-1">
-                {(telemetry.consoleLogs || []).length === 0 && (
-                  <p className="text-sm text-gray-400 italic">No console logs captured.</p>
-                )}
-                {(telemetry.consoleLogs || []).map((log, i) => (
-                  <div key={i} className={`flex gap-2 text-xs p-2 rounded border ${
-                    log.level === 'error' ? 'bg-red-50 border-red-100 text-red-800' :
-                    log.level === 'warn' ? 'bg-amber-50 border-amber-100 text-amber-800' :
-                    'bg-gray-50 border-gray-100 text-gray-700'
-                  }`}>
-                    <span className="font-mono text-[10px] opacity-50 whitespace-nowrap">
-                      {new Date(log.timestamp).toISOString().split('T')[1].slice(0, -1)}
-                    </span>
-                    <span className="font-semibold uppercase w-10 shrink-0">{log.level}</span>
-                    <span className="break-all font-mono">{log.message}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'network' && telemetry && (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <Globe className="w-4 h-4" /> Network Requests
-                </h2>
-              </div>
-              <div className="space-y-1">
-                {(telemetry.networkRequests || []).length === 0 && (
-                  <p className="text-sm text-gray-400 italic">No network requests captured.</p>
-                )}
-                {(telemetry.networkRequests || []).map((req, i) => (
-                  <ExpandableNetworkRequest key={i} req={req} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'errors' && telemetry && (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <Bug className="w-4 h-4" /> JavaScript Errors
-                </h2>
-              </div>
-              <div className="space-y-2">
-                {(telemetry.jsErrors || []).length === 0 && (
-                  <p className="text-sm text-gray-400 italic">No JavaScript errors captured.</p>
-                )}
-                {(telemetry.jsErrors || []).map((err, i) => (
-                  <div key={i} className="p-3 bg-red-50 rounded-lg border border-red-100">
-                    <div className="flex items-center gap-2 mb-1">
-                      <AlertCircle className="w-4 h-4 text-red-500" />
-                      <span className="text-xs font-mono text-red-700">
-                        {new Date(err.timestamp).toISOString().split('T')[1].slice(0, -1)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-red-800 font-medium">{err.message}</p>
-                    {err.source && (
-                      <p className="text-xs text-red-600 mt-1">
-                        {err.source}:{err.line}:{err.column}
-                      </p>
-                    )}
-                    {err.stack && (
-                      <pre className="text-[10px] text-red-600 mt-2 overflow-x-auto bg-red-100/50 p-2 rounded">
-                        {err.stack}
-                      </pre>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'export' && telemetry && (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <FileCode className="w-4 h-4" /> Export for LLM
-                </h2>
-                <Button size="sm" className="gap-2" onClick={handleExportLLM}>
-                  <Copy className="w-3 h-3" />
-                  Copy Transcript
-                </Button>
-              </div>
-              <p className="text-sm text-gray-600">
-                Generate a Markdown transcript optimized for pasting into ChatGPT, Claude, or other LLMs.
-                It includes step-by-step context with console logs, network requests, and errors.
-              </p>
-              <div className="bg-gray-900 rounded-lg p-4 max-h-[400px] overflow-y-auto">
-                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
-                  {generateLLMTranscript(
-                    telemetry,
-                    blueprint.steps.map(s => ({
-                      action: s.action,
-                      description: s.description,
-                      value: s.value,
-                      selector: s.selector,
-                    }))
                   )}
-                </pre>
-              </div>
-            </section>
-          )}
-            </div>
-          </ScrollArea>
+
+                  {/* Errors Tab — Dark */}
+                  {activeTab === 'errors' && telemetry && (
+                    <div className="space-y-4">
+                      {(telemetry.jsErrors || []).length === 0 ? (
+                        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                          <p className="text-sm text-zinc-600 italic">No JavaScript errors captured.</p>
+                        </div>
+                      ) : (
+                        (telemetry.jsErrors || []).map((err, i) => (
+                          <div key={i} className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertCircle className="w-4 h-4 text-red-500" />
+                              <span className="text-xs font-mono text-zinc-500">
+                                {new Date(err.timestamp).toISOString().split('T')[1].slice(0, -1)}
+                              </span>
+                            </div>
+                            <p className="text-base text-red-400 font-medium">{err.message}</p>
+                            {err.source && (
+                              <p className="text-sm text-zinc-500 mt-1.5">
+                                {err.source}:{err.line}:{err.column}
+                              </p>
+                            )}
+                            {err.stack && (
+                              <pre className="text-xs text-zinc-500 mt-3 overflow-x-auto bg-zinc-950 p-3 rounded border border-zinc-800">
+                                {err.stack}
+                              </pre>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Export Tab — Dark */}
+                  {activeTab === 'export' && telemetry && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-zinc-500 leading-relaxed">
+                        Markdown transcript optimized for ChatGPT, Claude, or other LLMs. Includes step-by-step
+                        context with console logs, network requests, and errors.
+                      </p>
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                            Preview
+                          </span>
+                          <span className="text-sm text-zinc-600">{generateLLMTranscript.length} chars</span>
+                        </div>
+                        <pre className="p-4 text-xs text-zinc-300 whitespace-pre-wrap font-mono max-h-[500px] overflow-y-auto leading-relaxed">
+                          {generateLLMTranscript(
+                            telemetry,
+                            blueprint.steps.map((s) => ({
+                              action: s.action,
+                              description: s.description,
+                              value: s.value,
+                              selector: s.selector,
+                            }))
+                          )}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </ScrollArea>
+          </div>
         </div>
+      </div>
+
+      {/* Status Bar */}
+      <div className="shrink-0 border-t border-zinc-200 bg-zinc-50 px-6 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-zinc-500">
+            Step {activeStepIndex + 1} of {blueprint.steps.length}
+          </span>
+          {hasTelemetry && (
+            <>
+              <span className="text-sm text-zinc-400">·</span>
+              <span className="text-sm text-zinc-500">
+                {telemetry?.consoleLogs?.length || 0} logs
+              </span>
+              <span className="text-sm text-zinc-400">·</span>
+              <span className="text-sm text-zinc-500">
+                {telemetry?.networkRequests?.length || 0} requests
+              </span>
+              {(telemetry?.jsErrors?.length || 0) > 0 && (
+                <>
+                  <span className="text-sm text-zinc-400">·</span>
+                  <span className="text-sm text-red-600 font-medium">
+                    {telemetry?.jsErrors?.length} errors
+                  </span>
+                </>
+              )}
+            </>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-sm gap-1.5 text-zinc-500 hover:text-zinc-900 rounded-md"
+          onClick={handleExportLLM}
+          disabled={!hasTelemetry}
+        >
+          <FileCode className="w-3.5 h-3.5" />
+          Export LLM
+        </Button>
       </div>
     </div>
   );

@@ -39,7 +39,7 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
     if (resourceId) params.set('resourceId', resourceId);
     if (type) params.set('type', type);
 
-    const url = `https://playground-qa-extension.online/api/stream${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `/api/stream${params.toString() ? `?${params.toString()}` : ''}`;
     console.log('[useStreamEvents] Connecting to:', url);
 
     const eventSource = new EventSource(url);
