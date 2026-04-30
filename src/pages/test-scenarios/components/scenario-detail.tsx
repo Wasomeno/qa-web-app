@@ -59,6 +59,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -1656,6 +1666,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   const [page, setPage] = useState(1);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showGenModal, setShowGenModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<TestCaseStatus | 'all'>('all');
   const [runState, setRunState] = useState<TestRunState | null>(null);
   const ITEMS_PER_PAGE = 10;
@@ -1862,7 +1873,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               <Button
                 variant="ghost"
                 className="h-9 px-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg gap-2 text-sm"
-                onClick={onDelete}
+                onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
@@ -2117,6 +2128,27 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
           setShowGenModal(false);
         }}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Test Scenario</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{scenario.title}</strong>? This action cannot be undone. All test cases and their automation data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={onDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
