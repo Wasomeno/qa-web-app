@@ -108,6 +108,18 @@ export const testScenarioApi = {
     return response.data!;
   },
 
+  runScenarioTestCase: async (
+    id: string,
+    sectionId: string,
+    tcId: string
+  ): Promise<{ message: string; id: string }> => {
+    const response = await api.post<{ message: string; id: string }>(
+      `/test-scenarios/${id}/sections/${sectionId}/test-cases/${tcId}/run`
+    );
+    if (!response.success) throw new Error(response.error);
+    return response.data!;
+  },
+
   reorderTestCases: async (
     id: string,
     sectionId: string,

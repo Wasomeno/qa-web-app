@@ -7,7 +7,6 @@ import {
   ChevronUp,
   Search,
   Play,
-  Pause,
   Square,
   Trash2,
   CheckCircle2,
@@ -82,6 +81,7 @@ import {
   TestCaseStatus,
   AutomationStatus,
 } from '@/types/test-scenario';
+import { testScenarioApi } from '@/api/test-scenario';
 
 // ─────────────────────────────────────────────
 // Inline Edit Field
@@ -718,151 +718,130 @@ interface TestRunState {
   errorMessage?: string;
 }
 
-function useTestRunSimulator(
+function useTestRunner(
+  scenarioId: string,
+  sectionId: string,
   testCase: TestCase,
   state: TestRunState | null,
   onUpdateState: React.Dispatch<React.SetStateAction<TestRunState | null>>,
-  onComplete: (result: { status: 'pass' | 'fail'; durationMs: number; errorMessage?: string }) => void
+  onTestCaseUpdate: (tc: TestCase) => void
 ) {
-  const startTimeRef = useRef<number>(0);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearAllTimers = useCallback(() => {
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
+  const clearPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
-  const start = useCallback(() => {
-    clearAllTimers();
-    startTimeRef.current = Date.now();
+  // If the test case is already running when the component mounts, start polling
+  React.useEffect(() => {
+    if (
+      testCase.automationTest?.status === 'running' &&
+      (!state || state.testCaseId !== testCase.id)
+    ) {
+      onUpdateState({
+        testCaseId: testCase.id,
+        phase: 'running',
+        currentStepIndex: 0,
+        completedStepIds: new Set(),
+        result: null,
+      });
 
-    const newState: TestRunState = {
+      intervalRef.current = setInterval(async () => {
+        try {
+          const scenario = await testScenarioApi.getScenario(scenarioId);
+          const section = scenario.sections?.find(s => s.id === sectionId);
+          const updatedTc = section?.testCases.find(tc => tc.id === testCase.id);
+
+          if (updatedTc?.automationTest && updatedTc.automationTest.status !== 'running') {
+            clearPolling();
+            onTestCaseUpdate(updatedTc);
+            onUpdateState(prev => {
+              if (!prev || prev.testCaseId !== testCase.id) return prev;
+              return {
+                ...prev,
+                phase: 'completed',
+                result: updatedTc.automationTest!.status === 'pass' ? 'pass' : 'fail',
+              };
+            });
+            setTimeout(() => onUpdateState(null), 800);
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 3000);
+    }
+
+    return () => clearPolling();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const start = useCallback(async () => {
+    clearPolling();
+
+    onUpdateState({
       testCaseId: testCase.id,
       phase: 'running',
       currentStepIndex: 0,
       completedStepIds: new Set(),
       result: null,
-    };
-    onUpdateState(newState);
-
-    // Run each step with simulated delay
-    testCase.steps.forEach((step, idx) => {
-      const delay = (idx + 1) * 1200 + Math.random() * 400;
-      const timer = setTimeout(() => {
-        onUpdateState(prev => {
-          if (!prev || prev.phase === 'cancelled') return prev;
-          if (prev.phase === 'paused') {
-            // Will be resumed by resume()
-            return prev;
-          }
-          const completed = new Set(prev.completedStepIds);
-          completed.add(step.id);
-          return {
-            ...prev,
-            currentStepIndex: idx + 1,
-            completedStepIds: completed,
-          };
-        });
-      }, delay);
-      timersRef.current.push(timer);
     });
 
-    // Completion
-    const totalDelay = (testCase.steps.length + 1) * 1200 + 300;
-    const completionTimer = setTimeout(() => {
+    try {
+      await testScenarioApi.runScenarioTestCase(scenarioId, sectionId, testCase.id);
+    } catch (err) {
+      console.error('Failed to start test:', err);
       onUpdateState(prev => {
-        if (!prev || prev.phase === 'cancelled') return prev;
-        // 85% pass rate for demo
-        const passed = Math.random() > 0.15;
-        const result: TestRunState = {
+        if (!prev || prev.testCaseId !== testCase.id) return prev;
+        return {
           ...prev,
           phase: 'completed',
-          result: passed ? 'pass' : 'fail',
-          errorMessage: passed
-            ? undefined
-            : `Assertion failed at step ${Math.floor(Math.random() * testCase.steps.length) + 1}: Expected element to be visible, but it was not found in DOM.`,
+          result: 'fail',
+          errorMessage: err instanceof Error ? err.message : 'Failed to start test execution',
         };
-        return result;
       });
-      const duration = Date.now() - startTimeRef.current;
-      const passed = Math.random() > 0.15;
-      onComplete({
-        status: passed ? 'pass' : 'fail',
-        durationMs: duration,
-        errorMessage: passed
-          ? undefined
-          : `Assertion failed at step ${Math.floor(Math.random() * testCase.steps.length) + 1}: Expected element to be visible, but it was not found in DOM.`,
-      });
-    }, totalDelay);
-    timersRef.current.push(completionTimer);
-  }, [testCase, onUpdateState, onComplete, clearAllTimers]);
+      setTimeout(() => onUpdateState(null), 2000);
+      return;
+    }
 
-  const pause = useCallback(() => {
-    clearAllTimers();
-    onUpdateState(prev => (prev ? { ...prev, phase: 'paused' } : prev));
-  }, [onUpdateState, clearAllTimers]);
+    // Start polling for completion
+    intervalRef.current = setInterval(async () => {
+      try {
+        const scenario = await testScenarioApi.getScenario(scenarioId);
+        const section = scenario.sections?.find(s => s.id === sectionId);
+        const updatedTc = section?.testCases.find(tc => tc.id === testCase.id);
 
-  const resume = useCallback(() => {
-    onUpdateState(prev => {
-      if (!prev || prev.phase !== 'paused') return prev;
-      const remainingSteps = testCase.steps.filter(s => !prev.completedStepIds.has(s.id));
-      const nextIdx = testCase.steps.length - remainingSteps.length;
-
-      // Resume from current position
-      remainingSteps.forEach((step, i) => {
-        const delay = (i + 1) * 1200 + Math.random() * 400;
-        const timer = setTimeout(() => {
-          onUpdateState(p => {
-            if (!p || p.phase === 'cancelled') return p;
-            const completed = new Set(p.completedStepIds);
-            completed.add(step.id);
-            return { ...p, currentStepIndex: nextIdx + i + 1, completedStepIds: completed };
+        if (updatedTc?.automationTest && updatedTc.automationTest.status !== 'running') {
+          clearPolling();
+          onTestCaseUpdate(updatedTc);
+          onUpdateState(prev => {
+            if (!prev || prev.testCaseId !== testCase.id) return prev;
+            return {
+              ...prev,
+              phase: 'completed',
+              result: updatedTc.automationTest!.status === 'pass' ? 'pass' : 'fail',
+            };
           });
-        }, delay);
-        timersRef.current.push(timer);
-      });
-
-      const totalDelay = (remainingSteps.length + 1) * 1200 + 300;
-      const completionTimer = setTimeout(() => {
-        onUpdateState(p => {
-          if (!p || p.phase === 'cancelled') return p;
-          const passed = Math.random() > 0.15;
-          return {
-            ...p,
-            phase: 'completed',
-            result: passed ? 'pass' : 'fail',
-            errorMessage: passed
-              ? undefined
-              : `Assertion failed at step ${Math.floor(Math.random() * testCase.steps.length) + 1}: Expected element to be visible, but it was not found in DOM.`,
-          };
-        });
-        const duration = Date.now() - startTimeRef.current;
-        const passed = Math.random() > 0.15;
-        onComplete({
-          status: passed ? 'pass' : 'fail',
-          durationMs: duration,
-          errorMessage: passed
-            ? undefined
-            : `Assertion failed at step ${Math.floor(Math.random() * testCase.steps.length) + 1}: Expected element to be visible, but it was not found in DOM.`,
-        });
-      }, totalDelay);
-      timersRef.current.push(completionTimer);
-
-      return { ...prev, phase: 'running' };
-    });
-  }, [testCase, onUpdateState, onComplete]);
+          setTimeout(() => onUpdateState(null), 800);
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 3000);
+  }, [scenarioId, sectionId, testCase, onUpdateState, onTestCaseUpdate, clearPolling]);
 
   const cancel = useCallback(() => {
-    clearAllTimers();
+    clearPolling();
     onUpdateState(prev => (prev ? { ...prev, phase: 'cancelled' } : prev));
     setTimeout(() => onUpdateState(null), 800);
-  }, [onUpdateState, clearAllTimers]);
+  }, [onUpdateState, clearPolling]);
 
   React.useEffect(() => {
-    return () => clearAllTimers();
-  }, [clearAllTimers]);
+    return () => clearPolling();
+  }, [clearPolling]);
 
-  return { start, pause, resume, cancel };
+  return { start, cancel };
 }
 
 // ─────────────────────────────────────────────
@@ -871,30 +850,19 @@ function useTestRunSimulator(
 const TestRunPanel: React.FC<{
   testCase: TestCase;
   runState: TestRunState;
-  onPause: () => void;
-  onResume: () => void;
   onCancel: () => void;
-}> = ({ testCase, runState, onPause, onResume, onCancel }) => {
+}> = ({ testCase, runState, onCancel }) => {
   const isRunning = runState.phase === 'running';
-  const isPaused = runState.phase === 'paused';
   const isCompleted = runState.phase === 'completed';
   const isCancelled = runState.phase === 'cancelled';
 
-  // Derive AI-style message from current step
-  const currentStep = testCase.steps[runState.currentStepIndex];
   const message = isCompleted
     ? runState.result === 'pass'
       ? 'All steps completed successfully.'
       : 'Test failed. See details below.'
     : isCancelled
     ? 'Run cancelled by user.'
-    : isPaused
-    ? currentStep
-      ? `Paused at: ${currentStep.action}`
-      : 'Run paused.'
-    : currentStep
-    ? `${currentStep.action}…`
-    : 'Starting test run…';
+    : 'Running automation steps…';
 
   const progressPct =
     testCase.steps.length > 0
@@ -921,7 +889,6 @@ const TestRunPanel: React.FC<{
             className={cn(
               'w-7 h-7 rounded-full flex items-center justify-center shrink-0',
               isRunning && 'bg-amber-100 text-amber-700',
-              isPaused && 'bg-zinc-100 text-zinc-600',
               isCompleted && runState.result === 'pass' && 'bg-emerald-100 text-emerald-700',
               isCompleted && runState.result === 'fail' && 'bg-red-100 text-red-700',
               isCancelled && 'bg-zinc-100 text-zinc-400'
@@ -929,8 +896,6 @@ const TestRunPanel: React.FC<{
           >
             {isRunning ? (
               <Loader2 className="w-4 h-4 animate-spin" />
-            ) : isPaused ? (
-              <Pause className="w-4 h-4" />
             ) : isCompleted && runState.result === 'pass' ? (
               <CheckCircle2 className="w-4 h-4" />
             ) : isCompleted && runState.result === 'fail' ? (
@@ -943,8 +908,6 @@ const TestRunPanel: React.FC<{
             <p className="text-sm font-semibold text-zinc-900 truncate">
               {isRunning
                 ? 'Running Automation Test'
-                : isPaused
-                ? 'Paused'
                 : isCompleted
                 ? runState.result === 'pass'
                   ? 'Passed'
@@ -957,61 +920,26 @@ const TestRunPanel: React.FC<{
 
         {/* Controls */}
         <div className="flex items-center gap-1.5 shrink-0 ml-3">
-          {isRunning ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-amber-600 hover:bg-amber-50"
-                onClick={onPause}
-                title="Pause"
-              >
-                <Pause className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50"
-                onClick={onCancel}
-                title="Cancel"
-              >
-                <Square className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          ) : isPaused ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-amber-600 hover:bg-amber-50"
-                onClick={onResume}
-                title="Resume"
-              >
-                <Play className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50"
-                onClick={onCancel}
-                title="Cancel"
-              >
-                <Square className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          ) : null}
+          {isRunning && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50"
+              onClick={onCancel}
+              title="Cancel"
+            >
+              <Square className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Progress bar */}
-      {(isRunning || isPaused) && (
+      {isRunning && (
         <div className="px-4 pb-3">
           <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
             <div
-              className={cn(
-                'h-full rounded-full transition-all duration-500',
-                isPaused ? 'bg-zinc-400' : 'bg-amber-400'
-              )}
+              className="h-full rounded-full transition-all duration-500 bg-amber-400"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -1028,8 +956,7 @@ const TestRunPanel: React.FC<{
       <div className="px-4 pb-4 space-y-1.5">
         {testCase.steps.map((step, idx) => {
           const isCompleted = runState.completedStepIds.has(step.id);
-          const isCurrent =
-            (isRunning || isPaused) && idx === runState.currentStepIndex;
+          const isCurrent = isRunning && idx === runState.currentStepIndex;
 
           return (
             <div
@@ -1083,44 +1010,17 @@ const RunButton: React.FC<{
   testCase: TestCase;
   runState: TestRunState | null;
   onStart: () => void;
-  onPause: () => void;
-  onResume: () => void;
   onCancel: () => void;
-}> = ({ testCase, runState, onStart, onPause, onResume, onCancel }) => {
+}> = ({ testCase, runState, onStart, onCancel }) => {
   const isThisRunning =
-    runState?.testCaseId === testCase.id &&
-    (runState.phase === 'running' || runState.phase === 'paused');
+    runState?.testCaseId === testCase.id && runState.phase === 'running';
 
   if (isThisRunning) {
     return (
       <div className="flex items-center gap-1">
-        {runState.phase === 'running' ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-md text-amber-600 hover:bg-amber-50"
-            onClick={e => {
-              e.stopPropagation();
-              onPause();
-            }}
-            title="Pause"
-          >
-            <Pause className="w-3.5 h-3.5" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-md text-amber-600 hover:bg-amber-50"
-            onClick={e => {
-              e.stopPropagation();
-              onResume();
-            }}
-            title="Resume"
-          >
-            <Play className="w-3.5 h-3.5" />
-          </Button>
-        )}
+        <div className="h-7 w-7 flex items-center justify-center">
+          <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -1163,13 +1063,15 @@ const RunButton: React.FC<{
 // Sortable Test Case Wrapper
 // ─────────────────────────────────────────────
 const SortableTestCase: React.FC<{
+  scenarioId: string;
+  sectionId: string;
   testCase: TestCase;
   isExpanded: boolean;
   onToggle: () => void;
   onUpdate: (tc: TestCase) => void;
   runState: TestRunState | null;
   onRunStateChange: React.Dispatch<React.SetStateAction<TestRunState | null>>;
-}> = ({ testCase, isExpanded, onToggle, onUpdate, runState, onRunStateChange }) => {
+}> = ({ scenarioId, sectionId, testCase, isExpanded, onToggle, onUpdate, runState, onRunStateChange }) => {
   const [detailOpen, setDetailOpen] = useState(false);
 
   const {
@@ -1181,27 +1083,14 @@ const SortableTestCase: React.FC<{
     isDragging,
   } = useSortable({ id: testCase.id });
 
-  const simulator = useTestRunSimulator(
+  const runner = useTestRunner(
+    scenarioId,
+    sectionId,
     testCase,
     runState?.testCaseId === testCase.id ? runState : null,
     onRunStateChange,
-    result => {
-      onUpdate({
-        ...testCase,
-        automationTest: {
-          id: `auto-${Date.now()}`,
-          name: `${testCase.code}_Run`,
-          status: result.status,
-          lastRunAt: new Date().toISOString(),
-          runDurationMs: result.durationMs,
-          errorMessage: result.errorMessage,
-          failedStepIndex: result.errorMessage
-            ? parseInt(result.errorMessage.match(/step (\d+)/)?.[1] || '1')
-            : undefined,
-        },
-      });
-      // Clear run state after a brief delay so panel transitions to LastRun
-      setTimeout(() => onRunStateChange(null), 800);
+    updatedTc => {
+      onUpdate(updatedTc);
     }
   );
 
@@ -1326,10 +1215,8 @@ const SortableTestCase: React.FC<{
           <RunButton
             testCase={testCase}
             runState={runState}
-            onStart={simulator.start}
-            onPause={simulator.pause}
-            onResume={simulator.resume}
-            onCancel={simulator.cancel}
+            onStart={runner.start}
+            onCancel={runner.cancel}
           />
 
           <div className="flex items-center gap-1 text-[11px] text-zinc-400 ml-1">
@@ -1353,9 +1240,7 @@ const SortableTestCase: React.FC<{
               <TestRunPanel
                 testCase={testCase}
                 runState={runState}
-                onPause={simulator.pause}
-                onResume={simulator.resume}
-                onCancel={simulator.cancel}
+                onCancel={runner.cancel}
               />
             </div>
           ) : testCase.automationTest ? (
@@ -2057,6 +1942,8 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                         {paginatedCases.map(tc => (
                           <SortableTestCase
                             key={tc.id}
+                            scenarioId={scenario.id}
+                            sectionId={activeSection.id}
                             testCase={tc}
                             isExpanded={expandedIds.has(tc.id) || runState?.testCaseId === tc.id}
                             onToggle={() => toggleExpanded(tc.id)}
