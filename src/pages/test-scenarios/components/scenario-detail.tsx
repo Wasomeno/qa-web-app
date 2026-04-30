@@ -31,6 +31,7 @@ import {
   Filter,
   RotateCcw,
   Sparkles,
+  Eye,
 } from 'lucide-react';
 import {
   DndContext,
@@ -51,6 +52,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -478,6 +486,141 @@ const LastRunPanel: React.FC<{
         </div>
       )}
     </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// Test Case Detail Modal
+// ─────────────────────────────────────────────
+const TestCaseDetailModal: React.FC<{
+  testCase: TestCase;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}> = ({ testCase, open, onOpenChange }) => {
+  const at = testCase.automationTest;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded">
+              {testCase.code}
+            </span>
+            <DialogTitle className="text-base">{testCase.title}</DialogTitle>
+          </div>
+          {testCase.description && (
+            <DialogDescription>{testCase.description}</DialogDescription>
+          )}
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {testCase.tags.map(tag => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md"
+              >
+                <Tag className="w-2.5 h-2.5" />
+                {tag}
+              </span>
+            ))}
+            <PriorityBadge priority={testCase.priority} />
+            <StatusBadge status={testCase.status} />
+            {at && <AutomationBadge test={at} />}
+          </div>
+
+          {/* Precondition */}
+          {testCase.preCondition && (
+            <div>
+              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                Precondition
+              </h4>
+              <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-100">
+                {testCase.preCondition}
+              </p>
+            </div>
+          )}
+
+          {/* Manual Steps */}
+          <div>
+            <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+              Test Steps
+            </h4>
+            <div className="space-y-2">
+              {testCase.steps.map((step, idx) => (
+                <div
+                  key={step.id}
+                  className="flex items-start gap-3 text-sm bg-zinc-50 rounded-lg px-3 py-2.5 border border-zinc-100"
+                >
+                  <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-5 mt-0.5">
+                    {step.order}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-zinc-800 font-medium">{step.action}</p>
+                    {step.data && <p className="text-zinc-500 text-xs mt-0.5">Data: {step.data}</p>}
+                    <p className="text-zinc-500 text-xs mt-0.5">Expected: {step.expected}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Automation */}
+          {at && (
+            <div>
+              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                Automation Test
+              </h4>
+              <LastRunPanel test={at} />
+
+              {/* Generated automation steps */}
+              {at.steps && at.steps.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                    Generated Steps
+                  </p>
+                  <div className="space-y-1.5">
+                    {at.steps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 text-xs bg-zinc-50 rounded-md px-2.5 py-2 border border-zinc-100"
+                      >
+                        <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-4">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-zinc-700">{step.action}</span>
+                          {step.description && (
+                            <span className="text-zinc-500 ml-1">— {step.description}</span>
+                          )}
+                          {step.selector && (
+                            <code className="block text-[10px] text-zinc-400 mt-0.5 truncate">
+                              {step.selector}
+                            </code>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Note */}
+          {testCase.note && (
+            <div>
+              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                Note
+              </h4>
+              <p className="text-sm text-zinc-600">{testCase.note}</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -1017,6 +1160,8 @@ const SortableTestCase: React.FC<{
   runState: TestRunState | null;
   onRunStateChange: React.Dispatch<React.SetStateAction<TestRunState | null>>;
 }> = ({ testCase, isExpanded, onToggle, onUpdate, runState, onRunStateChange }) => {
+  const [detailOpen, setDetailOpen] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -1152,6 +1297,20 @@ const SortableTestCase: React.FC<{
           <PriorityBadge priority={testCase.priority} />
           <StatusBadge status={testCase.status} />
           <AutomationBadge test={testCase.automationTest} />
+
+          {/* View detail */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            onClick={e => {
+              e.stopPropagation();
+              setDetailOpen(true);
+            }}
+            title="View details"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </Button>
 
           {/* Run / Re-run button */}
           <RunButton
@@ -1292,6 +1451,13 @@ const SortableTestCase: React.FC<{
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <TestCaseDetailModal
+        testCase={testCase}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 };
