@@ -959,10 +959,9 @@ const SortableTestCase: React.FC<{
   isExpanded: boolean;
   onToggle: () => void;
   onUpdate: (tc: TestCase) => void;
-  onViewAutomation: (id: string) => void;
   runState: TestRunState | null;
   onRunStateChange: React.Dispatch<React.SetStateAction<TestRunState | null>>;
-}> = ({ testCase, isExpanded, onToggle, onUpdate, onViewAutomation, runState, onRunStateChange }) => {
+}> = ({ testCase, isExpanded, onToggle, onUpdate, runState, onRunStateChange }) => {
   const {
     attributes,
     listeners,
@@ -1097,14 +1096,7 @@ const SortableTestCase: React.FC<{
           ))}
           <PriorityBadge priority={testCase.priority} />
           <StatusBadge status={testCase.status} />
-          <AutomationBadge
-            test={testCase.automationTest}
-            onClick={
-              testCase.automationTest
-                ? () => onViewAutomation(testCase.automationTest!.id)
-                : undefined
-            }
-          />
+          <AutomationBadge test={testCase.automationTest} />
 
           {/* Run / Re-run button */}
           <RunButton
@@ -1416,7 +1408,6 @@ interface ScenarioDetailProps {
   onClose: () => void;
   onGenerate: (sectionIds: string[]) => void;
   onDelete: () => void;
-  onViewGeneratedId: (id: string) => void;
   onUpdateScenario?: (id: string, data: any) => Promise<void>;
   onUpdateTestCase?: (sectionId: string, tcId: string, data: any) => Promise<void>;
   onReorderTestCases?: (sectionId: string, orderedIds: string[]) => Promise<void>;
@@ -1430,7 +1421,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   onClose,
   onGenerate,
   onDelete,
-  onViewGeneratedId,
   onUpdateScenario,
   onUpdateTestCase,
   onReorderTestCases,
@@ -1839,7 +1829,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                             isExpanded={expandedIds.has(tc.id) || runState?.testCaseId === tc.id}
                             onToggle={() => toggleExpanded(tc.id)}
                             onUpdate={updated => updateTestCase(activeSection.id, updated)}
-                            onViewAutomation={onViewGeneratedId}
                             runState={runState}
                             onRunStateChange={setRunState}
                           />

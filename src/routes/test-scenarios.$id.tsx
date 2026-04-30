@@ -74,9 +74,6 @@ function TestScenariosDetailRoute() {
       onClose={() => router.history.back()}
       onGenerate={(sectionIds) => generateMutation.mutate(sectionIds)}
       onDelete={() => deleteMutation.mutate()}
-      onViewGeneratedId={(generatedId) => {
-        router.navigate({ to: '/recordings/$id', params: { id: generatedId } });
-      }}
       onUpdateScenario={async (scenarioId, data) => {
         await updateScenarioMutation.mutateAsync(data);
       }}
