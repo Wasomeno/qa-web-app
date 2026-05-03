@@ -402,7 +402,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
             disabled={!projectDetails && (isFetching || isFetchingSelected)}
             className={cn(
               'w-full justify-between text-left font-normal bg-white border-theme-border rounded-xl',
-              'focus:ring-blue-500/20 focus:border-blue-500 hover:bg-gray-50 hover:text-gray-900 transition-all',
+              'focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 hover:text-gray-900 transition-all',
               !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
               className
             )}
@@ -480,7 +480,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
                           <span
                             className={cn(
                               'truncate',
-                              isSelected ? 'text-blue-700 font-medium' : ''
+                              isSelected ? 'text-zinc-700 font-medium' : ''
                             )}
                           >
                             {item.label}
@@ -498,13 +498,13 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
                           <Check
                             className={cn(
                               'h-4 w-4 shrink-0',
-                              isSelected ? 'opacity-100 text-blue-600' : 'opacity-0'
+                              isSelected ? 'opacity-100 text-zinc-600' : 'opacity-0'
                             )}
                           />
                           <span
                             className={cn(
                               'truncate flex-1',
-                              isSelected ? 'text-blue-700 font-medium' : ''
+                              isSelected ? 'text-zinc-700 font-medium' : ''
                             )}
                           >
                             {item.label}

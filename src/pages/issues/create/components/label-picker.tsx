@@ -38,7 +38,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-auto py-2 px-3 w-full justify-start text-left font-normal bg-white border-theme-border rounded-xl focus:ring-blue-500/20 focus:border-blue-500 hover:bg-gray-50 relative min-h-[42px] transition-all"
+          className="h-auto py-2 px-3 w-full justify-start text-left font-normal bg-white border-theme-border rounded-xl focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 relative min-h-[42px] transition-all"
           disabled={disabled}
         >
           <div className="flex flex-wrap gap-2 items-center pr-6">
@@ -81,7 +81,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
       >
         <div className="p-2 border-b border-gray-100">
           <input
-            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-zinc-500"
             placeholder="Search labels..."
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -112,7 +112,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
                     />
                     <span className="flex-1 truncate">{label.name}</span>
                     {isSelected && (
-                      <Check className="w-4 h-4 ml-2 text-blue-600" />
+                      <Check className="w-4 h-4 ml-2 text-zinc-600" />
                     )}
                   </div>
                 );

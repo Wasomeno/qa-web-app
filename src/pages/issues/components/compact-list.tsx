@@ -477,7 +477,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ issue, onSelect }) => {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
+          <div className="text-sm font-medium text-gray-900 truncate group-hover:text-zinc-600">
             {issue.title}
           </div>
           <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">

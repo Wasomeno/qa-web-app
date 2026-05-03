@@ -269,7 +269,7 @@ const InlineField: React.FC<InlineFieldProps> = ({
 // Priority Badge + Selector
 // ─────────────────────────────────────────────
 const PRIORITY_META: Record<Priority, { label: string; classes: string }> = {
-  low: { label: 'Low', classes: 'bg-blue-50 text-blue-700 border-blue-100' },
+  low: { label: 'Low', classes: 'bg-zinc-50 text-zinc-700 border-zinc-100' },
   medium: { label: 'Medium', classes: 'bg-amber-50 text-amber-700 border-amber-100' },
   high: { label: 'High', classes: 'bg-orange-50 text-orange-700 border-orange-100' },
   critical: { label: 'Critical', classes: 'bg-red-50 text-red-700 border-red-100' },

@@ -41,7 +41,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-between text-left font-normal bg-white border-theme-border rounded-xl focus:ring-blue-500/20 focus:border-blue-500 hover:bg-gray-50 transition-all"
+          className="w-full justify-between text-left font-normal bg-white border-theme-border rounded-xl focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 transition-all"
           disabled={disabled}
         >
           <div className="flex items-center truncate">
@@ -64,7 +64,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
       <PopoverContent className="w-[300px] p-0" align="start" container={portalContainer}>
         <div className="p-2 border-b border-gray-100">
           <input
-            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-zinc-500"
             placeholder="Search users..."
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -80,7 +80,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
               <div
                 className={cn(
                   'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-100',
-                  !selectedAssignee && 'bg-blue-50 text-blue-700'
+                  !selectedAssignee && 'bg-zinc-50 text-zinc-700'
                 )}
                 onClick={() => {
                   onSelect(null);
@@ -90,7 +90,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
                 <UserIcon className="w-4 h-4 mr-2 text-gray-500" />
                 Unassigned
                 {!selectedAssignee && (
-                  <Check className="w-4 h-4 ml-auto text-blue-600" />
+                  <Check className="w-4 h-4 ml-auto text-zinc-600" />
                 )}
               </div>
               {filteredMembers.map(member => (
@@ -99,7 +99,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
                   className={cn(
                     'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-100',
                     selectedAssignee?.id === member.id &&
-                      'bg-blue-50 text-blue-700'
+                      'bg-zinc-50 text-zinc-700'
                   )}
                   onClick={() => {
                     onSelect(member);
@@ -120,7 +120,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
                     </span>
                   </div>
                   {selectedAssignee?.id === member.id && (
-                    <Check className="w-4 h-4 ml-auto text-blue-600" />
+                    <Check className="w-4 h-4 ml-auto text-zinc-600" />
                   )}
                 </div>
               ))}

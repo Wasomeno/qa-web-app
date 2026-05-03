@@ -22,7 +22,7 @@ const PIN_COLOR_MAP: Record<PinColor, string> = {
   orange: 'bg-orange-500',
   yellow: 'bg-yellow-500',
   green: 'bg-green-500',
-  blue: 'bg-blue-500',
+  blue: 'bg-zinc-500',
   purple: 'bg-purple-500',
 };
 
@@ -129,7 +129,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               <span
                 className={cn(
                   'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-medium',
-                  'bg-blue-50 text-blue-700 border border-blue-100'
+                  'bg-zinc-50 text-zinc-700 border border-zinc-100'
                 )}
               >
                 <ClipboardList className="w-3 h-3" />
@@ -288,7 +288,7 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
         <div className="w-px h-3 bg-gray-200 mx-0.5" />
         <button
           onClick={handleOpenGitlab}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
           title="Open in GitLab"
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -298,7 +298,7 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
             e.stopPropagation();
             navigator.clipboard.writeText(issue.web_url);
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
           title="Copy Link"
         >
           <Link2 className="w-3.5 h-3.5" />

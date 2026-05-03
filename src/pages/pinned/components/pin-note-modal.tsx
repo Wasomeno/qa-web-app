@@ -48,8 +48,8 @@ export const PinNoteModal: React.FC<PinNoteModalProps> = ({
             >
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-zinc-50 rounded-lg">
+                    <MessageSquare className="w-5 h-5 text-zinc-600" />
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-gray-900">
@@ -87,7 +87,7 @@ export const PinNoteModal: React.FC<PinNoteModalProps> = ({
                     value={note}
                     onChange={e => setNote(e.target.value.slice(0, 200))}
                     placeholder="Enter your personal note here..."
-                    className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                    className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 outline-none transition-all resize-none"
                   />
                   <div className="flex justify-end mt-2">
                     <span
@@ -111,7 +111,7 @@ export const PinNoteModal: React.FC<PinNoteModalProps> = ({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                  className="flex items-center gap-2 px-6 py-2 bg-zinc-600 text-white text-sm font-medium rounded-xl hover:bg-zinc-700 transition-colors shadow-sm"
                 >
                   <Save className="w-4 h-4" />
                   Save Note

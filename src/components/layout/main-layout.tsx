@@ -118,7 +118,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   to="/"
                   className="flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden"
                 >
-                  <FlowGLogo className="h-6 w-6 shrink-0 text-primary-500" />
+                  <FlowGLogo className="h-6 w-6 shrink-0 text-zinc-500" />
                   <span className="text-lg font-bold tracking-tight text-gray-900">
                     FlowG
                   </span>
@@ -154,25 +154,25 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                               className={cn(
                                 'relative h-9 transition-colors',
                                 isActive &&
-                                  'bg-primary-50/80 text-primary-600 hover:bg-primary-50 hover:text-primary-700'
+                                  'bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700'
                               )}
                             >
                               <Link to={item.path}>
                                 {isActive && (
-                                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary-500" />
+                                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-zinc-500" />
                                 )}
                                 <Icon
                                   className={cn(
                                     'shrink-0',
                                     isActive
-                                      ? 'text-primary-500'
+                                      ? 'text-zinc-500'
                                       : 'text-gray-500'
                                   )}
                                 />
                                 <span
                                   className={cn(
                                     isActive
-                                      ? 'font-semibold text-primary-700'
+                                      ? 'font-semibold text-zinc-700'
                                       : 'font-medium text-gray-700'
                                   )}
                                 >
@@ -200,25 +200,25 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                         className={cn(
                           'relative h-9 transition-colors',
                           location.pathname === '/create-issue' &&
-                            'bg-primary-50/80 text-primary-600 hover:bg-primary-50 hover:text-primary-700'
+                            'bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700'
                         )}
                       >
                         <Link to="/create-issue">
                           {location.pathname === '/create-issue' && (
-                            <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary-500" />
+                            <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-zinc-500" />
                           )}
                           <PlusCircle
                             className={cn(
                               'shrink-0',
                               location.pathname === '/create-issue'
-                                ? 'text-primary-500'
+                                ? 'text-zinc-500'
                                 : 'text-gray-500'
                             )}
                           />
                           <span
                             className={cn(
                               location.pathname === '/create-issue'
-                                ? 'font-semibold text-primary-700'
+                                ? 'font-semibold text-zinc-700'
                                 : 'font-medium text-gray-700'
                             )}
                           >
@@ -234,13 +234,13 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
             {/* Footer — Download Extension CTA */}
             <div className="px-4 py-2 mt-auto border-t border-gray-100 group-data-[collapsible=icon]:hidden">
-              <div className="rounded-xl bg-blue-50 p-4 relative overflow-hidden">
+              <div className="rounded-xl bg-zinc-50 p-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-2 opacity-10">
                   <FlowGLogo className="w-16 h-16" />
                 </div>
                 <div className="relative z-10">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-1">Get the Extension</h4>
-                  <p className="text-xs text-blue-700 mb-3 leading-relaxed">
+                  <h4 className="text-sm font-semibold text-zinc-900 mb-1">Get the Extension</h4>
+                  <p className="text-xs text-zinc-700 mb-3 leading-relaxed">
                     Download FlowG extension to capture your QA sessions effortlessly.
                   </p>
                   <a 
@@ -248,7 +248,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                     target="_blank" 
                     rel="noopener noreferrer"
                     download
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
                   >
                     Download FlowG
                   </a>
@@ -264,7 +264,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 rel="noopener noreferrer"
                 download
                 title="Download FlowG Extension"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-600 transition-colors hover:bg-zinc-100"
               >
                 <FlowGLogo className="h-4 w-4" />
               </a>

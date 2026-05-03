@@ -157,7 +157,7 @@ export const DescriptionEditor = ({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 hover:underline cursor-pointer',
+          class: 'text-zinc-600 hover:underline cursor-pointer',
         },
       }),
       Image.configure({
@@ -283,7 +283,7 @@ export const DescriptionEditor = ({
   const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN;
 
   return (
-    <div className="border border-theme-border rounded-xl bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex flex-col shadow-sm">
+    <div className="border border-theme-border rounded-xl bg-white focus-within:ring-2 focus-within:ring-zinc-500/20 focus-within:border-zinc-500 transition-all overflow-hidden flex flex-col shadow-sm">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-1.5 bg-white/80 border-b border-theme-border sticky top-0 z-10 backdrop-blur-sm">
         {/* History */}
@@ -413,7 +413,7 @@ export const DescriptionEditor = ({
                 size="sm"
                 className={cn(
                   'h-8 w-8 p-0 hover:bg-gray-100',
-                  editor.isActive('table') && 'bg-blue-100 text-blue-700'
+                  editor.isActive('table') && 'bg-zinc-100 text-zinc-700'
                 )}
               >
                 <TableIcon className="w-4 h-4" />
@@ -770,7 +770,7 @@ const ToolbarButton = ({
           size="sm"
           className={cn(
             'h-8 w-8 p-0 hover:bg-gray-100',
-            isActive && 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            isActive && 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
           )}
           onClick={onClick}
           disabled={disabled}
@@ -809,7 +809,7 @@ const ToolbarToggle = ({
           onPressedChange={onPressedChange}
           size="sm"
           className={cn(
-            'h-8 w-8 p-0 hover:bg-gray-100 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700 data-[state=on]:hover:bg-blue-200'
+            'h-8 w-8 p-0 hover:bg-gray-100 data-[state=on]:bg-zinc-100 data-[state=on]:text-zinc-700 data-[state=on]:hover:bg-zinc-200'
           )}
           disabled={disabled}
         >

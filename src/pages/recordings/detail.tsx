@@ -202,7 +202,7 @@ const ExpandableNetworkRow: React.FC<{
         <span
           className={`font-semibold text-xs w-10 shrink-0 ${
             req.method === 'GET'
-              ? 'text-blue-600'
+              ? 'text-zinc-600'
               : req.method === 'POST'
                 ? 'text-emerald-600'
                 : req.method === 'DELETE'
@@ -767,7 +767,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                                   </span>
                                 )}
                                 {ctx.domMutationCount > 0 && (
-                                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                  <span className="text-xs font-medium text-zinc-600 bg-zinc-50 px-2 py-0.5 rounded">
                                     {ctx.domMutationCount} mutations
                                   </span>
                                 )}

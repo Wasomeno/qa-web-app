@@ -123,7 +123,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
       case 'pushing_changes':
       case 'creating_mr':
         return {
-          color: 'bg-blue-50 text-blue-700 border-blue-100',
+          color: 'bg-zinc-50 text-zinc-700 border-zinc-100',
           icon: <Loader2 className="h-3 w-3 animate-spin" />,
           label: 'Running',
         };

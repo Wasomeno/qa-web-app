@@ -440,7 +440,7 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
         </Button>
         <Button
           size="sm"
-          className="text-xs bg-blue-600 hover:bg-blue-700 text-white"
+          className="text-xs bg-zinc-600 hover:bg-zinc-700 text-white"
           onClick={handleStartRecording}
         >
           <Plus className="w-3 h-3 mr-1" />

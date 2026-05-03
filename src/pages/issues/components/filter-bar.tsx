@@ -54,7 +54,7 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
           placeholder="Search issues by title, ID, or description…"
           value={filters.search}
           onChange={e => onFilterChange('search', e.target.value)}
-          className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-2xl text-base placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 transition-all shadow-sm"
+          className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-2xl text-base placeholder:text-gray-400 focus:ring-2 focus:ring-zinc-500/15 focus:border-zinc-500 transition-all shadow-sm"
         />
       </div>
 
@@ -109,7 +109,7 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
             onFilterChange('sort', val as IssueFilterState['sort'])
           }
         >
-          <SelectTrigger className="bg-white border-theme-border rounded-xl text-theme-text focus:ring-blue-500/20 focus:border-blue-500 w-full h-10">
+          <SelectTrigger className="bg-white border-theme-border rounded-xl text-theme-text focus:ring-zinc-500/20 focus:border-zinc-500 w-full h-10">
             <div className="flex items-center gap-2">
               <ArrowUpDown
                 aria-hidden="true"

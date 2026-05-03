@@ -43,14 +43,14 @@ export const QuickFilterChips: React.FC<QuickFilterChipsProps> = ({
             className={cn(
               'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all whitespace-nowrap border',
               isActive
-                ? 'bg-primary-50 text-primary-700 border-primary-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+                ? 'bg-zinc-50 text-zinc-700 border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
                 : 'bg-white/60 text-gray-600 border-gray-200/80 hover:bg-white hover:border-gray-300 hover:shadow-sm'
             )}
           >
             <Icon
               className={cn(
                 'w-3.5 h-3.5',
-                isActive ? 'text-primary-500' : 'text-gray-400'
+                isActive ? 'text-zinc-500' : 'text-gray-400'
               )}
             />
             {chip.label}

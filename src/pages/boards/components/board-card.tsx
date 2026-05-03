@@ -117,7 +117,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
             e.stopPropagation();
             window.open(issue.webUrl, '_blank');
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
           title="Open in GitLab"
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
             e.stopPropagation();
             navigator.clipboard.writeText(issue.webUrl);
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
           title="Copy Link"
         >
           <Link2 className="w-3.5 h-3.5" />

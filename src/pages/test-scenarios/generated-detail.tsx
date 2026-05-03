@@ -54,8 +54,8 @@ export const GeneratedDetailPage: React.FC<GeneratedDetailProps> = ({
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100/50">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <div className="w-6 h-6 rounded-md bg-zinc-50 flex items-center justify-center shrink-0 border border-zinc-100/50">
+              <Sparkles className="w-3.5 h-3.5 text-zinc-600" />
             </div>
             <h1 className="text-lg font-medium tracking-tight text-zinc-900 truncate">
               {blueprint.name}

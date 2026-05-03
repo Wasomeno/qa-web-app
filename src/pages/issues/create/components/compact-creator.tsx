@@ -447,7 +447,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
             Description
           </Label>
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-shadow">
+          <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-zinc-500 focus-within:border-transparent transition-shadow">
             {/* Toolbar */}
             <div className="flex items-center justify-between gap-1 border-b border-gray-100 bg-gray-50/50 px-2 py-1">
               <div className="flex items-center gap-0.5">

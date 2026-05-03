@@ -552,7 +552,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
               }
             >
               {editingField === 'description' ? (
-                <div className="space-y-3 bg-white p-3 rounded-lg border border-blue-100 shadow-sm ring-2 ring-blue-50">
+                <div className="space-y-3 bg-white p-3 rounded-lg border border-zinc-100 shadow-sm ring-2 ring-zinc-50">
                   <DescriptionEditor
                     content={description}
                     onChange={setDescription}
@@ -810,7 +810,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       onClick={() =>
                         currentIssue.web_url && window.open(currentIssue.web_url, '_blank')
                       }
-                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-zinc-600 transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </motion.button>

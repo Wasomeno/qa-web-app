@@ -90,13 +90,13 @@ export const LoginPage: React.FC = () => {
   if (session?.loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full bg-white font-sans selection:bg-primary-100 selection:text-primary-900">
+    <div className="relative flex min-h-screen w-full bg-white font-sans selection:bg-zinc-100 selection:text-zinc-900">
       {/* Left / Top — Brand & Value Props */}
       <div className="relative flex flex-1 flex-col items-center justify-center bg-[#0b0b0c] px-8 py-16 text-white lg:items-start lg:px-16 xl:px-24">
         {/* subtle glow */}

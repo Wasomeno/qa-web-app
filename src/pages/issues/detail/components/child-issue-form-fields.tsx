@@ -98,7 +98,7 @@ export const ChildIssueFormFields: React.FC<ChildIssueFormFieldsProps> = ({
           placeholder="Issue title"
           value={title}
           onChange={e => onChange({ title: e.target.value })}
-          className="h-9 text-sm bg-white border-theme-border rounded-xl focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+          className="h-9 text-sm bg-white border-theme-border rounded-xl focus:ring-zinc-500/20 focus:border-zinc-500 transition-colors"
           autoFocus
         />
       </div>

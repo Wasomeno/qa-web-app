@@ -216,7 +216,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
                       "h-8 w-8",
                       isDeleting
                         ? "text-zinc-300 cursor-not-allowed"
-                        : "text-zinc-500 hover:text-blue-600 hover:bg-blue-50"
+                        : "text-zinc-500 hover:text-zinc-600 hover:bg-zinc-50"
                     )}
                     onClick={onGenerate}
                     disabled={isDeleting}
@@ -255,7 +255,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
             variant="secondary"
             className={cn(
               'capitalize font-medium text-xs',
-              isGenerating && 'bg-blue-100 text-blue-700 hover:bg-blue-100',
+              isGenerating && 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
               isReady && 'bg-green-100 text-green-700 hover:bg-green-100',
               isFailed && 'bg-red-100 text-red-700 hover:bg-red-100',
               scenario.status === 'uploaded' &&

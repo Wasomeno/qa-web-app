@@ -170,7 +170,7 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
                       'flex-shrink-0',
                       issue.state === 'opened'
                         ? 'text-green-500'
-                        : 'text-blue-500'
+                        : 'text-zinc-500'
                     )}
                   >
                     {issue.state === 'opened' ? (
@@ -195,7 +195,7 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-gray-400 hover:text-blue-600"
+                    className="h-7 w-7 p-0 text-gray-400 hover:text-zinc-600"
                     onClick={() => window.open(issue.web_url, '_blank')}
                     title="Open in new tab"
                   >

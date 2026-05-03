@@ -39,7 +39,7 @@ const getStepStatusIcon = (status: FixStep['status']) => {
     case 'done':
       return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
     case 'running':
-      return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+      return <Loader2 className="h-4 w-4 text-zinc-500 animate-spin" />;
     case 'error':
       return <XCircle className="h-4 w-4 text-red-500" />;
     case 'skipped':
@@ -55,7 +55,7 @@ const getStepStatusBg = (status: FixStep['status']) => {
     case 'done':
       return 'bg-emerald-50 border-emerald-100';
     case 'running':
-      return 'bg-blue-50 border-blue-100';
+      return 'bg-zinc-50 border-zinc-100';
     case 'error':
       return 'bg-red-50 border-red-100';
     default:
@@ -73,9 +73,9 @@ const getStatusConfig = (status: string) => {
     case 'pushing_changes':
     case 'creating_mr':
       return {
-        bg: 'bg-blue-50',
-        text: 'text-blue-700',
-        border: 'border-blue-100',
+        bg: 'bg-zinc-50',
+        text: 'text-zinc-700',
+        border: 'border-zinc-100',
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         label: 'Running',
       };
