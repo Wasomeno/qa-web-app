@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Terminal,
   Search,
-  Plus,
   Loader2,
   Trash2,
 } from 'lucide-react';
@@ -278,27 +277,7 @@ export const RecordingsPage: React.FC<{
               Manage and run your captured test flows
             </p>
           </div>
-          <div className="shrink-0 pt-1">
-            <AnimatePresence mode="wait">
-              {selectedIds.size === 0 && (
-                <motion.div
-                  key="create-btn"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
-                    onClick={handleStartRecording}
-                  >
-                    <Plus className="w-5 h-5" /> Test Recording
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+
         </div>
 
         <div className="flex items-center justify-between gap-2 mt-5">
