@@ -349,6 +349,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
 
   const cancelEdit = () => {
     setEditingField(null);
+    if (!currentIssue) return;
+    
     setDescription(currentIssue.description || '');
     setStatus((currentIssue.state || '') === 'closed' ? 'closed' : 'opened');
     setSelectedAssignee(

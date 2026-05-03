@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+.env
+.env.*
+!.env.example
+.dockerignore
+Dockerfile
