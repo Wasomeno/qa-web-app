@@ -280,7 +280,7 @@ export const DescriptionEditor = ({
     return null;
   }
 
-  const publicDomain = import.meta.env.R2_PUBLIC_DOMAIN || 'https://pub-03dd816d26684f7fba942512f600ddf5.r2.dev';
+  const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN;
 
   return (
     <div className="border border-theme-border rounded-xl bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex flex-col shadow-sm">

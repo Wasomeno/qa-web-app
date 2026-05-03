@@ -113,7 +113,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
   const [title, setTitle] = useState(initialData.title || '');
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-  const publicDomain = import.meta.env.R2_PUBLIC_DOMAIN || 'https://pub-03dd816d26684f7fba942512f600ddf5.r2.dev';
+  const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN;
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [mdTab, setMdTab] = useState<'write' | 'preview'>('write');

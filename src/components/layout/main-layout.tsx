@@ -232,6 +232,44 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
               </SidebarGroup>
             </SidebarContent>
 
+            {/* Footer — Download Extension CTA */}
+            <div className="px-4 py-2 mt-auto border-t border-gray-100 group-data-[collapsible=icon]:hidden">
+              <div className="rounded-xl bg-blue-50 p-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 opacity-10">
+                  <FlowGLogo className="w-16 h-16" />
+                </div>
+                <div className="relative z-10">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-1">Get the Extension</h4>
+                  <p className="text-xs text-blue-700 mb-3 leading-relaxed">
+                    Download FlowG extension to capture your QA sessions effortlessly.
+                  </p>
+                  <a 
+                    href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  >
+                    Download FlowG
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Collapsed state Download Extension CTA */}
+            <div className="hidden border-t border-gray-100 py-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+              <a 
+                href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                download
+                title="Download FlowG Extension"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+              >
+                <FlowGLogo className="h-4 w-4" />
+              </a>
+            </div>
+
             {/* Footer — User & Logout */}
             <SidebarFooter className="border-t border-gray-100 p-3">
               <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
