@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
   Link,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,6 +80,8 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editName, setEditName] = useState(recording.name);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const videoUrl = recording.video_url || (recording as any).videoUrl;
 
   useEffect(() => {
     if (isDeleting) {
@@ -208,7 +211,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
     return (
       <div
         role="button"
-        className="flex items-center gap-4 py-4 px-6 border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors group cursor-pointer relative"
+        className="flex items-center gap-3 py-3 px-4 border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors group cursor-pointer relative"
         onClick={onClick}
       >
         {/* Delete confirmation / error overlay */}
@@ -261,12 +264,24 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Left: Checkbox + Status */}
-        <div className="relative w-5 h-5 shrink-0 flex items-center justify-center">
-          {/* Checkbox layer */}
+        {/* Left: Thumbnail + Checkbox + Status */}
+        <div className="relative w-16 h-10 shrink-0 flex items-center justify-center bg-zinc-900 rounded-lg border border-zinc-100 overflow-hidden">
+          {videoUrl ? (
+            <video
+              src={videoUrl}
+              className="w-full h-full object-cover"
+              preload="metadata"
+              muted
+              playsInline
+            />
+          ) : (
+            <Video className="w-5 h-5 text-zinc-700" />
+          )}
+
+          {/* Selection overlay */}
           <div
             className={cn(
-              'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
+              'absolute inset-0 flex items-center justify-center transition-opacity duration-150 bg-black/5',
               selectionActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
             )}
           >
@@ -280,15 +295,17 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
             />
           </div>
 
-          {/* Status dot layer */}
-          <div
-            className={cn(
-              'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
-              selectionActive ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'
-            )}
-          >
-            <div className={cn('w-1.5 h-1.5 rounded-full', statusColor)} />
-          </div>
+          {/* Status dot layer (hidden when hovering/selecting) */}
+          {!selectionActive && (
+            <div
+              className={cn(
+                'absolute bottom-1 right-1 transition-opacity duration-150',
+                'group-hover:opacity-0'
+              )}
+            >
+              <div className={cn('w-2 h-2 rounded-full border border-white', statusColor)} />
+            </div>
+          )}
         </div>
 
         {/* Middle: Content */}
@@ -305,30 +322,39 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                 className="h-7 text-sm py-0 w-full max-w-md"
               />
             ) : (
-              <span className="text-sm font-medium text-zinc-900 truncate">
+              <span className="text-sm font-semibold text-zinc-900 truncate">
                 {recording.name}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-0.5">
+          <div className="flex items-center gap-3 mt-1">
             {recording.description && (
-              <span className="text-xs text-zinc-400 truncate max-w-[320px]">
+              <span className="text-xs text-zinc-500 truncate max-w-[400px]">
                 {recording.description}
-              </span>
-            )}
-            <span className="text-[11px] text-zinc-400 tabular-nums">
-              {recording.steps.length} steps
-            </span>
-            {recording.project_name && (
-              <span className="text-[11px] text-zinc-400">
-                {recording.project_name}
               </span>
             )}
           </div>
         </div>
 
+        {/* Project Picker */}
+        <div className="w-48 shrink-0 flex justify-end">
+          <ProjectSelect
+            value={recording.project_id ?? null}
+            projectName={recording.project_name}
+            projectDetails={recording.projectDetails ?? null}
+            onSelect={project => {
+              const newProjectId = project?.id ?? null;
+              handleUpdateProject({ id: recording.id, project_id: newProjectId });
+            }}
+            mode="single"
+            size="compact"
+            portalContainer={portalContainer}
+            stopPropagation
+          />
+        </div>
+
         {/* Right: Date + Actions */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-4 shrink-0 ml-4">
           {recording.created_at && (
             <span className="text-[11px] text-zinc-400 tabular-nums">
               {new Date(recording.created_at).toLocaleDateString('en-US', {
@@ -357,7 +383,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
     >
       {/* Top-right date */}
       {recording.created_at && (
-        <span className="absolute top-3 right-3 text-[10px] text-zinc-400 font-medium tabular-nums">
+        <span className="absolute top-3 right-3 text-[10px] text-zinc-400 font-medium tabular-nums z-20">
           {new Date(recording.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -373,11 +399,11 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="overflow-hidden"
+            className="overflow-hidden z-30"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-red-50 border-b border-red-100">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 {isDeleting ? (
                   <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin shrink-0" />
                 ) : deleteError ? (
@@ -417,10 +443,44 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="p-5 flex flex-col h-full">
+      {/* Video Thumbnail */}
+      <div className="w-full h-[240px] bg-zinc-900 relative overflow-hidden border-b border-zinc-100 flex items-center justify-center">
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            className="w-full h-full object-cover"
+            preload="metadata"
+            muted
+            playsInline
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-zinc-700">
+            <Video className="w-8 h-8" />
+          </div>
+        )}
+        
+        {/* Selection overlay */}
+        <div
+          className={cn(
+            'absolute inset-0 flex items-start p-3 transition-opacity duration-150',
+            selectionActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+        >
+          <StyledCheckbox
+            checked={isSelected}
+            onChange={e => {
+              e.stopPropagation();
+              onToggleSelect?.(e);
+            }}
+            size="sm"
+          />
+        </div>
+      </div>
+
+      <div className="p-3 flex flex-col flex-1">
         {/* Header: Title + Actions */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0 pr-8">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
             {isEditing ? (
               <Input
                 ref={inputRef}
@@ -432,55 +492,25 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                 className="h-7 text-sm py-0"
               />
             ) : (
-              <h3 className="font-semibold text-zinc-900 truncate leading-tight">
+              <h3 className="text-sm font-semibold text-zinc-900 truncate leading-snug group-hover:text-primary transition-colors">
                 {recording.name}
               </h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1 line-clamp-1">
+            <p className="text-[11px] text-zinc-500 mt-1 line-clamp-1">
               {recording.description || 'No description'}
             </p>
           </div>
-          {/* Actions - hover only, positioned absolute to not push title */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute top-3 right-3">
+          {/* Actions - hover only */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
             <Actions />
           </div>
         </div>
 
-        {/* Compact Steps Preview */}
-        <div className="mt-4 flex-1 min-h-[60px]">
-          <div className="space-y-1.5">
-            {recording.steps.slice(0, 3).map((step, idx) => (
-              <div key={idx} className="flex gap-2 text-[11px]">
-                <span className="text-zinc-400 font-medium tabular-nums shrink-0 w-4">
-                  {idx + 1}.
-                </span>
-                <span className="text-zinc-500 truncate">
-                  {step.description || step.action}
-                </span>
-              </div>
-            ))}
-            {recording.steps.length > 3 && (
-              <p className="text-[11px] text-zinc-400 pl-5">
-                + {recording.steps.length - 3} more
-              </p>
-            )}
-            {recording.steps.length === 0 && (
-              <p className="text-[11px] text-zinc-400 italic py-2">
-                No steps recorded
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Footer: Metadata */}
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-50">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-[11px] text-zinc-500">
-              <Clock className="w-3 h-3 text-zinc-400" />
-              {recording.steps.length} steps
-            </span>
+        {/* Footer: Project Picker */}
+        <div className="mt-3 pt-2 flex items-center justify-between border-t border-zinc-50">
+          <div className="flex-1 min-w-0">
             {recording.project_name && (
-              <span className="text-[11px] text-zinc-400 truncate max-w-[120px]">
+              <span className="text-[10px] text-zinc-400 truncate block">
                 {recording.project_name}
               </span>
             )}
