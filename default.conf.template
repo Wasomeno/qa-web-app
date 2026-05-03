@@ -20,10 +20,11 @@ server {
     # API Proxy for Production
     location /api/ {
         # Ensure VITE_API_PROXY_TARGET is passed as a runtime ENV var to the Nginx container
-        proxy_pass ${VITE_API_PROXY_TARGET};
+        proxy_pass ${VITE_API_PROXY_TARGET}/api/;
+        proxy_ssl_server_name on;
         
         # Standard proxy headers
-        proxy_set_header Host $host;
+        proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
