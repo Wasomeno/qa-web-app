@@ -102,7 +102,7 @@ export const LoginPage: React.FC = () => {
         {/* subtle glow */}
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-[#863bff] blur-[120px]" />
-          <div className="absolute bottom-1/4 -right-20 h-72 w-72 rounded-full bg-[#fc6d26] blur-[120px]" />
+          <div className="absolute bottom-1/4 -right-20 h-72 w-72 rounded-full bg-zinc-600 blur-[120px]" />
         </div>
 
         <motion.div
@@ -178,7 +178,7 @@ export const LoginPage: React.FC = () => {
           <button
             onClick={handleLogin}
             disabled={isLoading}
-            className="group relative mt-8 flex h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-[#fc6d26] px-5 text-[14px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e65c1a] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc6d26] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
+            className="group relative mt-8 flex h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-zinc-900 px-5 text-[14px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-zinc-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin text-white/80" />
