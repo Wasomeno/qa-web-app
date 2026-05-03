@@ -32,7 +32,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
       onClick={() => onClick?.(issue)}
       className={cn(
         'bg-white rounded-xl border border-gray-100 shadow-sm',
-        'hover:shadow-md hover:border-gray-200 hover:scale-[1.003]',
+        'hover:shadow-md hover:border-gray-200',
         'transition-all duration-200 cursor-pointer group relative overflow-hidden',
         isCompact ? 'p-2.5' : 'p-3.5'
       )}
