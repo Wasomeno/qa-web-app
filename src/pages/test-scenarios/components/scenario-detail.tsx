@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   GripVertical,
   ChevronLeft,
@@ -82,6 +84,103 @@ import {
   AutomationStatus,
 } from '@/types/test-scenario';
 import { testScenarioApi } from '@/api/test-scenario';
+
+// ─────────────────────────────────────────────
+// Skeleton
+// ─────────────────────────────────────────────
+export const ScenarioDetailSkeleton: React.FC = () => {
+  return (
+    <div className="flex flex-col h-full bg-white">
+      {/* Header Skeleton */}
+      <div className="shrink-0 border-b border-zinc-100 bg-white">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-4 flex-1">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-64 rounded-md" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-32 rounded" />
+                    <div className="h-3 w-3 rounded-full bg-zinc-100" />
+                    <Skeleton className="h-4 w-24 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-24 rounded-lg" />
+              <Skeleton className="h-9 w-32 rounded-lg" />
+            </div>
+          </div>
+          <div className="flex items-center gap-6 mt-8 pt-6 border-t border-zinc-50">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-4 w-20 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden flex max-w-[1600px] mx-auto w-full">
+        {/* Sidebar Skeleton */}
+        <div className="w-64 shrink-0 border-r border-zinc-100 bg-zinc-50/30 hidden lg:flex flex-col">
+          <div className="flex-1 px-3 py-6 space-y-6">
+            <div className="px-3">
+              <Skeleton className="h-3 w-16 mb-4" />
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="p-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-6 rounded-md" />
+                    </div>
+                    <Skeleton className="h-1.5 w-full rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/10">
+          <div className="flex-1 px-4 lg:px-8 py-8 space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-48 rounded-lg" />
+                <Skeleton className="h-8 w-32 rounded-lg" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-white border border-zinc-100 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4 flex-1">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-5 w-1/3" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ─────────────────────────────────────────────
 // Inline Edit Field
@@ -1101,38 +1200,6 @@ const SortableTestCase: React.FC<{
     zIndex: isDragging ? 50 : undefined,
   };
 
-  const handleStepChange = (idx: number, updated: TestStep) => {
-    const newSteps = [...testCase.steps];
-    newSteps[idx] = updated;
-    onUpdate({ ...testCase, steps: newSteps });
-  };
-
-  const moveStep = (idx: number, dir: -1 | 1) => {
-    const newSteps = [...testCase.steps];
-    const swapIdx = idx + dir;
-    if (swapIdx < 0 || swapIdx >= newSteps.length) return;
-    [newSteps[idx], newSteps[swapIdx]] = [newSteps[swapIdx], newSteps[idx]];
-    // Recompute order
-    newSteps.forEach((s, i) => (s.order = i + 1));
-    onUpdate({ ...testCase, steps: newSteps });
-  };
-
-  const addStep = () => {
-    const newStep: TestStep = {
-      id: `st-${Date.now()}`,
-      order: testCase.steps.length + 1,
-      action: 'New step action',
-      expected: 'Expected result',
-    };
-    onUpdate({ ...testCase, steps: [...testCase.steps, newStep] });
-  };
-
-  const removeStep = (idx: number) => {
-    const newSteps = testCase.steps.filter((_, i) => i !== idx);
-    newSteps.forEach((s, i) => (s.order = i + 1));
-    onUpdate({ ...testCase, steps: newSteps });
-  };
-
   const automationBorder = testCase.automationTest
     ? testCase.automationTest.status === 'pass'
       ? 'border-l-emerald-400'
@@ -1227,125 +1294,87 @@ const SortableTestCase: React.FC<{
 
         {/* Expand chevron */}
         <div className="shrink-0 text-zinc-400">
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </motion.div>
         </div>
       </div>
 
       {/* Expanded Content */}
-      {isExpanded && (
-        <div className="px-4 pb-5 border-t border-zinc-50">
-          {/* Active run simulator takes precedence */}
-          {runState && runState.testCaseId === testCase.id && runState.phase !== 'cancelled' ? (
-            <div className="mt-4">
-              <TestRunPanel
-                testCase={testCase}
-                runState={runState}
-                onCancel={runner.cancel}
-              />
-            </div>
-          ) : testCase.automationTest ? (
-            /* Last Run — shown when not actively running */
-            <div className="mt-4">
-              <LastRunPanel
-                test={testCase.automationTest}
-              />
-            </div>
-          ) : null}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
+            animate={{ height: 'auto', opacity: 1, filter: 'blur(0px)' }}
+            exit={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
+            transition={{ 
+              height: { type: 'spring', stiffness: 300, damping: 30, restDelta: 0.01 },
+              opacity: { duration: 0.2 },
+              filter: { duration: 0.2 }
+            }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-5 border-t border-zinc-50">
+              {/* Test Result / Active Run */}
+              {runState && runState.testCaseId === testCase.id && runState.phase !== 'cancelled' ? (
+                <div className="mt-4">
+                  <TestRunPanel
+                    testCase={testCase}
+                    runState={runState}
+                    onCancel={runner.cancel}
+                  />
+                </div>
+              ) : testCase.automationTest ? (
+                <div className="mt-4">
+                  <LastRunPanel
+                    test={testCase.automationTest}
+                  />
+                </div>
+              ) : null}
 
-          {/* Mobile meta badges */}
-          <div className="flex sm:hidden flex-wrap gap-2 mt-4">
-            <PriorityBadge priority={testCase.priority} onChange={p => onUpdate({ ...testCase, priority: p })} />
-            <StatusBadge status={testCase.status} onChange={s => onUpdate({ ...testCase, status: s })} />
-            <AutomationBadge test={testCase.automationTest} />
-          </div>
+              {/* Concise Content */}
+              <div className="mt-4 space-y-4">
+                {/* Description */}
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
+                    Description
+                  </label>
+                  <p className="text-sm text-zinc-600 leading-relaxed">
+                    {testCase.description || (
+                      <span className="italic text-zinc-400">No description provided.</span>
+                    )}
+                  </p>
+                </div>
 
-          {/* Editable fields */}
-          <div className="mt-4 space-y-4">
-            {/* Description */}
-            <div>
-              <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
-                Description
-              </label>
-              <InlineField
-                value={testCase.description || ''}
-                onChange={v => onUpdate({ ...testCase, description: v })}
-                multiline
-                placeholder="No description"
-              />
-            </div>
-
-            {/* Precondition */}
-            <div>
-              <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
-                Precondition
-              </label>
-              <InlineField
-                value={testCase.preCondition || ''}
-                onChange={v => onUpdate({ ...testCase, preCondition: v })}
-                multiline
-                placeholder="No preconditions"
-              />
-            </div>
-
-            {/* Steps */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                  Steps
-                </label>
-                <button
-                  onClick={addStep}
-                  className="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 flex items-center gap-1 transition-colors"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add step
-                </button>
-              </div>
-              <div className="space-y-0">
-                {testCase.steps.map((step, idx) => (
-                  <div key={step.id} className="relative group/step">
-                    <StepItem
-                      step={step}
-                      isFirst={idx === 0}
-                      isLast={idx === testCase.steps.length - 1}
-                      onChange={s => handleStepChange(idx, s)}
-                      onMoveUp={() => moveStep(idx, -1)}
-                      onMoveDown={() => moveStep(idx, 1)}
-                    />
-                    {/* Delete step button */}
-                    <button
-                      onClick={() => removeStep(idx)}
-                      className="absolute right-0 top-1 p-1 rounded-md text-zinc-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover/step:opacity-100 transition-opacity"
-                      title="Remove step"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                {/* Footer stats & actions */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-zinc-50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-50 rounded-md border border-zinc-100 text-[11px] font-medium text-zinc-600">
+                      <Layers className="w-3 h-3 text-zinc-400" />
+                      <span>{testCase.steps.length} Steps</span>
+                    </div>
+                    <PriorityBadge priority={testCase.priority} onChange={p => onUpdate({ ...testCase, priority: p })} />
+                    <StatusBadge status={testCase.status} onChange={s => onUpdate({ ...testCase, status: s })} />
                   </div>
-                ))}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                    onClick={() => setDetailOpen(true)}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1.5" />
+                    Full Details
+                  </Button>
+                </div>
               </div>
             </div>
-
-            {/* Note */}
-            <div>
-              <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
-                Note
-              </label>
-              <InlineField
-                value={testCase.note || ''}
-                onChange={v => onUpdate({ ...testCase, note: v })}
-                multiline
-                placeholder="No notes"
-              />
-            </div>
-
-            {/* Desktop inline status/priority editors */}
-            <div className="hidden sm:flex items-center gap-3 pt-2">
-              <PriorityBadge priority={testCase.priority} onChange={p => onUpdate({ ...testCase, priority: p })} />
-              <StatusBadge status={testCase.status} onChange={s => onUpdate({ ...testCase, status: s })} />
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Detail Modal */}
       <TestCaseDetailModal
