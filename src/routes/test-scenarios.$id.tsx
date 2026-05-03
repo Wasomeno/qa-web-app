@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ScenarioDetail } from '@/pages/test-scenarios/components/scenario-detail';
+import { ScenarioDetail, ScenarioDetailSkeleton } from '@/pages/test-scenarios/components/scenario-detail';
 import { testScenarioApi } from '@/api/test-scenario';
 
 function TestScenariosDetailRoute() {
@@ -53,11 +53,7 @@ function TestScenariosDetailRoute() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-sm text-zinc-500">Loading scenario…</div>
-      </div>
-    );
+    return <ScenarioDetailSkeleton />;
   }
 
   if (!scenario) {
