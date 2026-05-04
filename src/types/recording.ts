@@ -56,7 +56,7 @@ export interface RecordingSession {
 
 export interface TestStep {
   id?: string;
-  action: 'click' | 'type' | 'navigate' | 'select' | 'assert';
+  action: 'click' | 'type' | 'navigate' | 'select' | 'assert' | 'api_request' | string;
   selector: string;
   selectorCandidates?: string[];
   // Deep element tracking fields
@@ -95,6 +95,12 @@ export interface TestStep {
   fallbackPolicy?: 'agent_resolve' | 'fail';
   timeoutMs?: number;
   retryCount?: number;
+
+  // API specific fields
+  apiMethod?: string;
+  apiEndpoint?: string;
+  apiPayload?: string;
+  apiHeaders?: string;
 }
 
 export interface ElementHints {
