@@ -65,6 +65,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
     loginUrl: '',
     username: '',
     password: '',
+    apiBaseUrl: '',
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -255,6 +256,22 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label className="text-xs">API Base URL</Label>
+                    <Input
+                      placeholder="https://api.dev.com"
+                      value={authConfig.apiBaseUrl}
+                      onChange={e =>
+                        setAuthConfig({
+                          ...authConfig,
+                          apiBaseUrl: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label className="text-xs">Login URL</Label>
                     <Input
                       placeholder="https://app.dev.com/login"
@@ -267,9 +284,6 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                       }
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs">Test Username</Label>
                     <Input
@@ -283,6 +297,9 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                       }
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs">Test Password</Label>
                     <Input

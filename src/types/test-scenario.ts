@@ -5,6 +5,7 @@ export interface AuthConfig {
   loginUrl: string;
   username: string;
   password?: string;
+  apiBaseUrl?: string; // Target environment API URL for data seeding
 }
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
