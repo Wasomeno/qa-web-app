@@ -113,6 +113,11 @@ export interface RecordingStep {
   xpathCandidates?: string[];
   assertionType?: string;
   expectedValue?: string;
+  // API specific fields
+  apiMethod?: string;
+  apiEndpoint?: string;
+  apiPayload?: string;
+  apiHeaders?: string;
 }
 
 export interface TestRecording {

@@ -679,9 +679,16 @@ const TestCaseDetailModal: React.FC<{
           {/* Automation */}
           {at && (
             <div>
-              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                Automation Test
-              </h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                  Automation Test
+                </h4>
+                {at.framework && (
+                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 uppercase font-mono bg-zinc-50/50">
+                    {at.framework}
+                  </Badge>
+                )}
+              </div>
               <LastRunPanel test={at} />
 
               {/* Generated automation steps */}
@@ -696,18 +703,53 @@ const TestCaseDetailModal: React.FC<{
                         key={idx}
                         className="flex items-start gap-2 text-xs bg-zinc-50 rounded-md px-2.5 py-2 border border-zinc-100"
                       >
-                        <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-4">
+                        <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-4 mt-0.5">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className="font-medium text-zinc-700">{step.action}</span>
-                          {step.description && (
-                            <span className="text-zinc-500 ml-1">— {step.description}</span>
-                          )}
-                          {step.selector && (
-                            <code className="block text-[10px] text-zinc-400 mt-0.5 truncate">
-                              {step.selector}
-                            </code>
+                          {step.action === 'api_request' ? (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-[10px] px-1 py-0.5 rounded font-bold tracking-wide" style={{
+                                  backgroundColor: step.apiMethod === 'GET' ? '#dbeafe' : step.apiMethod === 'POST' ? '#dcfce7' : step.apiMethod === 'PUT' ? '#fef9c3' : step.apiMethod === 'DELETE' ? '#fee2e2' : '#f3f4f6',
+                                  color: step.apiMethod === 'GET' ? '#1e40af' : step.apiMethod === 'POST' ? '#166534' : step.apiMethod === 'PUT' ? '#854d0e' : step.apiMethod === 'DELETE' ? '#991b1b' : '#374151'
+                                }}>
+                                  {step.apiMethod}
+                                </span>
+                                <span className="font-mono text-[11px] text-zinc-700">{step.apiEndpoint}</span>
+                                {step.description && (
+                                  <span className="text-zinc-500 ml-1">— {step.description}</span>
+                                )}
+                              </div>
+                              {step.apiPayload && (
+                                <div className="mt-1">
+                                  <span className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Payload</span>
+                                  <code className="block text-[10px] text-zinc-600 bg-white border border-zinc-100 p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
+                                    {step.apiPayload}
+                                  </code>
+                                </div>
+                              )}
+                              {step.apiHeaders && (
+                                <div className="mt-1">
+                                  <span className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Headers</span>
+                                  <code className="block text-[10px] text-zinc-600 bg-white border border-zinc-100 p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
+                                    {step.apiHeaders}
+                                  </code>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <>
+                              <span className="font-medium text-zinc-700">{step.action}</span>
+                              {step.description && (
+                                <span className="text-zinc-500 ml-1">— {step.description}</span>
+                              )}
+                              {step.selector && (
+                                <code className="block text-[10px] text-zinc-400 mt-0.5 truncate">
+                                  {step.selector}
+                                </code>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

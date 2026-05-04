@@ -41,8 +41,10 @@ export const GeneratedDetailPage: React.FC<GeneratedDetailProps> = ({
         return <ListFilter className="w-3.5 h-3.5" />;
       case 'assert':
         return <CheckCircle2 className="w-3.5 h-3.5 text-zinc-600" />;
+      case 'api_request':
+        return <Database className="w-3.5 h-3.5 text-indigo-600" />;
       default:
-        return <Database className="w-3.5 h-3.5" />;
+        return <Sparkles className="w-3.5 h-3.5" />;
     }
   };
 
@@ -134,7 +136,20 @@ export const GeneratedDetailPage: React.FC<GeneratedDetailProps> = ({
                         <span className="text-sm font-semibold text-zinc-900 uppercase tracking-tight">
                           {step.action}
                         </span>
-                        {step.value && (
+                        {step.action === 'api_request' && step.apiMethod && (
+                          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wide" style={{
+                            backgroundColor: step.apiMethod === 'GET' ? '#dbeafe' : step.apiMethod === 'POST' ? '#dcfce7' : step.apiMethod === 'PUT' ? '#fef9c3' : step.apiMethod === 'DELETE' ? '#fee2e2' : '#f3f4f6',
+                            color: step.apiMethod === 'GET' ? '#1e40af' : step.apiMethod === 'POST' ? '#166534' : step.apiMethod === 'PUT' ? '#854d0e' : step.apiMethod === 'DELETE' ? '#991b1b' : '#374151'
+                          }}>
+                            {step.apiMethod}
+                          </span>
+                        )}
+                        {step.action === 'api_request' && step.apiEndpoint && (
+                          <span className="font-mono text-[11px] text-zinc-700 bg-white border border-zinc-200 px-2 py-0.5 rounded-md shadow-sm">
+                            {step.apiEndpoint}
+                          </span>
+                        )}
+                        {step.value && step.action !== 'api_request' && (
                           <Badge
                             variant="secondary"
                             className="text-[11px] py-0.5 px-2 font-medium bg-zinc-100 text-zinc-700 whitespace-normal break-words max-w-full rounded-md border-transparent"
@@ -150,7 +165,28 @@ export const GeneratedDetailPage: React.FC<GeneratedDetailProps> = ({
                         </p>
                       )}
                       
-                      {step.selector && (
+                      {step.action === 'api_request' && (
+                        <div className="flex flex-col gap-2.5 mt-3 w-full">
+                          {step.apiPayload && (
+                            <div>
+                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Payload</span>
+                              <code className="text-[11px] font-mono bg-zinc-50/50 text-zinc-600 px-3 py-2.5 rounded-lg border border-zinc-100 block break-all w-full whitespace-pre-wrap">
+                                {step.apiPayload}
+                              </code>
+                            </div>
+                          )}
+                          {step.apiHeaders && (
+                            <div>
+                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Headers</span>
+                              <code className="text-[11px] font-mono bg-zinc-50/50 text-zinc-600 px-3 py-2.5 rounded-lg border border-zinc-100 block break-all w-full whitespace-pre-wrap">
+                                {step.apiHeaders}
+                              </code>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {step.selector && step.action !== 'api_request' && (
                         <code className="text-[11px] font-mono bg-zinc-50 text-zinc-500 px-3 py-2 rounded-lg border border-zinc-100 block break-all w-full mb-2">
                           {step.selector}
                         </code>

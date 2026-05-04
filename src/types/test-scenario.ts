@@ -15,6 +15,7 @@ export type AutomationStatus = 'idle' | 'running' | 'pass' | 'fail';
 export interface AutomationTest {
   id: string;
   name: string;
+  framework?: string;
   status: AutomationStatus;
   lastRunAt?: string;
   runDurationMs?: number;
