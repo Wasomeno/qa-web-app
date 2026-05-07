@@ -127,6 +127,9 @@ export const useAgent = (options?: UseAgentOptions) => {
           }),
         });
 
+        console.log('[useAgent] Response status:', response.status, response.statusText);
+        console.log('[useAgent] Response headers:', [...(response.headers.entries())]);
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -139,20 +142,27 @@ export const useAgent = (options?: UseAgentOptions) => {
 
         const decoder = new TextDecoder();
         let buffer = '';
+        let receivedFinal = false;
 
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log('[useAgent] Stream ended. receivedFinal:', receivedFinal);
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
+          console.log('[useAgent] Raw buffer chunk:', JSON.stringify(buffer));
+          
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
 
           for (const line of lines) {
+            console.log('[useAgent] Processing line:', JSON.stringify(line));
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                console.log('[useAgent] SSE event:', data);
+                console.log('[useAgent] Parsed SSE event:', data);
 
                 if (data.event === 'progress' && data.data?.message) {
                   const chunk = data.data.message;
@@ -182,11 +192,14 @@ export const useAgent = (options?: UseAgentOptions) => {
                     });
                   }
                 } else if (data.event === 'final') {
+                  receivedFinal = true;
                   setIsAgentLoading(false);
                   setProgressMessage(null);
                   activeSessionIdRef.current = null;
 
                   const responseContent = data.data?.content || data.data?.response || data.data;
+                  console.log('[useAgent] Final event received. Content length:', typeof responseContent === 'string' ? responseContent.length : 'not string');
+                  
                   if (responseContent) {
                     setMessages(prev => {
                       // Check if we already have a streaming message with this ID
@@ -219,6 +232,9 @@ export const useAgent = (options?: UseAgentOptions) => {
         }
 
         // If we get here without a final event, something went wrong
+        if (!receivedFinal) {
+          console.warn('[useAgent] Stream ended without final event');
+        }
         setIsAgentLoading(false);
         setProgressMessage(null);
         activeSessionIdRef.current = null;
