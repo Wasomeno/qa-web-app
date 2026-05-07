@@ -155,7 +155,32 @@ export const useAgent = (options?: UseAgentOptions) => {
                 console.log('[useAgent] SSE event:', data);
 
                 if (data.event === 'progress' && data.data?.message) {
-                  setProgressMessage(data.data.message);
+                  const chunk = data.data.message;
+                  setProgressMessage(chunk);
+                  
+                  // If the chunk looks like actual response text (not just "Agent is processing...")
+                  // we can optionally append it to a temporary streaming message
+                  if (chunk !== 'Agent is processing...' && !chunk.startsWith('Calling tool')) {
+                    setMessages(prev => {
+                      const lastMsg = prev[prev.length - 1];
+                      if (lastMsg && lastMsg.role === 'assistant' && lastMsg.id === responseId) {
+                        return [
+                          ...prev.slice(0, -1),
+                          { ...lastMsg, content: lastMsg.content + chunk }
+                        ];
+                      } else {
+                        return [
+                          ...prev,
+                          {
+                            id: responseId,
+                            role: 'assistant',
+                            content: chunk,
+                            timestamp: Date.now(),
+                          }
+                        ];
+                      }
+                    });
+                  }
                 } else if (data.event === 'final') {
                   setIsAgentLoading(false);
                   setProgressMessage(null);
@@ -163,15 +188,24 @@ export const useAgent = (options?: UseAgentOptions) => {
 
                   const responseContent = data.data?.content || data.data?.response || data.data;
                   if (responseContent) {
-                    setMessages(prev => [
-                      ...prev,
-                      {
+                    setMessages(prev => {
+                      // Check if we already have a streaming message with this ID
+                      const existingIndex = prev.findIndex(m => m.id === responseId);
+                      const newMessage: Message = {
                         id: responseId,
                         role: 'assistant',
                         content: typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent),
                         timestamp: Date.now(),
-                      },
-                    ]);
+                      };
+
+                      if (existingIndex >= 0) {
+                        const newMessages = [...prev];
+                        newMessages[existingIndex] = newMessage;
+                        return newMessages;
+                      } else {
+                        return [...prev, newMessage];
+                      }
+                    });
                   }
                   return;
                 } else if (data.event === 'error') {
