@@ -11,8 +11,23 @@ export function useVideoThumbnail(videoUrl: string, timeInSeconds: number = 3) {
     let isMounted = true;
     setIsLoading(true);
 
+    const authSessionId = localStorage.getItem('qa_webapp_session_id');
+    const url = new URL('/api/video/thumbnail', window.location.origin);
+    url.searchParams.set('url', videoUrl);
+    url.searchParams.set('time', timeInSeconds.toString());
+    if (authSessionId) {
+      url.searchParams.set('session_id', authSessionId);
+    }
+
     // Request thumbnail from backend API
-    fetch(`/api/video/thumbnail?url=${encodeURIComponent(videoUrl)}&time=${timeInSeconds}`)
+    fetch(url.toString(), {
+      headers: {
+        ...(authSessionId ? {
+          'X-Session-ID': authSessionId,
+          'Authorization': `Bearer ${authSessionId}`
+        } : {})
+      }
+    })
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -105,10 +105,20 @@ export const useAgent = (options?: UseAgentOptions) => {
 
       try {
         // Use direct fetch with POST to agent chat endpoint
-        const response = await fetch('/api/agent/chat', {
+        const authSessionId = localStorage.getItem('qa_webapp_session_id');
+        const url = new URL('/api/agent/chat', window.location.origin);
+        if (authSessionId) {
+          url.searchParams.set('session_id', authSessionId);
+        }
+
+        const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(authSessionId ? {
+              'X-Session-ID': authSessionId,
+              'Authorization': `Bearer ${authSessionId}`
+            } : {})
           },
           body: JSON.stringify({
             input: content,

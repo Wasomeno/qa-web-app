@@ -34,10 +34,16 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
   onEventRef.current = onEvent;
 
   const connect = useCallback(() => {
-    // Build URL with optional filters - endpoint is public (no auth needed)
+    // Build URL with optional filters
     const params = new URLSearchParams();
     if (resourceId) params.set('resourceId', resourceId);
     if (type) params.set('type', type);
+
+    // Add session_id for auth
+    const authSessionId = localStorage.getItem('qa_webapp_session_id');
+    if (authSessionId) {
+      params.set('session_id', authSessionId);
+    }
 
     const url = `/api/stream${params.toString() ? `?${params.toString()}` : ''}`;
     console.log('[useStreamEvents] Connecting to:', url);
