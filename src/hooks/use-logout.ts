@@ -1,11 +1,11 @@
 import { logout } from '@/api/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSessionUser } from './use-session-user';
+import { useSession } from '@/contexts/session-context';
 import { clearSessionId } from '@/utils/session';
 
 export function useLogout() {
   const queryClient = useQueryClient();
-  const { clearUser } = useSessionUser();
+  const session = useSession();
 
   return useMutation({
     mutationFn: () => logout(),
@@ -14,7 +14,9 @@ export function useLogout() {
       clearSessionId();
       
       // Clear local session state
-      await clearUser();
+      if (session) {
+        await session.clearUser();
+      }
 
       // Clear all queries in cache
       queryClient.clear();

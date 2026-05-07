@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Settings, Bell, LogOut, ChevronRight, Loader2 } from 'lucide-react';
-import { useSessionUser } from '@/hooks/use-session-user';
+import { useSession } from '@/contexts/session-context';
 import { useLogout } from '@/hooks/use-logout';
 
 interface ProfilePageProps {
@@ -11,7 +11,8 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({
   portalContainer,
 }) => {
-  const { user } = useSessionUser();
+  const session = useSession();
+  const user = session?.user;
   const logoutMutation = useLogout();
 
   const handleLogout = async () => {

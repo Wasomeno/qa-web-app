@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { MainLayout } from '@/components/layout/main-layout';
 import { NavigationProvider } from '@/contexts/navigation-context';
-import { useSessionUser } from '@/hooks/use-session-user';
+import { useSession } from '@/contexts/session-context';
 import { Loader2 } from 'lucide-react';
 
 function AnimatedOutlet() {
@@ -26,11 +26,13 @@ function AnimatedOutlet() {
 
 export const Route = createRootRoute({
   component: () => {
-    const { user, loading } = useSessionUser();
+    const session = useSession();
+    const user = session?.user;
+    const loading = session?.loading;
     const location = useLocation();
     const isLoginPage = location.pathname === '/login';
 
-    if (loading) {
+    if (loading && !user) {
       return (
         <div className="flex h-screen w-screen items-center justify-center bg-[#FAFAFA]">
           <Loader2 className="h-8 w-8 animate-spin text-primary-500" />

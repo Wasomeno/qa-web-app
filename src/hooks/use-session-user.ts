@@ -27,15 +27,14 @@ export const useSessionUser = () => {
 
   const syncUser = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await getCurrentUser();
       if (response.success && response.data) {
-        setLoading(false);
         await setUser(response.data);
+        setLoading(false);
         return response.data;
       } else {
-        setLoading(false);
         await clearUser();
+        setLoading(false);
       }
     } catch (err) {
       setLoading(false);
@@ -51,11 +50,13 @@ export const useSessionUser = () => {
         setUserState(JSON.parse(stored));
         setLoading(false);
       } catch (e) {
-        syncUser();
+        setLoading(true);
       }
     } else {
-      syncUser();
+      setLoading(true);
     }
+    // Always sync on mount to verify session
+    syncUser();
   }, [syncUser]);
 
   // Listen for changes from other tabs

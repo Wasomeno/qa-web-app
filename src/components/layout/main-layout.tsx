@@ -13,7 +13,7 @@ import {
   FolderTree,
 } from 'lucide-react';
 import { Link, useLocation } from '@tanstack/react-router';
-import { useSessionUser } from '@/hooks/use-session-user';
+import { useSession } from '@/contexts/session-context';
 import { useLogout } from '@/hooks/use-logout';
 import { cn } from '@/lib/utils';
 
@@ -98,7 +98,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const location = useLocation();
-  const { user } = useSessionUser();
+  const session = useSession();
+  const user = session?.user;
   const logoutMutation = useLogout();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
 

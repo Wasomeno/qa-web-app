@@ -36,7 +36,7 @@ import {
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePinnedIssues } from '@/hooks/use-pinned-issues';
-import { useSessionUser } from '@/hooks/use-session-user';
+import { useSession } from '@/contexts/session-context';
 import { useGetIssue } from '../hooks/use-get-issue';
 import { useGetIssueComments } from '../hooks/use-get-issue-comments';
 import { ChildIssuesList } from '@/pages/issues/detail/components/child-issues-list';
@@ -199,7 +199,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const { user } = useSessionUser();
+  const session = useSession();
+  const user = session?.user;
 
   const projectId = propProjectId || issue?.project_id;
   const issueId = propIssueId || issue?.iid;

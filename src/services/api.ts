@@ -58,6 +58,23 @@ async function request<T>(
         resp.statusText,
         resp.body
       );
+
+      // Handle session expiration
+      if (resp.status === 401) {
+        localStorage.removeItem('session_user');
+        localStorage.removeItem('qa_webapp_session_id');
+        
+        // Trigger a storage event manually so other hooks in the same tab can update
+        // (The storage event only fires for other tabs by default)
+        window.dispatchEvent(new Event('storage'));
+        
+        // Optional: Force reload or redirect if absolutely necessary, 
+        // but clearing state should be enough if hooks are listening.
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+
       return {
         success: false,
         error: (resp.body as any)?.error || (resp.body as any)?.message || `API Error: ${resp.status} ${resp.statusText}`,
