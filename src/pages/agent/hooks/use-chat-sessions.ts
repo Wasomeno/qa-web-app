@@ -112,6 +112,11 @@ export const useChatSessions = () => {
     setCurrentSessionId(null);
   }, []);
 
+  // Set current session ID directly
+  const setCurrentSessionIdDirect = useCallback((sessionId: string | null) => {
+    setCurrentSessionId(sessionId);
+  }, []);
+
   // Get current session
   const getCurrentSession = useCallback((): ChatSession | null => {
     if (!currentSessionId) return null;
@@ -126,6 +131,7 @@ export const useChatSessions = () => {
     saveSession,
     deleteSession,
     clearCurrentSession,
+    setCurrentSessionId: setCurrentSessionIdDirect,
     getCurrentSession,
   };
 };

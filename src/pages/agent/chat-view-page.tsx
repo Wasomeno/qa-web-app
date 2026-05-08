@@ -1,36 +1,145 @@
 import React, { useRef, useEffect, useMemo, useCallback, useState } from 'react';
-import { useNavigation } from '@/contexts/navigation-context';
-import { useChatSessions, ChatSession } from './hooks/use-chat-sessions';
+import { useNavigate } from '@tanstack/react-router';
+import { useChatSessions } from './hooks/use-chat-sessions';
 import { useAgent } from './hooks/use-agent';
 import { ChatMessage, Message } from './components/chat-message';
 import { ChatInput } from './components/chat-input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, ArrowLeft } from 'lucide-react';
+import { Bot, ArrowLeft, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useChatSessionApi, ChatMessageFromApi } from '@/hooks/use-chat-sessions-api';
 
 interface ChatViewPageProps {
   sessionId: string;
 }
 
+function convertApiMessagesToMessages(apiMessages: ChatMessageFromApi[]): Message[] {
+  return apiMessages.map((msg, index) => ({
+    id: `msg-${index}-${Date.now()}`,
+    role: msg.role as 'user' | 'assistant',
+    content: msg.content,
+    timestamp: new Date(msg.timestamp).getTime(),
+  }));
+}
+
 export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
-  const { pop } = useNavigation();
-  const { sessions, loadSession, saveSession } = useChatSessions();
+  const navigate = useNavigate();
+  const { sessions, saveSession } = useChatSessions();
+  
+  const { data: apiSession, isLoading: isLoadingApi } = useChatSessionApi(sessionId);
+  
+  // Local session
+  const localSession = useMemo(() => sessions.find((s) => s.id === sessionId), [sessions, sessionId]);
+  
+  // API messages converted
+  const apiMessages = useMemo(() => {
+    if (!apiSession) return null;
+    return convertApiMessagesToMessages(apiSession.messages);
+  }, [apiSession]);
+
+  // Initial messages to pass to useAgent
+  const [initialMessages, setInitialMessages] = useState<Message[] | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!hasInitialized) {
+      if (apiMessages) {
+        setInitialMessages(apiMessages);
+        setHasInitialized(true);
+      } else if (localSession) {
+        setInitialMessages(localSession.messages);
+        setHasInitialized(true);
+      } else if (!isLoadingApi) {
+        // If not loading and no api/local session found
+        setInitialMessages([]);
+        setHasInitialized(true);
+      }
+    }
+  }, [apiMessages, localSession, isLoadingApi, hasInitialized]);
+
+  // Handle back
+  const handleBack = () => {
+    navigate({ to: '/chat-sessions' });
+  };
+
+  if (isLoadingApi && !hasInitialized) {
+    return (
+      <div className="flex flex-col h-full w-full bg-background items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground mt-4">Loading session...</p>
+      </div>
+    );
+  }
+
+  if (hasInitialized && initialMessages === null && !apiSession && !localSession) {
+    return (
+      <div className="flex flex-col h-full w-full bg-background items-center justify-center text-center p-4">
+        <p className="text-muted-foreground">Session not found</p>
+        <Button onClick={handleBack} className="mt-4">
+          Back to Sessions
+        </Button>
+      </div>
+    );
+  }
+
+  const title = apiSession?.preview || localSession?.title || 'Chat Session';
+
+  return (
+    <div className="flex flex-col h-full w-full bg-background relative">
+      {/* Header */}
+      <div className="flex items-center px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleBack}
+          className="mr-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-semibold truncate">
+            {title}
+          </h2>
+          <p className="text-[10px] text-muted-foreground">
+            {sessionId}
+          </p>
+        </div>
+      </div>
+
+      {hasInitialized && initialMessages !== null ? (
+        <ChatContent 
+          sessionId={sessionId} 
+          initialMessages={initialMessages} 
+          saveSession={saveSession} 
+        />
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface ChatContentProps {
+  sessionId: string;
+  initialMessages: Message[];
+  saveSession: (sessionId: string, messages: Message[]) => void;
+}
+
+const ChatContent: React.FC<ChatContentProps> = ({ sessionId, initialMessages, saveSession }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Get session
-  const session = sessions.find((s: ChatSession) => s.id === sessionId);
-  
-  // Initialize agent hook with session messages
+
+  // Initialize agent hook
   const {
     messages,
     isAgentLoading,
     progressMessage,
     sendMessage,
-    resetMessages,
   } = useAgent({
     sessionId,
-    initialMessages: session?.messages || [],
+    initialMessages,
     onMessagesChange: useCallback(
       (msgs: Message[]) => {
         if (sessionId && msgs.length > 0) {
@@ -40,13 +149,6 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
       [sessionId, saveSession]
     ),
   });
-
-  // Load the session when component mounts
-  useEffect(() => {
-    if (sessionId) {
-      loadSession(sessionId);
-    }
-  }, [sessionId, loadSession]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -60,16 +162,6 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
     }
   }, [messages, isAgentLoading, progressMessage]);
 
-  // Check if there are any user messages
-  const hasUserMessages = useMemo(() => {
-    return messages.some((msg: Message) => msg.role === 'user');
-  }, [messages]);
-
-  // Handle back
-  const handleBack = () => {
-    pop();
-  };
-
   // Handle send message using the hook's sendMessage
   const handleSendMessage = useCallback(
     async (value: string, files?: File[]) => {
@@ -79,35 +171,8 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
     [sendMessage]
   );
 
-  if (!session) {
-    return (
-      <div className="flex flex-col h-full w-full bg-background items-center justify-center">
-        <p className="text-muted-foreground">Session not found</p>
-        <Button onClick={handleBack} className="mt-4">
-          Go back
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-full w-full bg-background relative">
-      {/* Floating Back Button */}
-      <button
-        type="button"
-        className="absolute top-4 left-4 h-12 w-12 z-50 flex items-center justify-center rounded-md opacity-40 hover:opacity-100 transition-opacity"
-        onClick={handleBack}
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </button>
-
-      {/* Session Title */}
-      <div className="absolute top-4 left-16 right-4 z-40 flex items-center">
-        <h2 className="text-sm font-medium truncate max-w-[calc(100%-8rem)]">
-          {session.title}
-        </h2>
-      </div>
-
+    <>
       <ScrollArea className="flex-1 w-full" ref={scrollRef}>
         <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col min-h-full justify-end">
           <div className="space-y-2">
@@ -197,8 +262,8 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="w-full shrink-0">
-        <div className="max-w-3xl mx-auto px-4 pb-6">
+      <div className="w-full shrink-0 border-t bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="relative">
             <ChatInput
               onSend={handleSendMessage}
@@ -207,6 +272,6 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

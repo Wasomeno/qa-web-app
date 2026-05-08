@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useState,
 } from "react";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { ChatMessage, Message } from "./components/chat-message";
 import { ChatInput } from "./components/chat-input";
@@ -21,9 +21,11 @@ import {
   CheckSquare,
   PlayCircle,
   Terminal,
+  Loader2,
 } from "lucide-react";
 import { useAgent } from "./hooks/use-agent";
-import { useChatSessions, ChatSession } from "./hooks/use-chat-sessions";
+import { useChatSessions } from "./hooks/use-chat-sessions";
+import { useChatSessionsApi, useChatSessionApi, ChatSession as ApiChatSession, ChatMessageFromApi } from "@/hooks/use-chat-sessions-api";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import useMeasure from "react-use-measure";
 import { cn } from "@/lib/utils";
@@ -33,24 +35,48 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Convert API messages to local Message format
+function convertApiMessagesToMessages(apiMessages: ChatMessageFromApi[]): Message[] {
+  return apiMessages.map((msg, index) => ({
+    id: `msg-${index}-${Date.now()}`,
+    role: msg.role as 'user' | 'assistant',
+    content: msg.content,
+    timestamp: new Date(msg.timestamp).getTime(),
+  }));
+}
 
 export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
   portalContainer,
 }) => {
-  const { push } = useNavigation();
+  const navigate = useNavigate();
+  const search = useSearch({ from: '/' });
   const [ref, bounds] = useMeasure();
+  
+  // Local storage for messages (for display)
   const {
-    sessions,
     currentSessionId,
     createSession,
-    loadSession,
     saveSession,
-    deleteSession,
     clearCurrentSession,
     getCurrentSession,
+    setCurrentSessionId,
   } = useChatSessions();
 
+  // Backend API for session list
+  const { data: apiSessions = [], isLoading: isLoadingSessions } = useChatSessionsApi();
+
+  // Track if we're loading a session from the backend
+  const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
+  
+  // Fetch session details when loading a session from the backend
+  const { data: sessionDetail, isLoading: isLoadingSession } = useChatSessionApi(loadingSessionId);
+
   const currentSession = getCurrentSession();
+
+  // Store loaded messages from backend
+  const [loadedMessages, setLoadedMessages] = useState<Message[] | null>(null);
 
   // Use useState with a function to compute initial value properly
   const [view, setView] = useState<"home" | "chat">(() => {
@@ -138,22 +164,20 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
     }
   };
 
-  // Resume a session
-  const handleResumeSession = (session: ChatSession) => {
-    loadSession(session.id);
-    setView("chat");
+  // Resume a session from the API list - navigate to session detail page
+  const handleResumeSession = (session: ApiChatSession) => {
+    setLoadingSessionId(session.session_id);
+    navigate({ 
+      to: '/chat-sessions/$sessionId', 
+      params: { sessionId: session.session_id } 
+    });
   };
 
-  // Delete session
-  const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
-    e.stopPropagation();
-    deleteSession(sessionId);
-  };
-
-  // Format relative time
-  const formatRelativeTime = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
+  // Format relative time for API sessions (ISO string)
+  const formatRelativeTimeApi = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -162,7 +186,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return new Date(timestamp).toLocaleDateString();
+    return date.toLocaleDateString();
   };
 
   // Home View
@@ -257,68 +281,106 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
               />
             </div>
 
-            {/* Recent Sessions - Limited to 3 with View All link */}
-            {sessions.length > 0 && (
+            {/* Recent Sessions - Loading Skeleton */}
+            {isLoadingSessions && (
+              <div className="w-full mt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={`skeleton-${i}`}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: i * 0.06,
+                        duration: 0.25,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-lg"
+                    >
+                      <div className="flex-1 min-w-0 space-y-2.5">
+                        <Skeleton className="h-3.5 rounded" style={{ width: `${65 - i * 8}%` }} />
+                        <Skeleton className="h-3 rounded opacity-60" style={{ width: `${30 - i * 4}%` }} />
+                      </div>
+                      <Skeleton className="h-3.5 w-3.5 rounded opacity-40 shrink-0" />
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Sessions - Loaded (Limited to 3 with View All link) */}
+            {!isLoadingSessions && apiSessions.length > 0 && (
               <div className="w-full mt-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <h2 className="text-sm font-medium text-muted-foreground">
                     Recent Chats
                   </h2>
-                  {sessions.length > 1 && (
+                  {apiSessions.length > 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="ml-auto text-xs h-7"
-                      onClick={() => push("chat-sessions")}
+                      onClick={() => navigate({ to: '/chat-sessions' })}
                     >
                       <List className="h-3 w-3 mr-1" />
-                      View all ({sessions.length})
+                      View all ({apiSessions.length})
                       <ChevronRight className="h-3 w-3 ml-1" />
                     </Button>
                   )}
                 </div>
                 <div className="space-y-2">
                   <AnimatePresence>
-                    {sessions.slice(0, 1).map((session, index) => (
-                      <motion.div
-                        key={session.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ delay: 0.1 * index, duration: 0.2 }}
-                        onClick={() => handleResumeSession(session)}
-                        className={cn(
-                          "group flex items-center gap-3 p-3 rounded-lg border cursor-pointer",
-                          "hover:bg-accent/50 hover:border-primary/20 transition-all duration-200",
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate pr-2">
-                            {session.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatRelativeTime(session.updatedAt)} ·{" "}
-                            {session.messages.length} messages
-                          </p>
-                        </div>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:bg-red-50 hover:text-red-600 text-gray-400"
-                              onClick={(e) =>
-                                handleDeleteSession(e, session.id)
-                              }
+                    {apiSessions.slice(0, 3).map((session, index) => {
+                      const isLoading = loadingSessionId === session.session_id;
+                      
+                      return (
+                        <motion.div
+                          key={session.session_id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ delay: 0.1 * index, duration: 0.2 }}
+                          onClick={() => !isLoading && handleResumeSession(session)}
+                          className={cn(
+                            "group flex items-center gap-3 p-3 rounded-lg border cursor-pointer",
+                            "transition-all duration-200",
+                            isLoading 
+                              ? "bg-primary/5 border-primary/30" 
+                              : "hover:bg-accent/50 hover:border-primary/20"
+                          )}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate pr-2">
+                              {session.preview || 'Chat Session'}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatRelativeTimeApi(session.last_update_time)}
+                            </p>
+                          </div>
+                          
+                          {isLoading ? (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="relative h-5 w-5 shrink-0"
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete session</TooltipContent>
-                        </Tooltip>
-                      </motion.div>
-                    ))}
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                                className="h-5 w-5 rounded-full border-[1.5px] border-primary/20 border-t-primary"
+                              />
+                            </motion.div>
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          )}
+                        </motion.div>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
               </div>
@@ -329,18 +391,45 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
     );
   }
 
+  // Show loading state while fetching session from backend
+  if (isLoadingSession || (loadingSessionId && !sessionDetail)) {
+    return (
+      <div className="flex flex-col h-full w-full bg-background items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          className="flex flex-col items-center gap-4 px-6 py-8 bg-white rounded-2xl shadow-xl border border-gray-100"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-900">Loading chat session</p>
+            <p className="text-xs text-muted-foreground mt-1">Please wait...</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Chat View - use session ID as key to remount with correct messages
+  // Use loadedMessages from backend if available, otherwise use local session messages
+  const messagesForChat = loadedMessages || currentSession?.messages || [];
+
   return (
     <ChatView
       key={currentSessionId}
       sessionId={currentSessionId}
-      initialMessages={currentSession?.messages || []}
+      initialMessages={messagesForChat}
       saveSession={saveSession}
-      clearCurrentSession={clearCurrentSession}
+      clearCurrentSession={() => {
+        setLoadedMessages(null);
+        clearCurrentSession();
+      }}
       onBack={() => {
-        if (currentSessionId) {
-          // Messages will be saved via onMessagesChange
-        }
+        setLoadedMessages(null);
         clearCurrentSession();
         setView("home");
       }}
