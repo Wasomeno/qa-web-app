@@ -39,7 +39,7 @@ const SelectScrollUpButton = React.forwardRef<
   <SelectPrimitive.ScrollUpButton
     ref={ref}
     className={cn(
-      'flex cursor-default items-center justify-center py-1',
+      'flex cursor-default items-center justify-center py-1 pointer-events-auto',
       className
     )}
     {...props}
@@ -56,7 +56,7 @@ const SelectScrollDownButton = React.forwardRef<
   <SelectPrimitive.ScrollDownButton
     ref={ref}
     className={cn(
-      'flex cursor-default items-center justify-center py-1',
+      'flex cursor-default items-center justify-center py-1 pointer-events-auto',
       className
     )}
     {...props}
@@ -78,7 +78,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Base styles
-        "relative z-[9999999] max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-lg pointer-events-auto",
+        "relative z-[9999999] max-h-[var(--radix-select-content-available-height)] min-w-[8rem] overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-lg pointer-events-auto",
         // Animations
         "data-[state=open]:animate-scale-in data-[state=open]:animate-fade-in",
         "data-[state=closed]:animate-scale-out data-[state=closed]:animate-fade-out",
@@ -93,7 +93,7 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          'p-1 max-h-[--radix-select-content-available-height] overflow-y-auto',
+          'p-1 max-h-[var(--radix-select-content-available-height)] overflow-y-auto overscroll-contain touch-pan-y pointer-events-auto',
           position === 'popper' &&
             // Remove reserved trigger-height to avoid large visual gap below trigger
             'w-full min-w-[var(--radix-select-trigger-width)]'
