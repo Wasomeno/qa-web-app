@@ -18,6 +18,7 @@ export interface ChatSessionDetail {
   last_update_time: string;
   messages: ChatMessageFromApi[];
   message_count: number;
+  preview?: string;
 }
 
 // GET /agent/chat-sessions - List all chat sessions
