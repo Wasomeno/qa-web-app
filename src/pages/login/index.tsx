@@ -89,99 +89,51 @@ export const LoginPage: React.FC = () => {
 
   if (session?.loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white">
+      <div className="flex min-h-screen w-full items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full bg-white font-sans selection:bg-zinc-100 selection:text-zinc-900">
-      {/* Left / Top — Brand & Value Props */}
-      <div className="relative flex flex-1 flex-col items-center justify-center bg-[#0b0b0c] px-8 py-16 text-white lg:items-start lg:px-16 xl:px-24">
+    <>
+      {/* Mobile Layout — centered dark card */}
+      <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#0b0b0c] px-6 py-8 font-sans lg:hidden">
         {/* subtle glow */}
-        <div className="pointer-events-none absolute inset-0 opacity-40">
-          <div className="absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-[#863bff] blur-[120px]" />
-          <div className="absolute bottom-1/4 -right-20 h-72 w-72 rounded-full bg-zinc-600 blur-[120px]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
+          <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-[#863bff] blur-[100px]" />
+          <div className="absolute bottom-1/4 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-zinc-600 blur-[100px]" />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 w-full max-w-md"
-        >
-          <div className="flex items-center gap-3">
-            <FlowGLogo className="h-9 w-9 text-white" />
-            <span className="text-2xl font-bold tracking-tight">FlowG</span>
-          </div>
-
-          <h2 className="mt-8 text-[28px] font-semibold leading-tight tracking-tight lg:text-[32px]">
-            Your AI-powered
-            <br />
-            QA companion
-          </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-white/60">
-            Manage issues, test scenarios, and recordings — all in one place.
-          </p>
-
-          <div className="mt-10 space-y-4">
-            {FEATURES.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: 0.2 + i * 0.08,
-                    duration: 0.4,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  className="flex items-start gap-3.5"
-                >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                    <Icon className="h-4 w-4 text-white/80" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-medium text-white/90">
-                      {f.title}
-                    </p>
-                    <p className="text-[12px] leading-relaxed text-white/50">
-                      {f.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Right / Bottom — Login Action */}
-      <div className="relative flex w-full flex-col items-center justify-center px-6 py-16 lg:w-[480px] lg:shrink-0 xl:w-[520px]">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[360px]"
+          className="relative z-10 flex w-full max-w-sm flex-col items-center text-center"
         >
-          <div className="flex flex-col items-center lg:items-start">
-            <h1 className="text-[22px] font-semibold tracking-tight text-gray-900">
-              Sign in to FlowG
-            </h1>
-            <p className="mt-1.5 text-center text-[14px] text-gray-500 lg:text-left">
-              Continue with your GitLab account to get started.
-            </p>
+          <div className="flex items-center gap-3">
+            <FlowGLogo className="h-10 w-10 text-white" />
+            <span className="text-3xl font-bold tracking-tight text-white">
+              FlowG
+            </span>
           </div>
+
+          <h1 className="mt-6 text-[22px] font-semibold leading-tight tracking-tight text-white sm:text-[26px]">
+            Your AI-powered
+            <br />
+            QA companion
+          </h1>
+          <p className="mt-2 text-[14px] leading-relaxed text-white/50">
+            Manage issues, test scenarios, and recordings — all in one place.
+          </p>
 
           <button
             onClick={handleLogin}
             disabled={isLoading}
-            className="group relative mt-8 flex h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-zinc-900 px-5 text-[14px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-zinc-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
+            className="group relative mt-8 flex h-12 w-full max-w-[320px] items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-white px-5 text-[14px] font-semibold text-zinc-900 shadow-sm transition-all duration-200 hover:bg-zinc-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0b0c] disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-white/80" />
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
             ) : (
               <>
                 <GitLabIcon className="h-5 w-5" />
@@ -190,16 +142,146 @@ export const LoginPage: React.FC = () => {
             )}
           </button>
 
-          <p className="mt-4 text-center text-[12px] text-gray-400 lg:text-left">
+          <p className="mt-3 text-[12px] text-white/40">
             Secure authentication via GitLab OAuth
           </p>
+
+          <div className="mt-8 grid grid-cols-3 gap-3">
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <motion.div
+                  key={f.title}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.3 + i * 0.08,
+                    duration: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="flex flex-col items-center gap-2 rounded-xl bg-white/5 px-3 py-4"
+                >
+                  <Icon className="h-5 w-5 text-white/70" />
+                  <span className="text-[11px] font-medium text-white/70">
+                    {f.title.split(' ')[0]}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
         </motion.div>
 
-        <div className="absolute bottom-6 text-[12px] text-gray-400">
+        <div className="absolute bottom-6 text-[12px] text-white/30">
           &copy; {new Date().getFullYear()} FlowG
         </div>
       </div>
-    </div>
+
+      {/* Desktop Layout — split panel */}
+      <div className="relative hidden min-h-screen w-full flex-row bg-white font-sans selection:bg-zinc-100 selection:text-zinc-900 lg:flex">
+        {/* Left — Brand & Value Props */}
+        <div className="relative flex flex-1 flex-col items-start justify-center bg-[#0b0b0c] px-16 py-16 text-white xl:px-24">
+          {/* subtle glow */}
+          <div className="pointer-events-none absolute inset-0 opacity-40">
+            <div className="absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-[#863bff] blur-[120px]" />
+            <div className="absolute bottom-1/4 -right-20 h-72 w-72 rounded-full bg-zinc-600 blur-[120px]" />
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-md"
+          >
+            <div className="flex items-center gap-3">
+              <FlowGLogo className="h-9 w-9 text-white" />
+              <span className="text-2xl font-bold tracking-tight">FlowG</span>
+            </div>
+
+            <h2 className="mt-8 text-[32px] font-semibold leading-tight tracking-tight">
+              Your AI-powered
+              <br />
+              QA companion
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/60">
+              Manage issues, test scenarios, and recordings — all in one place.
+            </p>
+
+            <div className="mt-10 space-y-4">
+              {FEATURES.map((f, i) => {
+                const Icon = f.icon;
+                return (
+                  <motion.div
+                    key={f.title}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      delay: 0.2 + i * 0.08,
+                      duration: 0.4,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="flex items-start gap-3.5"
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+                      <Icon className="h-4 w-4 text-white/80" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-white/90">
+                        {f.title}
+                      </p>
+                      <p className="text-[12px] leading-relaxed text-white/50">
+                        {f.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right — Login Action */}
+        <div className="relative flex w-[480px] shrink-0 flex-col items-center justify-center px-12 py-16 xl:w-[520px]">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-[360px]"
+          >
+            <div className="flex flex-col items-start">
+              <h1 className="text-[22px] font-semibold tracking-tight text-gray-900">
+                Sign in to FlowG
+              </h1>
+              <p className="mt-1.5 text-[14px] text-gray-500">
+                Continue with your GitLab account to get started.
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="group relative mt-8 flex h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-zinc-900 px-5 text-[14px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-zinc-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-white/80" />
+              ) : (
+                <>
+                  <GitLabIcon className="h-5 w-5" />
+                  <span>Continue with GitLab</span>
+                </>
+              )}
+            </button>
+
+            <p className="mt-4 text-[12px] text-gray-400">
+              Secure authentication via GitLab OAuth
+            </p>
+          </motion.div>
+
+          <div className="absolute bottom-6 text-[12px] text-gray-400">
+            &copy; {new Date().getFullYear()} FlowG
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
