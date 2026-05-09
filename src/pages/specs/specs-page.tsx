@@ -1,9 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { ProjectSelect } from '@/components/project-select';
 import { useProjectBranches } from '@/hooks/use-project-branches';
 import { useLazyFileTree } from '@/hooks/use-lazy-file-tree';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Sheet,
+  SheetContent,
+} from '@/components/ui/sheet';
 import {
   useSpecsFile,
   useSaveSpecsFile,
@@ -20,6 +25,7 @@ import {
   History,
   FolderTree,
   X,
+  Menu,
 } from 'lucide-react';
 import type { GitLabProject } from '@/types/project';
 
@@ -68,6 +74,11 @@ export function SpecsPage() {
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [sidePanel, setSidePanel] = useState<SidePanel>('none');
   const [selectedCommitSha, setSelectedCommitSha] = useState<string | null>(null);
+
+  // --- Mobile sheet state ---
+  const isMobile = useIsMobile();
+  const [mobileFileTreeOpen, setMobileFileTreeOpen] = useState(false);
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
 
   const projectId = selectedProjectId ? Number(selectedProjectId) : undefined;
 
@@ -143,6 +154,12 @@ export function SpecsPage() {
     setSelectedCommitSha(null);
   }, []);
 
+  const handleFileSelectMobile = useCallback((path: string) => {
+    setActiveFile(path);
+    setSelectedCommitSha(null);
+    setMobileFileTreeOpen(false);
+  }, []);
+
   const handleSave = useCallback(
     async (content: string) => {
       if (!activeFile) return;
@@ -175,7 +192,7 @@ export function SpecsPage() {
   // --- Empty state: no project selected ---
   if (!selectedProjectId) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full px-4">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -205,53 +222,106 @@ export function SpecsPage() {
 
   const activeFileName = activeFile?.split('/').pop();
 
-  return (
-    <div className="flex h-full bg-background">
-      {/* ── File Tree Sidebar ── */}
-      <div className="w-[260px] shrink-0 border-r border-border/40 flex flex-col bg-muted/10">
-        {/* Sidebar header: project + branch selectors */}
-        <div className="flex flex-col gap-2 px-3 py-3 border-b border-border/40 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <FolderTree className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-              <span className="text-[13px] font-semibold text-foreground/80">Specs</span>
-            </div>
-            <ProjectSelect
-              value={selectedProjectId}
-              onSelect={handleProjectSelect}
-              size="compact"
-              placeholder="Project"
-              className="max-w-[120px]"
-            />
+  // Shared file tree sidebar content
+  const fileTreeSidebarContent = (
+    <>
+      <div className="flex flex-col gap-2 px-3 py-3 border-b border-border/40 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <FolderTree className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+            <span className="text-[13px] font-semibold text-foreground/80">Specs</span>
           </div>
-          <BranchSelect
-            branches={branches}
-            value={effectiveBranch}
-            onSelect={handleBranchSelect}
-            onSearch={setBranchSearch}
-            loading={branchesLoading}
+          <ProjectSelect
+            value={selectedProjectId}
+            onSelect={handleProjectSelect}
             size="compact"
-            className="w-full"
+            placeholder="Project"
+            className="max-w-[120px]"
           />
         </div>
-
-        <FileTree
-          nodes={tree}
-          activePath={activeFile}
-          onSelect={handleFileSelect}
-          onExpand={loadChildren}
-          loadingPaths={loadingPaths}
-          isLoaded={isLoaded}
-          loading={treeLoading}
-          onRefresh={handleRefresh}
-          className="flex-1"
+        <BranchSelect
+          branches={branches}
+          value={effectiveBranch}
+          onSelect={handleBranchSelect}
+          onSearch={setBranchSearch}
+          loading={branchesLoading}
+          size="compact"
+          className="w-full"
         />
       </div>
+      <FileTree
+        nodes={tree}
+        activePath={activeFile}
+        onSelect={isMobile ? handleFileSelectMobile : handleFileSelect}
+        onExpand={loadChildren}
+        loadingPaths={loadingPaths}
+        isLoaded={isLoaded}
+        loading={treeLoading}
+        onRefresh={handleRefresh}
+        className="flex-1"
+      />
+    </>
+  );
+
+  return (
+    <div className="flex h-full bg-background">
+      {/* ── Desktop File Tree Sidebar ── */}
+      <div className="hidden md:flex w-[260px] shrink-0 border-r border-border/40 flex-col bg-muted/10">
+        {fileTreeSidebarContent}
+      </div>
+
+      {/* ── Mobile File Tree Sheet ── */}
+      <Sheet open={mobileFileTreeOpen} onOpenChange={setMobileFileTreeOpen}>
+        <SheetContent side="left" className="p-0 w-4/5 max-w-[300px] flex flex-col">
+          {fileTreeSidebarContent}
+        </SheetContent>
+      </Sheet>
 
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Breadcrumb + Actions bar */}
-        <div className="flex items-center justify-between px-5 py-2 border-b border-border/40 bg-muted/10 shrink-0">
+        {/* Mobile header */}
+        <div className="flex md:hidden items-center justify-between pl-14 pr-3 py-2 border-b border-border/40 bg-muted/10 shrink-0 gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileFileTreeOpen(true)}
+            className="h-8 px-2 shrink-0"
+          >
+            <Menu className="h-4 w-4 mr-1.5" />
+            Files
+          </Button>
+          <div className="flex items-center gap-1 min-w-0 text-[13px]">
+            <span className="text-muted-foreground/50 font-medium truncate">
+              {selectedProjectName}
+            </span>
+            <span className="text-muted-foreground/30 shrink-0">/</span>
+            <span className="text-xs text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded font-mono shrink-0">
+              {effectiveBranch}
+            </span>
+            {activeFile && (
+              <>
+                <span className="text-muted-foreground/30 shrink-0">/</span>
+                <span className="font-semibold text-foreground/80 truncate">
+                  {activeFileName}
+                </span>
+              </>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileHistoryOpen(true)}
+            className={cn(
+              'h-8 px-2 shrink-0',
+              mobileHistoryOpen && 'bg-muted text-foreground/80'
+            )}
+          >
+            <History className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Desktop Breadcrumb + Actions bar */}
+        <div className="hidden md:flex items-center justify-between px-5 py-2 border-b border-border/40 bg-muted/10 shrink-0">
           <div className="flex items-center gap-1.5 text-[13px] min-w-0">
             <span className="text-muted-foreground/50 font-medium">
               {selectedProjectName}
@@ -305,28 +375,47 @@ export function SpecsPage() {
             />
           </div>
 
-          {/* Side Panel */}
-          {sidePanel === 'history' && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="shrink-0 border-l border-border/40 overflow-hidden"
-            >
-              <CommitHistory
-                commits={commits}
-                loading={commitsLoading}
-                onRefresh={refetchCommits}
-                onSelectCommit={handleSelectCommit}
-                selectedCommit={commitDetail}
-                loadingDetail={commitDetailLoading}
-                className="h-full"
-              />
-            </motion.div>
-          )}
+          {/* Desktop Side Panel */}
+          <div className="hidden md:block h-full">
+            <AnimatePresence initial={false}>
+              {sidePanel === 'history' && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 320, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="shrink-0 border-l border-border/40 overflow-hidden h-full"
+                >
+                  <CommitHistory
+                    commits={commits}
+                    loading={commitsLoading}
+                    onRefresh={refetchCommits}
+                    onSelectCommit={handleSelectCommit}
+                    selectedCommit={commitDetail}
+                    loadingDetail={commitDetailLoading}
+                    className="h-full"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
+
+      {/* ── Mobile History Sheet ── */}
+      <Sheet open={mobileHistoryOpen} onOpenChange={setMobileHistoryOpen}>
+        <SheetContent side="right" className="p-0 w-full sm:max-w-md flex flex-col">
+          <CommitHistory
+            commits={commits}
+            loading={commitsLoading}
+            onRefresh={refetchCommits}
+            onSelectCommit={handleSelectCommit}
+            selectedCommit={commitDetail}
+            loadingDetail={commitDetailLoading}
+            className="h-full"
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
