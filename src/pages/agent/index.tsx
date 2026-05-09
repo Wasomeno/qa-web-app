@@ -197,8 +197,8 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
 
         {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 relative z-10 overflow-auto">
-          <div className="w-full max-w-2xl space-y-8">
+        <div className="flex-1 flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 relative z-10 overflow-auto">
+          <div className="w-full max-w-2xl space-y-6 md:space-y-8">
             {/* Logo and Title or Commands List */}
             {isCommandMode ? (
               <MotionConfig
@@ -207,7 +207,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                 <motion.div
                   animate={boundsReady ? { height: bounds.height } : {}}
                   transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                  className="w-[calc(100%+2rem)] -ml-4 px-4 pb-8 -mb-8 relative overflow-visible"
+                  className="w-full sm:w-[calc(100%+2rem)] sm:-ml-4 px-0 sm:px-4 pb-4 sm:pb-8 -mb-4 sm:-mb-8 relative overflow-visible"
                 >
                   <div className="w-full relative px-1 py-1" ref={ref}>
                     <motion.div
@@ -260,8 +260,8 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                 </motion.div>
               </MotionConfig>
             ) : (
-              <div className="text-center space-y-3">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground">
+              <div className="text-center space-y-3 px-2 sm:px-0">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                   Welcome to FlowG
                 </h1>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
@@ -272,7 +272,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
             )}
 
             {/* Chat Input */}
-            <div className="relative w-full mt-8">
+            <div className="relative w-full mt-6 md:mt-8">
               <ChatInput
                 onSend={(value, files) => startNewChat(value, files)}
                 placeholder="Ask me anything..."
@@ -299,7 +299,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                         duration: 0.25,
                         ease: [0.16, 1, 0.3, 1],
                       }}
-                      className="flex items-center gap-3 p-3 rounded-lg"
+                      className="flex items-center gap-3 p-3 sm:p-3 rounded-lg"
                     >
                       <div className="flex-1 min-w-0 space-y-2.5">
                         <Skeleton className="h-3.5 rounded" style={{ width: `${65 - i * 8}%` }} />
@@ -347,7 +347,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                           transition={{ delay: 0.1 * index, duration: 0.2 }}
                           onClick={() => !isLoading && handleResumeSession(session)}
                           className={cn(
-                            "group flex items-center gap-3 p-3 rounded-lg border cursor-pointer",
+                            "group flex items-center gap-3 p-3 sm:p-3 rounded-lg border cursor-pointer",
                             "transition-all duration-200",
                             isLoading 
                               ? "bg-primary/5 border-primary/30" 
@@ -532,14 +532,14 @@ const ChatView: React.FC<ChatViewProps> = ({
       {/* Floating Back Button */}
       <button
         type="button"
-        className="absolute top-4 left-4 h-12 w-12 z-50 flex items-center justify-center rounded-md opacity-40 hover:opacity-100 transition-opacity"
+        className="absolute top-2 left-2 sm:top-4 sm:left-4 h-9 w-9 sm:h-12 sm:w-12 z-50 flex items-center justify-center rounded-md opacity-40 hover:opacity-100 transition-opacity"
         onClick={onBack}
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
       </button>
 
       <ScrollArea className="flex-1 w-full" ref={scrollRef}>
-        <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col min-h-full justify-end">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col min-h-full justify-end">
           <div className="space-y-2">
             <AnimatePresence initial={false}>
               {messages.map((msg) => (

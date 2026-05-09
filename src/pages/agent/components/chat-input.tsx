@@ -230,7 +230,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const isActive = isFocused || hasContent;
 
   return (
-    <div className="relative w-full flex flex-col justify-end min-h-[60px] pb-2 z-10">
+    <div className="relative w-full flex flex-col justify-end min-h-[52px] sm:min-h-[60px] pb-2 z-10">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -323,7 +323,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="absolute bottom-[calc(100%+12px)] left-0 w-[320px] bg-white border border-neutral-200 shadow-xl rounded-xl overflow-hidden z-50"
+              className="absolute bottom-[calc(100%+12px)] left-0 w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-neutral-200 shadow-xl rounded-xl overflow-hidden z-50"
             >
               <div className="px-3 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider border-b border-neutral-100 bg-neutral-50/50">
                 Commands

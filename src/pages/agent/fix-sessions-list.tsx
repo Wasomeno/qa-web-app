@@ -157,7 +157,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Header */}
-      <div className="flex-none px-8 pt-8 pb-4 bg-white z-20">
+      <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-white z-20">
         <h1 className="text-2xl font-bold text-gray-900">Fix Sessions</h1>
         <p className="text-sm text-gray-500 mt-1">
           Monitor and manage your automated fix sessions
@@ -169,7 +169,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
         {/* Sessions List */}
         <div className="flex-1 flex flex-col min-w-0">
           <ScrollArea className="flex-1 [&>div>div[style]]:!block [&>div>div[style]]:h-full">
-            <div className="flex flex-col h-full px-8 pb-8">
+            <div className="flex flex-col h-full px-4 md:px-8 pb-8">
               {isLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 4 }).map((_, i) => (
@@ -332,7 +332,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 436, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 bottom-0 w-[436px] z-50 border-l border-gray-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+              className="absolute right-0 top-0 bottom-0 w-full md:w-[436px] z-50 border-l border-gray-200 bg-white overflow-hidden flex flex-col shadow-2xl"
             >
               <FixSessionDetailPanel
                 session={getSelectedSession()}
