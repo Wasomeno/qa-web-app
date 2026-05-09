@@ -522,10 +522,10 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         {/* -------- Stream -------- */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-6 py-8">
+          <div className="max-w-3xl mx-auto px-4 md:px-6 py-8">
             {/* Description */}
             <StreamItem
               avatar={
@@ -754,7 +754,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
         </div>
 
         {/* -------- Sidebar -------- */}
-        <div className="w-64 flex-shrink-0 border-l border-gray-100 bg-gray-50/30 p-5 space-y-6 overflow-y-auto">
+        <div className="w-full lg:w-64 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-100 bg-gray-50/30 p-5 space-y-6 overflow-y-auto">
           {/* Actions */}
           <div className="space-y-2">
             <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">

@@ -140,20 +140,20 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header & Filters */}
-      <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
-        <div className="flex items-end justify-between">
+      <div className="flex-none px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
               Issue Boards
             </h1>
-            <p className="text-sm text-gray-500 mt-1.5">
+            <p className="text-sm text-gray-500 mt-1">
               Drag and drop issues to move them across your workflow
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 overflow-x-auto pb-1 md:pb-0">
             {/* Density Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-100">
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-100 shrink-0">
               <button
                 onClick={() => setDensity('comfortable')}
                 className={cn(
@@ -185,14 +185,14 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
             <div className="h-6 w-px bg-gray-200" />
 
             {isBoardLoading ? (
-              <Skeleton className="h-9 w-[250px] shrink-0" />
+              <Skeleton className="h-9 w-[180px] md:w-[250px] shrink-0" />
             ) : (
               <ProjectFilter
                 selectedProjectIds={activeProjectId ? [activeProjectId] : []}
                 onSelect={handleProjectSelect}
                 portalContainer={portalContainer}
                 singleSelect={true}
-                className="w-[260px] shrink-0"
+                className="w-[180px] md:w-[260px] shrink-0"
               />
             )}
           </div>

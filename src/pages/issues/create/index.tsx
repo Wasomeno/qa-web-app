@@ -16,16 +16,16 @@ export const CreateIssuePage: React.FC<CreateIssuePageProps> = ({
   return (
     <ScrollArea className="h-full">
       <div className="pb-32">
-        <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex-none space-y-5 px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Create Issue</h1>
-            <p className="text-sm text-gray-500 mt-1.5">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">Create Issue</h1>
+            <p className="text-sm text-gray-500 mt-1">
               Report a new bug or quality issue
             </p>
           </div>
         </div>
 
-        <div className="px-8 pt-6">
+        <div className="px-4 md:px-8 pt-6">
           <Tabs defaultValue="issue" className="w-full">
             <SlidingTabsList className="mb-6" variant="line-sliding">
               <TabsTrigger value="issue" variant="line-sliding">Issue</TabsTrigger>

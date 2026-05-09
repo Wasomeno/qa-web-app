@@ -114,11 +114,11 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
   return (
     <div className="flex flex-1 w-full flex-col overflow-hidden bg-[#F9FAFB]">
       {/* Header & Filters */}
-      <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
-        <div className="flex items-end justify-between">
+      <div className="flex-none space-y-5 px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Issues</h1>
-            <p className="text-sm text-gray-500 mt-1.5">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">Issues</h1>
+            <p className="text-sm text-gray-500 mt-1">
               Manage issues across your projects
             </p>
           </div>
@@ -136,7 +136,7 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col w-full overflow-y-auto overscroll-contain px-8 py-8">
+      <div className="flex-1 flex flex-col w-full overflow-y-auto overscroll-contain px-4 md:px-8 py-6 md:py-8">
         <IssueList
           issues={issues.data}
           isLoading={isInitialLoading}
