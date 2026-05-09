@@ -16,6 +16,8 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { useSession } from '@/contexts/session-context';
 import { useLogout } from '@/hooks/use-logout';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 import {
   SidebarProvider,
@@ -354,6 +356,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
           {/* Content Area */}
           <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
+            {/* Mobile Floating Trigger */}
+            <div className="absolute left-3 top-3 z-50 md:hidden">
+              <SidebarTrigger className="h-9 w-9 rounded-full border bg-white/90 shadow-sm backdrop-blur-sm hover:bg-white" />
+            </div>
             {children}
           </div>
         </SidebarProvider>
