@@ -35,7 +35,7 @@ function getFileIcon(name: string) {
   switch (ext) {
     case 'md':
     case 'markdown':
-      return <FileType className="h-3.5 w-3.5 text-slate-400" />;
+      return <FileType className="h-3.5 w-3.5 shrink-0 text-slate-400" />;
     case 'ts':
     case 'tsx':
     case 'js':
@@ -43,16 +43,16 @@ function getFileIcon(name: string) {
     case 'json':
     case 'yaml':
     case 'yml':
-      return <FileCode className="h-3.5 w-3.5 text-stone-400" />;
+      return <FileCode className="h-3.5 w-3.5 shrink-0 text-stone-400" />;
     case 'png':
     case 'jpg':
     case 'jpeg':
     case 'gif':
     case 'svg':
     case 'webp':
-      return <FileImage className="h-3.5 w-3.5 text-zinc-400" />;
+      return <FileImage className="h-3.5 w-3.5 shrink-0 text-zinc-400" />;
     default:
-      return <File className="h-3.5 w-3.5 text-muted-foreground/60" />;
+      return <File className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />;
   }
 }
 
@@ -254,7 +254,7 @@ function TreeNodeItem({
     <div>
       <button
         className={cn(
-          'flex items-center w-full text-left py-[5px] text-[13px] rounded-md mx-1 transition-all duration-150 group relative',
+          'flex items-center w-full text-left py-[5px] text-[13px] rounded-md mx-1 transition-all duration-150 group relative overflow-hidden',
           isActive
             ? 'bg-muted text-foreground/90 font-medium'
             : 'text-foreground/70 hover:bg-muted/60 hover:text-foreground'
@@ -278,7 +278,7 @@ function TreeNodeItem({
           <>
             <span
               className={cn(
-                'mr-1 transition-transform duration-200',
+                'mr-1 flex h-4 w-4 shrink-0 items-center justify-center transition-transform duration-200',
                 isExpanded && 'rotate-0',
                 !isExpanded && '-rotate-90'
               )}
@@ -297,12 +297,13 @@ function TreeNodeItem({
           </>
         ) : (
           <>
-            <span className="w-4 mr-1" />
-            {getFileIcon(node.name)}
-            <span className="ml-1.5" />
+            <span className="mr-1 h-4 w-4 shrink-0" />
+            <span className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center">
+              {getFileIcon(node.name)}
+            </span>
           </>
         )}
-        <span className="truncate leading-tight">{node.name}</span>
+        <span className="min-w-0 truncate leading-tight">{node.name}</span>
       </button>
 
       <AnimatePresence initial={false}>
