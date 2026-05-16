@@ -1,26 +1,28 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Terminal, Trash2, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, RefreshCw, Terminal, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-import { testScenarioApi } from '@/api/test-scenario';
+import { testScenarioApi } from "@/api/test-scenario";
 
-import { useNavigation } from '@/contexts/navigation-context';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useNavigation } from "@/contexts/navigation-context";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
-import { ProjectSelect } from '@/components/project-select';
-import { StyledCheckbox, SelectAllCheckbox } from '@/components/ui/styled-checkbox';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ProjectSelect } from "@/components/project-select";
+import {
+  StyledCheckbox,
+  SelectAllCheckbox,
+} from "@/components/ui/styled-checkbox";
 
-import { SearchablePicker } from '../issues/components/searchable-picker';
-import { UploadWizard } from './components/upload-wizard';
-import { ScenarioItem } from './components/scenario-item';
+import { SearchablePicker } from "../issues/components/searchable-picker";
+import { ScenarioItem } from "./components/scenario-item";
 
 const ScenarioSkeleton = () => (
   <div className="flex flex-col border border-zinc-100 rounded-xl overflow-hidden bg-white h-full">
@@ -42,10 +44,13 @@ const ScenarioSkeleton = () => (
 
 export const TestScenariosPage: React.FC<{
   portalContainer?: HTMLElement | null;
-}> = ({ portalContainer }) => {
+  projectId?: string;
+  projectName?: string;
+  hideHeader?: boolean;
+}> = ({ portalContainer, projectId, projectName, hideHeader = false }) => {
   const navigate = useNavigate();
   const { push } = useNavigation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -53,17 +58,62 @@ export const TestScenariosPage: React.FC<{
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Use local project state for this page
-  const [selectedProjectId, setSelectedProjectId] = useLocalStorage<string | null>(
-    'test-scenarios-project-id',
-    null
-  );
+  const [selectedProjectId, setSelectedProjectId] = useLocalStorage<
+    string | null
+  >("test-scenarios-project-id", null);
 
-  const handleProjectSelect = (project: { id: number; name: string } | null) => {
+  const handleProjectSelect = (
+    project: { id: number; name: string } | null,
+  ) => {
+    if (projectId) return;
     setSelectedProjectId(project?.id.toString() ?? null);
   };
+
+  const activeProjectId = projectId || selectedProjectId;
+
+  const handleSync = async () => {
+    if (!activeProjectId) {
+      toast.error("Select a project before syncing scenarios");
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const result = await testScenarioApi.syncScenarios(activeProjectId);
+      await refetch();
+      toast.success(`Synced ${result.count} scenario${result.count === 1 ? "" : "s"}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to sync scenarios");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const renderSyncScenariosButton = () => (
+    <Button
+      variant="ghost"
+      className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleSync();
+      }}
+      disabled={isSyncing || !activeProjectId}
+      title={
+        activeProjectId
+          ? "Sync docs/test-scenarios from the project specs repository"
+          : "Select a project before syncing scenarios"
+      }
+    >
+      {isSyncing ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <RefreshCw className="w-4 h-4" />
+      )}
+      Sync from specs
+    </Button>
+  );
 
   // Queries
   const {
@@ -71,12 +121,19 @@ export const TestScenariosPage: React.FC<{
     refetch,
     isLoading: isScenariosLoading,
   } = useQuery({
-    queryKey: ['test-scenarios'],
+    queryKey: ["test-scenarios", activeProjectId],
     queryFn: async () => {
-      const result = await testScenarioApi.listScenarios();
-      console.log('API Response for scenarios:', result);
+      const result = await testScenarioApi.listScenarios(
+        activeProjectId ?? undefined,
+      );
+      console.log("API Response for scenarios:", result);
       // Handle both array response and paginated response { data: [...] }
-      if (result && typeof result === 'object' && !Array.isArray(result) && 'data' in result) {
+      if (
+        result &&
+        typeof result === "object" &&
+        !Array.isArray(result) &&
+        "data" in result
+      ) {
         return (result as any).data || [];
       }
       return Array.isArray(result) ? result : [];
@@ -93,14 +150,14 @@ export const TestScenariosPage: React.FC<{
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     setDeleteError(null);
-    
+
     try {
-      await testScenarioApi.deleteScenario(id);
-      toast.success('Test scenario deleted successfully');
+      await testScenarioApi.deleteScenario(id, projectId);
+      toast.success("Test scenario deleted successfully");
       refetch();
     } catch (e: any) {
       console.error(e);
-      const errorMessage = e?.message || 'Failed to delete test scenario';
+      const errorMessage = e?.message || "Failed to delete test scenario";
       setDeleteError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -111,15 +168,20 @@ export const TestScenariosPage: React.FC<{
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     setIsDeleting(true);
-    
+
     try {
-      await testScenarioApi.bulkDeleteScenarios(Array.from(selectedIds));
-      toast.success(`${selectedIds.size} test scenario(s) deleted successfully`);
+      await testScenarioApi.bulkDeleteScenarios(
+        Array.from(selectedIds),
+        projectId,
+      );
+      toast.success(
+        `${selectedIds.size} test scenario(s) deleted successfully`,
+      );
       setSelectedIds(new Set());
       refetch();
     } catch (e: any) {
-      console.error('Failed to bulk delete scenarios:', e);
-      const errorMessage = e?.message || 'Failed to delete test scenarios';
+      console.error("Failed to bulk delete scenarios:", e);
+      const errorMessage = e?.message || "Failed to delete test scenarios";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -140,67 +202,69 @@ export const TestScenariosPage: React.FC<{
     if (selectedIds.size === filteredItems.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredItems.map(item => item.id)));
+      setSelectedIds(new Set(filteredItems.map((item) => item.id)));
     }
   };
 
   const handleGenerate = (id: string, sectionIds: string[]) => {
     // Triggers generation for selected sections from the outer view
-    testScenarioApi.generateTests(id, { sectionIds }).then(() => refetch());
+    testScenarioApi
+      .generateTests(id, { sectionIds, projectId })
+      .then(() => refetch());
   };
 
   const filteredItems = useMemo(() => {
     const searchLower = searchQuery.toLowerCase();
     const items = Array.isArray(scenarios) ? scenarios : [];
-    return items.filter(s => {
-      const title = s.title || '';
+    return items.filter((s) => {
+      const title = s.title || "";
       const matchesSearch = title.toLowerCase().includes(searchLower);
       const matchesProject =
-        !selectedProjectId ||
-        s.projectId?.toString() === selectedProjectId;
+        !!projectId ||
+        !activeProjectId ||
+        s.projectId?.toString() === activeProjectId;
       return matchesSearch && matchesProject;
     });
-  }, [scenarios, selectedProjectId, searchQuery]);
+  }, [scenarios, activeProjectId, projectId, searchQuery]);
 
-  const allSelected = filteredItems.length > 0 && selectedIds.size === filteredItems.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < filteredItems.length;
+  const allSelected =
+    filteredItems.length > 0 && selectedIds.size === filteredItems.length;
+  const someSelected =
+    selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Header & Filters */}
       <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Test Scenarios</h1>
-            <p className="text-sm text-gray-500 mt-1.5">
-              Review and manage AI-generated test scenarios
-            </p>
-          </div>
-          <div className="shrink-0 pt-1">
-            <AnimatePresence mode="wait">
-              {selectedIds.size === 0 && (
-                <motion.div
-                  key="import-btn"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setIsWizardOpen(true);
-                    }}
+        {!hideHeader && (
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+                Test Scenarios
+              </h1>
+              <p className="text-sm text-gray-500 mt-1.5">
+                {projectName
+                  ? `Review scenarios for ${projectName}`
+                  : "Review and manage AI-generated test scenarios"}
+              </p>
+            </div>
+            <div className="shrink-0 pt-1">
+              <AnimatePresence mode="wait">
+                {selectedIds.size === 0 && (
+                  <motion.div
+                    key="import-btn"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
                   >
-                    <Plus className="w-5 h-5" /> Import Scenarios (.xlsx)
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    {renderSyncScenariosButton()}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex items-center justify-between gap-2 mt-5">
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -209,18 +273,25 @@ export const TestScenariosPage: React.FC<{
                 placeholder="Search scenarios..."
                 className="pl-9 w-64 h-10 bg-white border-theme-border rounded-xl focus-visible:ring-2 focus-visible:ring-zinc-900"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <ProjectSelect
-              value={selectedProjectId}
-              onSelect={handleProjectSelect}
-              mode="single"
-              portalContainer={portalContainer}
-              placeholder="All Projects"
-              extraOptions={{ allProjects: true }}
-            />
+            {!projectId && (
+              <ProjectSelect
+                value={selectedProjectId}
+                onSelect={handleProjectSelect}
+                mode="single"
+                portalContainer={portalContainer}
+                placeholder="All Projects"
+                extraOptions={{ allProjects: true }}
+              />
+            )}
           </div>
+          {hideHeader && (
+            <div className="shrink-0">
+              {renderSyncScenariosButton()}
+            </div>
+          )}
         </div>
       </div>
 
@@ -253,7 +324,7 @@ export const TestScenariosPage: React.FC<{
                     {filteredItems.map((item, index) => (
                       <motion.div
                         key={item.id}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                         className="relative"
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -270,7 +341,7 @@ export const TestScenariosPage: React.FC<{
                             >
                               <StyledCheckbox
                                 checked={selectedIds.has(item.id)}
-                                onChange={e => {
+                                onChange={(e) => {
                                   e.stopPropagation();
                                   toggleSelection(item.id);
                                 }}
@@ -283,18 +354,42 @@ export const TestScenariosPage: React.FC<{
                           scenario={item}
                           isSelected={false}
                           onClick={() => {
-                            navigate({ to: '/test-scenarios/$id', params: { id: item.id } });
+                            projectId
+                              ? navigate({
+                                  to: "/projects/$id/test-scenarios/$scenarioId" as any,
+                                  params: {
+                                    id: projectId,
+                                    scenarioId: item.id,
+                                  } as any,
+                                })
+                              : navigate({
+                                  to: "/test-scenarios/$id",
+                                  params: { id: item.id },
+                                });
                           }}
-                          onGenerate={e => {
+                          onGenerate={(e) => {
                             e.stopPropagation();
-                            navigate({ to: '/test-scenarios/$id', params: { id: item.id } });
+                            projectId
+                              ? navigate({
+                                  to: "/projects/$id/test-scenarios/$scenarioId" as any,
+                                  params: {
+                                    id: projectId,
+                                    scenarioId: item.id,
+                                  } as any,
+                                })
+                              : navigate({
+                                  to: "/test-scenarios/$id",
+                                  params: { id: item.id },
+                                });
                           }}
-                          onDelete={e => {
+                          onDelete={(e) => {
                             e.stopPropagation();
                             handleDelete(item.id);
                           }}
                           isDeleting={deletingId === item.id}
-                          deleteError={deletingId === item.id ? deleteError : null}
+                          deleteError={
+                            deletingId === item.id ? deleteError : null
+                          }
                         />
                       </motion.div>
                     ))}
@@ -305,7 +400,7 @@ export const TestScenariosPage: React.FC<{
               <EmptyState
                 icon={Terminal}
                 title="No test scenarios found"
-                description="Import an XLSX file to get started."
+                description="Sync docs/test-scenarios from the selected specs repository."
                 className="h-full min-h-[400px]"
               />
             )}
@@ -354,12 +449,6 @@ export const TestScenariosPage: React.FC<{
         )}
       </AnimatePresence>
 
-      <UploadWizard
-        isOpen={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
-        onSuccess={() => refetch()}
-        portalContainer={portalContainer}
-      />
     </div>
   );
 };

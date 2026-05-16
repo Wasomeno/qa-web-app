@@ -76,6 +76,18 @@ function TestScenariosDetailRoute() {
       onUpdateTestCase={async (sectionId, tcId, data) => {
         await updateTestCaseMutation.mutateAsync({ sectionId, tcId, data });
       }}
+      onUpdateTestCaseAutomationCategory={async (sectionId, tcId, category) => {
+        const updated = await testScenarioApi.updateTestCaseAutomationCategory(
+          id,
+          tcId,
+          category,
+          { sectionId },
+        );
+        if (updated && "sections" in updated) {
+          queryClient.setQueryData(['test-scenario', id], updated);
+        }
+        return updated;
+      }}
       onReorderTestCases={async (sectionId, orderedIds) => {
         await reorderTestCasesMutation.mutateAsync({ sectionId, orderedIds });
       }}

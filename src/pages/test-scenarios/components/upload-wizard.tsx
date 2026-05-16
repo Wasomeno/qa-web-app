@@ -1,24 +1,26 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { Upload, X, Loader2, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { getProjects } from '@/api/project';
-import { testScenarioApi } from '@/api/test-scenario';
-import { cn } from '@/lib/utils';
-import { AuthConfig, TestScenario } from '@/types/test-scenario';
-import { SearchablePicker } from '@/pages/issues/components/searchable-picker';
-import { useDebounce } from '@/utils/useDebounce';
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { Upload, X, Loader2, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { listAppProjects } from "@/api/project";
+import { testScenarioApi } from "@/api/test-scenario";
+import { cn } from "@/lib/utils";
+import { AuthConfig, TestScenario } from "@/types/test-scenario";
+import { SearchablePicker } from "@/pages/issues/components/searchable-picker";
+import { useDebounce } from "@/utils/useDebounce";
 
 interface UploadWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   portalContainer?: HTMLElement | null;
-  variant?: 'overlay' | 'inline';
+  variant?: "overlay" | "inline";
+  projectId?: string;
+  projectName?: string;
 }
 
 export const UploadWizard: React.FC<UploadWizardProps> = ({
@@ -26,7 +28,9 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
   onClose,
   onSuccess,
   portalContainer,
-  variant = 'overlay',
+  variant = "overlay",
+  projectId: lockedProjectId,
+  projectName,
 }) => {
   // Stable refs — avoid stale closures
   const onCloseRef = useRef(onClose);
@@ -58,14 +62,14 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
   const [step, setStep] = useState<1 | 2>(1);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [projectId, setProjectId] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>(lockedProjectId || "");
 
   const [authConfig, setAuthConfig] = useState<AuthConfig>({
-    baseUrl: '',
-    loginUrl: '',
-    username: '',
-    password: '',
-    apiBaseUrl: '',
+    baseUrl: "",
+    loginUrl: "",
+    username: "",
+    password: "",
+    apiBaseUrl: "",
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -74,23 +78,30 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
     sheets: number;
   } | null>(null);
   const [scenarioDetails, setScenarioDetails] = useState<TestScenario | null>(
-    null
+    null,
   );
 
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [projectSearch, setProjectSearch] = useState('');
+  const [projectSearch, setProjectSearch] = useState("");
   const debouncedProjectSearch = useDebounce(projectSearch, 400);
 
+  useEffect(() => {
+    if (lockedProjectId) setProjectId(lockedProjectId);
+  }, [lockedProjectId]);
+
   const { data: projectsData, isFetching: isFetchingProjects } = useQuery({
-    queryKey: ['projects', debouncedProjectSearch],
-    queryFn: () => getProjects(debouncedProjectSearch),
+    queryKey: ["app-projects"],
+    queryFn: listAppProjects,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    enabled: !lockedProjectId,
   });
-  const projects = projectsData?.data?.projects || [];
+  const projects = (projectsData?.data?.projects || []).filter((project) =>
+    project.name.toLowerCase().includes(debouncedProjectSearch.toLowerCase()),
+  );
 
-  const isInline = variant === 'inline';
+  const isInline = variant === "inline";
   const usePortal = isInline && !!portalContainer;
 
   // ─── Event handlers ────────────────────────────────────────────────────────
@@ -103,11 +114,11 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
       const res = await testScenarioApi.uploadScenario(
         file,
         projectId,
-        authConfig
+        authConfig,
       );
 
       setUploadedScenario(res);
-      const details = await testScenarioApi.getScenario(res.id);
+      const details = await testScenarioApi.getScenario(res.id, projectId);
       setScenarioDetails(details);
 
       if (details.sections && details.sections.length > 0) {
@@ -116,7 +127,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
 
       setStep(2);
     } catch (err) {
-      console.error('Failed to upload', err);
+      console.error("Failed to upload", err);
     } finally {
       setIsUploading(false);
     }
@@ -126,11 +137,14 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
     if (!uploadedScenario?.id || selectedSheets.length === 0) return;
     try {
       setIsGenerating(true);
-      await testScenarioApi.generateTests(uploadedScenario.id, { sectionIds: selectedSheets });
+      await testScenarioApi.generateTests(uploadedScenario.id, {
+        sectionIds: selectedSheets,
+        projectId,
+      });
       onSuccessRef.current();
       onCloseRef.current();
     } catch (err) {
-      console.error('Failed to start generation', err);
+      console.error("Failed to start generation", err);
     } finally {
       setIsGenerating(false);
     }
@@ -158,10 +172,10 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
         }
       }}
       className={cn(
-        'z-[100] flex items-center justify-center bg-black/50 p-4 font-sans pointer-events-auto',
-        isInline ? 'absolute -inset-px' : 'fixed inset-0'
+        "z-[100] flex items-center justify-center bg-black/50 p-4 font-sans pointer-events-auto",
+        isInline ? "absolute -inset-px" : "fixed inset-0",
       )}
-      style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+      style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <motion.div
         animate={{
@@ -170,9 +184,9 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
           y: isOpen ? 0 : 8,
         }}
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]"
-        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+        style={{ pointerEvents: isOpen ? "auto" : "none" }}
       >
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <h2 className="text-lg font-semibold">Generate Test from AI</h2>
@@ -197,7 +211,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                 >
                   <Upload className="w-8 h-8 text-zinc-400 mb-2" />
                   <p className="text-sm font-medium text-zinc-900">
-                    {file ? file.name : 'Click to upload XLSX'}
+                    {file ? file.name : "Click to upload XLSX"}
                   </p>
                   <p className="text-xs text-zinc-500 mt-1">.xlsx, .xls</p>
                   <input
@@ -206,30 +220,38 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     type="file"
                     accept=".xlsx, .xls"
                     className="hidden"
-                    onChange={e => e.target.files && setFile(e.target.files[0])}
+                    onChange={(e) =>
+                      e.target.files && setFile(e.target.files[0])
+                    }
                   />
                 </div>
               </div>
 
               <div className="space-y-2 w-full">
-                <Label>2. Target App Source Code Project</Label>
-                <div className="relative pl-1">
-                  <SearchablePicker
-                    options={projects.map(p => ({
-                      label: p.name_with_namespace || p.name,
-                      value: p.id.toString(),
-                    }))}
-                    value={projectId}
-                    onSelect={val => setProjectId(val as string)}
-                    placeholder="Select GitLab Project..."
-                    searchPlaceholder="Search projects by name..."
-                    portalContainer={portalContainer}
-                    onSearchChange={setProjectSearch}
-                    shouldFilter={false}
-                    isLoading={isFetchingProjects}
-                    className="w-full"
-                  />
-                </div>
+                <Label>2. Project</Label>
+                {lockedProjectId ? (
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800">
+                    {projectName || "Current project"}
+                  </div>
+                ) : (
+                  <div className="relative pl-1">
+                    <SearchablePicker
+                      options={projects.map((p) => ({
+                        label: p.name,
+                        value: p.id,
+                      }))}
+                      value={projectId}
+                      onSelect={(val) => setProjectId(val as string)}
+                      placeholder="Select project..."
+                      searchPlaceholder="Search projects by name..."
+                      portalContainer={portalContainer}
+                      onSearchChange={setProjectSearch}
+                      shouldFilter={false}
+                      isLoading={isFetchingProjects}
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -247,7 +269,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     <Input
                       placeholder="https://app.dev.com"
                       value={authConfig.baseUrl}
-                      onChange={e =>
+                      onChange={(e) =>
                         setAuthConfig({
                           ...authConfig,
                           baseUrl: e.target.value,
@@ -260,7 +282,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     <Input
                       placeholder="https://api.dev.com"
                       value={authConfig.apiBaseUrl}
-                      onChange={e =>
+                      onChange={(e) =>
                         setAuthConfig({
                           ...authConfig,
                           apiBaseUrl: e.target.value,
@@ -276,7 +298,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     <Input
                       placeholder="https://app.dev.com/login"
                       value={authConfig.loginUrl}
-                      onChange={e =>
+                      onChange={(e) =>
                         setAuthConfig({
                           ...authConfig,
                           loginUrl: e.target.value,
@@ -289,7 +311,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     <Input
                       placeholder="admin"
                       value={authConfig.username}
-                      onChange={e =>
+                      onChange={(e) =>
                         setAuthConfig({
                           ...authConfig,
                           username: e.target.value,
@@ -306,7 +328,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                       type="password"
                       placeholder="******"
                       value={authConfig.password}
-                      onChange={e =>
+                      onChange={(e) =>
                         setAuthConfig({
                           ...authConfig,
                           password: e.target.value,
@@ -326,7 +348,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                     Scenario Parsed Successfully
                   </p>
                   <p className="text-xs mt-0.5 opacity-80">
-                    Found {scenarioDetails?.sections?.length || 0} sections in{' '}
+                    Found {scenarioDetails?.sections?.length || 0} sections in{" "}
                     {scenarioDetails?.title}
                   </p>
                 </div>
@@ -335,22 +357,22 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
               <div className="space-y-3">
                 <Label>Select Sections to Generate</Label>
                 <div className="grid grid-cols-1 gap-2">
-                  {scenarioDetails?.sections?.map(section => {
+                  {scenarioDetails?.sections?.map((section) => {
                     const isSelected = selectedSheets.includes(section.id);
                     return (
                       <div
                         key={section.id}
                         onClick={() => {
-                          setSelectedSheets(prev =>
+                          setSelectedSheets((prev) =>
                             prev.includes(section.id)
-                              ? prev.filter(s => s !== section.id)
-                              : [...prev, section.id]
+                              ? prev.filter((s) => s !== section.id)
+                              : [...prev, section.id],
                           );
                         }}
                         className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                           isSelected
-                            ? 'border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900'
-                            : 'hover:border-zinc-300'
+                            ? "border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900"
+                            : "hover:border-zinc-300"
                         }`}
                       >
                         <div className="flex flex-col">
@@ -364,8 +386,8 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                         <div
                           className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
                             isSelected
-                              ? 'border-zinc-900 bg-zinc-900 shadow-sm'
-                              : 'border-zinc-300'
+                              ? "border-zinc-900 bg-zinc-900 shadow-sm"
+                              : "border-zinc-300"
                           }`}
                         >
                           {isSelected && (
@@ -408,7 +430,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
               {isUploading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Next'
+                "Next"
               )}
             </Button>
           ) : (
@@ -420,7 +442,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
               {isGenerating ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Start AI Output'
+                "Start AI Output"
               )}
             </Button>
           )}

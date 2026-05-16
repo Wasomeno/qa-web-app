@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -33,6 +35,11 @@ import {
   RotateCcw,
   Sparkles,
   Eye,
+  Server,
+  Monitor,
+  ClipboardCheck,
+  Copy,
+  Upload,
 } from 'lucide-react';
 import {
   DndContext,
@@ -74,6 +81,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { getGitLabProjects } from '@/api/project';
 import {
   TestScenario,
   TestSection,
@@ -82,24 +90,31 @@ import {
   Priority,
   TestCaseStatus,
   AutomationStatus,
+  AutomationCategory,
+  ManualTestStatus,
 } from '@/types/test-scenario';
 import { testScenarioApi } from '@/api/test-scenario';
 
 // ─────────────────────────────────────────────
 // Skeleton
 // ─────────────────────────────────────────────
-export const ScenarioDetailSkeleton: React.FC = () => {
+export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({ nested = false }) => {
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className={cn('flex flex-col h-full', nested ? 'bg-[#F9FAFB]' : 'bg-white')}>
       {/* Header Skeleton */}
-      <div className="shrink-0 border-b border-zinc-100 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-6">
+      <div
+        className={cn(
+          'shrink-0 border-b border-zinc-100',
+          nested ? 'bg-[#F9FAFB]/95' : 'bg-white'
+        )}
+      >
+        <div className={cn('max-w-[1600px] mx-auto px-4 lg:px-6', nested ? 'py-4' : 'py-6')}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-4 flex-1">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-9 w-9 rounded-lg" />
+                {!nested && <Skeleton className="h-9 w-9 rounded-lg" />}
                 <div className="space-y-2">
-                  <Skeleton className="h-7 w-64 rounded-md" />
+                  <Skeleton className={cn('rounded-md', nested ? 'h-5 w-56' : 'h-7 w-64')} />
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-4 w-32 rounded" />
                     <div className="h-3 w-3 rounded-full bg-zinc-100" />
@@ -113,11 +128,22 @@ export const ScenarioDetailSkeleton: React.FC = () => {
               <Skeleton className="h-9 w-32 rounded-lg" />
             </div>
           </div>
-          <div className="flex items-center gap-6 mt-8 pt-6 border-t border-zinc-50">
+          <div
+            className={cn(
+              'flex items-center overflow-hidden',
+              nested ? 'gap-2 mt-4' : 'gap-6 mt-8 pt-6 border-t border-zinc-50'
+            )}
+          >
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 w-20 rounded" />
+              <div
+                key={i}
+                className={cn(
+                  'flex items-center gap-2',
+                  nested && 'rounded-full border border-zinc-200 bg-white/70 px-3 py-2'
+                )}
+              >
+                <Skeleton className={cn('rounded', nested ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
+                <Skeleton className={cn('rounded', nested ? 'h-3 w-14' : 'h-4 w-20')} />
               </div>
             ))}
           </div>
@@ -394,7 +420,7 @@ const StatusBadge: React.FC<{
 // Automation Badge
 // ─────────────────────────────────────────────
 const AutomationBadge: React.FC<{
-  test?: { status: AutomationStatus; name: string; lastRunAt?: string };
+  test?: { status: AutomationStatus; name: string; lastRunAt?: string; category?: AutomationCategory };
   onClick?: () => void;
 }> = ({ test, onClick }) => {
   if (!test) {
@@ -428,9 +454,106 @@ const AutomationBadge: React.FC<{
       )}
     >
       {m.icon}
+      {test.category ? `${CATEGORY_META[test.category].label}: ` : ''}
       {test.status === 'pass' ? 'Pass' : test.status === 'fail' ? 'Fail' : test.status === 'running' ? 'Running' : 'Idle'}
       {timeAgo && <span className="opacity-60">· {timeAgo}</span>}
     </button>
+  );
+};
+
+const CATEGORY_META: Record<AutomationCategory, {
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+  classes: string;
+}> = {
+  api: {
+    label: 'API Test',
+    icon: <Server className="w-3.5 h-3.5" />,
+    description: 'Prompt for backend developers to create API coverage.',
+    classes: 'bg-sky-50 text-sky-700 border-sky-100',
+  },
+  e2e: {
+    label: 'End to End',
+    icon: <Monitor className="w-3.5 h-3.5" />,
+    description: 'Generate Playwright-style browser automation from frontend code.',
+    classes: 'bg-violet-50 text-violet-700 border-violet-100',
+  },
+  manual: {
+    label: 'Manual',
+    icon: <ClipboardCheck className="w-3.5 h-3.5" />,
+    description: 'Record pass or fail evidence without automation generation.',
+    classes: 'bg-zinc-50 text-zinc-700 border-zinc-200',
+  },
+};
+
+function inferAutomationCategory(testCase: TestCase): AutomationCategory {
+  return testCase.automationType || testCase.automationTest?.category || 'manual';
+}
+
+type AutomationCategoryUpdateResult =
+  | Awaited<ReturnType<typeof testScenarioApi.updateTestCaseAutomationCategory>>
+  | void;
+
+function isTestScenarioResult(value: unknown): value is TestScenario {
+  return Boolean(value && typeof value === 'object' && 'sections' in value);
+}
+
+function isTestCaseResult(value: unknown): value is TestCase {
+  return Boolean(value && typeof value === 'object' && 'code' in value && 'steps' in value);
+}
+
+function extractScenarioResult(result: AutomationCategoryUpdateResult): TestScenario | null {
+  if (isTestScenarioResult(result)) return result;
+  const maybe = result as { scenario?: unknown } | undefined;
+  return isTestScenarioResult(maybe?.scenario) ? maybe.scenario : null;
+}
+
+function extractTestCaseResult(result: AutomationCategoryUpdateResult): TestCase | null {
+  if (isTestCaseResult(result)) return result;
+  const maybe = result as { testCase?: unknown } | undefined;
+  return isTestCaseResult(maybe?.testCase) ? maybe.testCase : null;
+}
+
+function withAutomationCategory(testCase: TestCase, category: AutomationCategory | null): TestCase {
+  return {
+    ...testCase,
+    automationType: category ?? undefined,
+    automationTest: testCase.automationTest
+      ? { ...testCase.automationTest, category: category ?? undefined }
+      : testCase.automationTest,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+const AutomationCategorySelect: React.FC<{
+  value: AutomationCategory;
+  onChange: (category: AutomationCategory) => void;
+  disabled?: boolean;
+}> = ({ value, onChange, disabled = false }) => {
+  const meta = CATEGORY_META[value];
+  return (
+    <div className="relative" onClick={e => e.stopPropagation()}>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value as AutomationCategory)}
+        disabled={disabled}
+        className={cn(
+          'h-7 rounded-md border py-0 pl-7 pr-7 text-[11px] font-semibold outline-none transition-colors appearance-none cursor-pointer',
+          disabled && 'cursor-wait opacity-70',
+          meta.classes
+        )}
+        aria-label="Automation category"
+      >
+        <option value="api">API Test</option>
+        <option value="e2e">End to End</option>
+        <option value="manual">Manual</option>
+      </select>
+      <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
+        {meta.icon}
+      </span>
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-60" />
+    </div>
   );
 };
 
@@ -592,6 +715,420 @@ const LastRunPanel: React.FC<{
               Failed at step {test.failedStepIndex + 1}
             </p>
           )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const RepoPicker: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}> = ({ label, value, onChange, placeholder }) => {
+  const [search, setSearch] = useState('');
+  const { data, isFetching } = useQuery({
+    queryKey: ['gitlab-projects', 'automation-repo', search],
+    queryFn: () => getGitLabProjects(search),
+    enabled: search.trim().length >= 2,
+    staleTime: 30_000,
+  });
+  const projects = data?.data?.projects || [];
+
+  return (
+    <div className="space-y-2">
+      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+        {label}
+      </label>
+      <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={placeholder}
+          className="h-9 rounded-lg border-zinc-200 text-sm"
+        />
+        <Input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Repo ID"
+          className="h-9 rounded-lg border-zinc-200 font-mono text-sm"
+        />
+      </div>
+      {search.trim().length >= 2 && (
+        <div className="rounded-lg border border-zinc-100 bg-zinc-50/70 p-1.5">
+          {isFetching ? (
+            <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-zinc-500">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Searching repositories
+            </div>
+          ) : projects.length > 0 ? (
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {projects.slice(0, 6).map(project => (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(String(project.id));
+                    setSearch(project.path_with_namespace || project.name || String(project.id));
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-white"
+                >
+                  <span className="min-w-0 truncate font-medium text-zinc-700">
+                    {project.path_with_namespace || project.name}
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-400">{project.id}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="px-2 py-1.5 text-xs text-zinc-500">No repositories found.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AutomationCategoryPanel: React.FC<{
+  scenarioId: string;
+  projectId?: string;
+  sectionId: string;
+  testCase: TestCase;
+  category: AutomationCategory;
+  onUpdate: (tc: TestCase) => void;
+}> = ({ scenarioId, projectId, sectionId, testCase, category, onUpdate }) => {
+  const [backendRepoId, setBackendRepoId] = useState(testCase.automationTest?.repoId || '');
+  const [frontendRepoId, setFrontendRepoId] = useState(testCase.automationTest?.repoId || '');
+
+  React.useEffect(() => {
+    const repoId = testCase.automationTest?.repoId || '';
+    if (testCase.automationTest?.category === 'api') setBackendRepoId(repoId);
+    if (testCase.automationTest?.category === 'e2e') setFrontendRepoId(repoId);
+  }, [testCase.automationTest?.repoId, testCase.automationTest?.category]);
+
+  if (!projectId) {
+    return (
+      <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm text-zinc-500">
+        Project context is required before automation can be configured.
+      </div>
+    );
+  }
+
+  if (category === 'api') {
+    return (
+      <APIAutomationPanel
+        scenarioId={scenarioId}
+        projectId={projectId}
+        testCase={testCase}
+        backendRepoId={backendRepoId}
+        setBackendRepoId={setBackendRepoId}
+        onUpdate={onUpdate}
+      />
+    );
+  }
+
+  if (category === 'e2e') {
+    return (
+      <E2EAutomationPanel
+        scenarioId={scenarioId}
+        projectId={projectId}
+        sectionId={sectionId}
+        testCase={testCase}
+        frontendRepoId={frontendRepoId}
+        setFrontendRepoId={setFrontendRepoId}
+        onUpdate={onUpdate}
+      />
+    );
+  }
+
+  return (
+    <ManualAutomationPanel
+      scenarioId={scenarioId}
+      projectId={projectId}
+      testCase={testCase}
+    />
+  );
+};
+
+const APIAutomationPanel: React.FC<{
+  scenarioId: string;
+  projectId: string;
+  testCase: TestCase;
+  backendRepoId: string;
+  setBackendRepoId: (value: string) => void;
+  onUpdate: (tc: TestCase) => void;
+}> = ({ scenarioId, projectId, testCase, backendRepoId, setBackendRepoId, onUpdate }) => {
+  const prompt = testCase.automationTest?.category === 'api' ? testCase.automationTest.prompt : '';
+  const mutation = useMutation({
+    mutationFn: () =>
+      testScenarioApi.generateAutomation(scenarioId, projectId, {
+        category: 'api',
+        testCaseIds: [testCase.id],
+        backendRepoId,
+      }),
+    onSuccess: result => {
+      const nextPrompt = result.prompts?.find(p => p.testCaseId === testCase.id)?.prompt || prompt || '';
+      onUpdate({
+        ...testCase,
+        automationType: 'api',
+        automationTest: {
+          id: testCase.automationTest?.id || `api-prompt-${testCase.id}`,
+          name: `${testCase.code} API test prompt`,
+          category: 'api',
+          repoId: backendRepoId,
+          prompt: nextPrompt,
+          status: 'idle',
+          lastRunAt: new Date().toISOString(),
+        },
+      });
+      toast.success('API prompt generated');
+    },
+    onError: error => toast.error(error instanceof Error ? error.message : 'Failed to generate API prompt'),
+  });
+
+  return (
+    <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-sky-950">Backend prompt</p>
+          <p className="mt-0.5 text-xs text-sky-700/80">
+            Select the backend repo. The result is a compact prompt for a developer's local coding agent.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="h-8 rounded-lg bg-sky-700 text-white hover:bg-sky-800"
+          disabled={!backendRepoId || mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
+          {mutation.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
+          Generate prompt
+        </Button>
+      </div>
+
+      <RepoPicker
+        label="Backend repository"
+        value={backendRepoId}
+        onChange={setBackendRepoId}
+        placeholder="Search backend repo or paste ID"
+      />
+
+      {prompt && (
+        <div className="rounded-lg border border-sky-100 bg-white p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Generated prompt</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 rounded-md px-2 text-xs"
+              onClick={() => {
+                navigator.clipboard?.writeText(prompt);
+                toast.success('Prompt copied');
+              }}
+            >
+              <Copy className="mr-1.5 h-3.5 w-3.5" />
+              Copy
+            </Button>
+          </div>
+          <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-zinc-950 p-3 text-xs leading-relaxed text-zinc-100">
+            {prompt}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const E2EAutomationPanel: React.FC<{
+  scenarioId: string;
+  projectId: string;
+  sectionId: string;
+  testCase: TestCase;
+  frontendRepoId: string;
+  setFrontendRepoId: (value: string) => void;
+  onUpdate: (tc: TestCase) => void;
+}> = ({ scenarioId, projectId, testCase, frontendRepoId, setFrontendRepoId, onUpdate }) => {
+  const mutation = useMutation({
+    mutationFn: () =>
+      testScenarioApi.generateAutomation(scenarioId, projectId, {
+        category: 'e2e',
+        testCaseIds: [testCase.id],
+        frontendRepoId,
+      }),
+    onSuccess: () => {
+      onUpdate({
+        ...testCase,
+        automationType: 'e2e',
+        automationTest: {
+          id: testCase.automationTest?.id || `auto-pending-${testCase.id}`,
+          name: `${testCase.code}_E2E`,
+          category: 'e2e',
+          repoId: frontendRepoId,
+          status: 'running',
+        },
+      });
+      toast.success('E2E generation started');
+    },
+    onError: error => toast.error(error instanceof Error ? error.message : 'Failed to start E2E generation'),
+  });
+
+  return (
+    <div className="rounded-xl border border-violet-100 bg-violet-50/30 p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-violet-950">Browser automation</p>
+          <p className="mt-0.5 text-xs text-violet-700/80">
+            Select the frontend repo. Generation runs in the background and saves executable steps.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="h-8 rounded-lg bg-violet-700 text-white hover:bg-violet-800"
+          disabled={!frontendRepoId || mutation.isPending || testCase.automationTest?.status === 'running'}
+          onClick={() => mutation.mutate()}
+        >
+          {mutation.isPending || testCase.automationTest?.status === 'running' ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}
+          {testCase.automationTest?.status === 'running' ? 'Generating' : 'Generate E2E'}
+        </Button>
+      </div>
+
+      <RepoPicker
+        label="Frontend repository"
+        value={frontendRepoId}
+        onChange={setFrontendRepoId}
+        placeholder="Search frontend repo or paste ID"
+      />
+    </div>
+  );
+};
+
+const ManualAutomationPanel: React.FC<{
+  scenarioId: string;
+  projectId: string;
+  testCase: TestCase;
+}> = ({ scenarioId, projectId, testCase }) => {
+  const [status, setStatus] = useState<ManualTestStatus>('passed');
+  const [description, setDescription] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const { data: results = [], refetch } = useQuery({
+    queryKey: ['manual-results', projectId, scenarioId, testCase.id],
+    queryFn: () => testScenarioApi.listManualResults(scenarioId, projectId, testCase.id),
+  });
+
+  const submit = useMutation({
+    mutationFn: () =>
+      testScenarioApi.createManualResult(scenarioId, projectId, testCase.id, {
+        status,
+        description,
+        evidence: files,
+      }),
+    onSuccess: () => {
+      setDescription('');
+      setFiles([]);
+      refetch();
+      toast.success('Manual result saved');
+    },
+    onError: error => toast.error(error instanceof Error ? error.message : 'Failed to save manual result'),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-4">
+      <div>
+        <p className="text-sm font-semibold text-zinc-900">Manual execution</p>
+        <p className="mt-0.5 text-xs text-zinc-500">
+          Upload evidence, mark the outcome, and keep a concise note for audit history.
+        </p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-[160px_1fr]">
+        <div>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Result</label>
+          <select
+            value={status}
+            onChange={e => setStatus(e.target.value as ManualTestStatus)}
+            className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:ring-1 focus:ring-zinc-300"
+          >
+            <option value="passed">Passed</option>
+            <option value="failed">Failed</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Evidence files</label>
+          <label className="flex h-9 cursor-pointer items-center justify-between rounded-lg border border-dashed border-zinc-300 bg-white px-3 text-sm text-zinc-500 hover:border-zinc-400">
+            <span className="truncate">{files.length ? `${files.length} file${files.length > 1 ? 's' : ''} selected` : 'Choose evidence files'}</span>
+            <Upload className="h-3.5 w-3.5" />
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              onChange={e => setFiles(Array.from(e.target.files || []))}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Description</label>
+        <Textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          placeholder="What was verified? Mention blockers or evidence context."
+          className="min-h-20 rounded-lg border-zinc-200 bg-white text-sm"
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-zinc-500">Evidence is stored in Cloudflare R2.</p>
+        <Button
+          size="sm"
+          className="h-8 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800"
+          disabled={!description.trim() || files.length === 0 || submit.isPending}
+          onClick={() => submit.mutate()}
+        >
+          {submit.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+          Save result
+        </Button>
+      </div>
+
+      {results.length > 0 && (
+        <div className="border-t border-zinc-200 pt-3">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Recent manual results</p>
+          <div className="space-y-2">
+            {results.slice(0, 3).map(result => (
+              <div key={result.id} className="rounded-lg border border-zinc-100 bg-white px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'capitalize',
+                      result.status === 'passed'
+                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                        : 'border-red-100 bg-red-50 text-red-700'
+                    )}
+                  >
+                    {result.status}
+                  </Badge>
+                  <span className="text-xs text-zinc-400">{new Date(result.createdAt).toLocaleString()}</span>
+                </div>
+                <p className="mt-1.5 text-sm text-zinc-700">{result.description}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {result.evidence.map(file => (
+                    <a
+                      key={file.url}
+                      href={file.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md bg-zinc-50 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {file.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -1205,15 +1742,22 @@ const RunButton: React.FC<{
 // ─────────────────────────────────────────────
 const SortableTestCase: React.FC<{
   scenarioId: string;
+  projectId?: string;
   sectionId: string;
   testCase: TestCase;
   isExpanded: boolean;
   onToggle: () => void;
-  onUpdate: (tc: TestCase) => void;
+  onUpdate: (tc: TestCase, options?: { persist?: boolean }) => void;
+  onAutomationCategoryChange: (testCase: TestCase, category: AutomationCategory) => Promise<void>;
   runState: TestRunState | null;
   onRunStateChange: React.Dispatch<React.SetStateAction<TestRunState | null>>;
-}> = ({ scenarioId, sectionId, testCase, isExpanded, onToggle, onUpdate, runState, onRunStateChange }) => {
+}> = ({ scenarioId, projectId, sectionId, testCase, isExpanded, onToggle, onUpdate, onAutomationCategoryChange, runState, onRunStateChange }) => {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<AutomationCategory>(inferAutomationCategory(testCase));
+
+  React.useEffect(() => {
+    setSelectedCategory(inferAutomationCategory(testCase));
+  }, [testCase.automationType, testCase.automationTest?.category]);
 
   const {
     attributes,
@@ -1235,6 +1779,25 @@ const SortableTestCase: React.FC<{
     }
   );
 
+  const categoryMutation = useMutation({
+    mutationFn: (category: AutomationCategory) => onAutomationCategoryChange(testCase, category),
+    onMutate: category => {
+      setSelectedCategory(category);
+    },
+    onSuccess: () => {
+      toast.success('Automation category updated');
+    },
+    onError: error => {
+      setSelectedCategory(inferAutomationCategory(testCase));
+      toast.error(error instanceof Error ? error.message : 'Failed to update automation category');
+    },
+  });
+
+  const handleCategoryChange = (category: AutomationCategory) => {
+    if (categoryMutation.isPending || category === selectedCategory) return;
+    categoryMutation.mutate(category);
+  };
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -1242,31 +1805,31 @@ const SortableTestCase: React.FC<{
     zIndex: isDragging ? 50 : undefined,
   };
 
-  const automationBorder = testCase.automationTest
+  const automationState = testCase.automationTest
     ? testCase.automationTest.status === 'pass'
-      ? 'border-l-emerald-400'
+      ? 'ring-1 ring-emerald-100 bg-emerald-50/10'
       : testCase.automationTest.status === 'fail'
-      ? 'border-l-red-400'
+      ? 'ring-1 ring-red-100 bg-red-50/10'
       : testCase.automationTest.status === 'running'
-      ? 'border-l-amber-400'
-      : 'border-l-zinc-300'
-    : 'border-l-transparent';
+      ? 'ring-1 ring-amber-100 bg-amber-50/10'
+      : 'ring-1 ring-zinc-100'
+    : '';
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'rounded-xl border border-l-[3px] transition-all',
-        automationBorder,
+        'rounded-xl border transition-colors group/testcase',
+        automationState,
         isDragging
           ? 'border-zinc-300 shadow-lg bg-white'
-          : 'border-zinc-100 bg-white hover:border-zinc-200 hover:shadow-sm'
+          : 'border-zinc-200/70 bg-white hover:border-zinc-300 hover:shadow-sm hover:shadow-zinc-950/[0.03]'
       )}
     >
       {/* Collapsed Header */}
       <div
-        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer select-none"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none"
         onClick={onToggle}
       >
         {/* Drag Handle */}
@@ -1280,23 +1843,23 @@ const SortableTestCase: React.FC<{
         </div>
 
         {/* Code */}
-        <span className="shrink-0 font-mono text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded">
+        <span className="shrink-0 font-mono text-[11px] font-semibold text-zinc-500 bg-zinc-50 border border-zinc-200/70 px-2 py-1 rounded-md">
           {testCase.code}
         </span>
 
         {/* Title */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-zinc-900 truncate">
+          <p className="text-sm font-semibold text-zinc-950 truncate">
             {testCase.title}
           </p>
         </div>
 
         {/* Meta badges */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
           {testCase.tags.slice(0, 2).map(tag => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md"
+              className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md max-w-28 truncate"
             >
               <Tag className="w-2.5 h-2.5" />
               {tag}
@@ -1304,6 +1867,11 @@ const SortableTestCase: React.FC<{
           ))}
           <PriorityBadge priority={testCase.priority} />
           <StatusBadge status={testCase.status} />
+          <AutomationCategorySelect
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            disabled={categoryMutation.isPending}
+          />
           <AutomationBadge test={testCase.automationTest} />
 
           {/* View detail */}
@@ -1321,12 +1889,14 @@ const SortableTestCase: React.FC<{
           </Button>
 
           {/* Run / Re-run button */}
-          <RunButton
-            testCase={testCase}
-            runState={runState}
-            onStart={runner.start}
-            onCancel={runner.cancel}
-          />
+          {selectedCategory === 'e2e' && (
+            <RunButton
+              testCase={testCase}
+              runState={runState}
+              onStart={runner.start}
+              onCancel={runner.cancel}
+            />
+          )}
 
           <div className="flex items-center gap-1 text-[11px] text-zinc-400 ml-1">
             <Layers className="w-3 h-3" />
@@ -1379,6 +1949,15 @@ const SortableTestCase: React.FC<{
 
               {/* Concise Content */}
               <div className="mt-4 space-y-4">
+                <AutomationCategoryPanel
+                  scenarioId={scenarioId}
+                  projectId={projectId}
+                  sectionId={sectionId}
+                  testCase={testCase}
+                  category={selectedCategory}
+                  onUpdate={onUpdate}
+                />
+
                 {/* Description */}
                 <div>
                   <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
@@ -1400,6 +1979,11 @@ const SortableTestCase: React.FC<{
                     </div>
                     <PriorityBadge priority={testCase.priority} onChange={p => onUpdate({ ...testCase, priority: p })} />
                     <StatusBadge status={testCase.status} onChange={s => onUpdate({ ...testCase, status: s })} />
+                    <AutomationCategorySelect
+                      value={selectedCategory}
+                      onChange={handleCategoryChange}
+                      disabled={categoryMutation.isPending}
+                    />
                   </div>
 
                   <Button
@@ -1441,17 +2025,17 @@ const SectionSidebarItem: React.FC<{
     <button
       onClick={onSelect}
       className={cn(
-        'w-full text-left rounded-lg px-3 py-2.5 transition-all group',
+        'w-full text-left rounded-xl px-3 py-3 transition-all group border',
         isActive
-          ? 'bg-white border border-zinc-200 shadow-sm'
-          : 'hover:bg-zinc-100/50 border border-transparent'
+          ? 'bg-white border-zinc-200 shadow-sm shadow-zinc-950/[0.03]'
+          : 'border-transparent hover:bg-white/80 hover:border-zinc-200/70'
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
-            'text-sm font-medium truncate',
-            isActive ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'
+            'text-sm font-semibold truncate',
+            isActive ? 'text-zinc-950' : 'text-zinc-600 group-hover:text-zinc-900'
           )}
         >
           {section.title}
@@ -1459,7 +2043,7 @@ const SectionSidebarItem: React.FC<{
         <span
           className={cn(
             'shrink-0 text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md',
-            isActive ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-100/50 text-zinc-500'
+            isActive ? 'bg-zinc-100 text-zinc-700' : 'bg-white/80 text-zinc-500'
           )}
         >
           {section.testCases.length}
@@ -1591,12 +2175,18 @@ const SectionSelectModal: React.FC<{
 // ─────────────────────────────────────────────
 interface ScenarioDetailProps {
   scenario: TestScenario;
+  projectId?: string;
   projectName?: string;
   onClose: () => void;
   onGenerate: (sectionIds: string[]) => void;
   onDelete: () => void;
   onUpdateScenario?: (id: string, data: any) => Promise<void>;
   onUpdateTestCase?: (sectionId: string, tcId: string, data: any) => Promise<void>;
+  onUpdateTestCaseAutomationCategory?: (
+    sectionId: string,
+    tcId: string,
+    category: AutomationCategory | null,
+  ) => Promise<AutomationCategoryUpdateResult>;
   onReorderTestCases?: (sectionId: string, orderedIds: string[]) => Promise<void>;
   onAddTestCase?: (sectionId: string, data: any) => Promise<void>;
   onDeleteTestCase?: (sectionId: string, tcId: string) => Promise<void>;
@@ -1604,24 +2194,26 @@ interface ScenarioDetailProps {
 
 export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   scenario: initialScenario,
+  projectId,
   projectName,
   onClose,
   onGenerate,
   onDelete,
   onUpdateScenario,
   onUpdateTestCase,
+  onUpdateTestCaseAutomationCategory,
   onReorderTestCases,
   onAddTestCase,
   onDeleteTestCase,
 }) => {
   const [scenario, setScenario] = useState<TestScenario>(initialScenario);
+  const nestedInProject = Boolean(projectId);
   const [activeSectionId, setActiveSectionId] = useState<string>(
     initialScenario.sections![0]?.id || ''
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [showGenModal, setShowGenModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<TestCaseStatus | 'all'>('all');
   const [runState, setRunState] = useState<TestRunState | null>(null);
@@ -1695,7 +2287,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
   // Update a test case
   const updateTestCase = useCallback(
-    (sectionId: string, updated: TestCase) => {
+    (sectionId: string, updated: TestCase, options: { persist?: boolean } = {}) => {
       setScenario(prev => ({
         ...prev,
         sections: prev.sections!.map(s =>
@@ -1708,11 +2300,32 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         ),
       }));
 
-      if (onUpdateTestCase) {
+      if (options.persist !== false && onUpdateTestCase) {
         onUpdateTestCase(sectionId, updated.id, updated).catch(console.error);
       }
     },
     [onUpdateTestCase]
+  );
+
+  const updateAutomationCategory = useCallback(
+    async (sectionId: string, testCase: TestCase, category: AutomationCategory) => {
+      const result = onUpdateTestCaseAutomationCategory
+        ? await onUpdateTestCaseAutomationCategory(sectionId, testCase.id, category)
+        : await testScenarioApi.updateTestCaseAutomationCategory(scenario.id, testCase.id, category, {
+            projectId,
+            sectionId,
+          });
+
+      const updatedScenario = extractScenarioResult(result);
+      if (updatedScenario) {
+        setScenario(updatedScenario);
+        return;
+      }
+
+      const updatedTestCase = extractTestCaseResult(result) || withAutomationCategory(testCase, category);
+      updateTestCase(sectionId, updatedTestCase, { persist: false });
+    },
+    [onUpdateTestCaseAutomationCategory, projectId, scenario.id, updateTestCase]
   );
 
   // Toggle expanded
@@ -1747,37 +2360,60 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       : 'bg-zinc-50 text-zinc-700 border-zinc-200';
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/40">
+    <div className={cn('flex flex-col h-full', nestedInProject ? 'bg-[#F9FAFB]' : 'bg-zinc-50/60')}>
       {/* Top Header */}
-      <div className="shrink-0 bg-white border-b border-zinc-100">
-        <div className="px-6 pt-6 pb-4 max-w-[1600px] mx-auto">
+      <div
+        className={cn(
+          'shrink-0 border-b',
+          nestedInProject
+            ? 'bg-[#F9FAFB]/95 border-zinc-100/80'
+            : 'bg-white border-zinc-100'
+        )}
+      >
+        <div
+          className={cn(
+            'max-w-[1600px] mx-auto',
+            nestedInProject ? 'px-4 lg:px-6 pt-4 pb-3' : 'px-5 lg:px-8 pt-5 pb-5'
+          )}
+        >
           {/* Breadcrumb */}
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors mb-4"
+            className={cn(
+              'flex items-center gap-1.5 font-medium text-zinc-500 hover:text-zinc-900 transition-colors',
+              nestedInProject ? 'mb-3 text-xs' : 'mb-5 text-sm'
+            )}
           >
             <ChevronLeft className="w-4 h-4" />
-            Test Scenarios
+            Back to test scenarios
           </button>
 
-          <div className="flex items-start justify-between gap-6">
+          <div className={cn('flex flex-col xl:flex-row xl:items-start justify-between', nestedInProject ? 'gap-4' : 'gap-6')}>
             <div className="flex-1 min-w-0">
               {/* Title */}
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                <h1
+                  className={cn(
+                    'font-semibold tracking-[-0.02em] text-zinc-950',
+                    nestedInProject ? 'text-xl leading-7' : 'text-[1.6rem] leading-8'
+                  )}
+                >
                   <InlineField
                     value={scenario.title}
                     onChange={v => {
                       setScenario(prev => ({ ...prev, title: v }));
                       if (onUpdateScenario) onUpdateScenario(scenario.id, { title: v }).catch(console.error);
                     }}
-                    inputClassName="text-2xl font-semibold tracking-tight"
+                    inputClassName={cn(
+                      'font-semibold tracking-tight',
+                      nestedInProject ? 'text-xl' : 'text-2xl'
+                    )}
                   />
                 </h1>
                 <Badge
                   variant="outline"
                   className={cn(
-                    'capitalize font-medium px-2.5 py-0.5 rounded-full text-xs',
+                    'capitalize font-semibold px-2.5 py-0.5 rounded-full text-xs',
                     scenarioStatusColor
                   )}
                 >
@@ -1786,7 +2422,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               </div>
 
               {/* Description */}
-              <div className="mt-1.5 text-sm text-zinc-500 max-w-2xl">
+              <div className={cn('text-sm text-zinc-500 leading-6', nestedInProject ? 'mt-1 max-w-3xl' : 'mt-2 max-w-4xl')}>
                 <InlineField
                   value={scenario.description || ''}
                   onChange={v => {
@@ -1799,10 +2435,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               </div>
 
               {/* Meta row */}
-              <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500 flex-wrap">
-                <div className="flex items-center gap-1.5">
+              <div className={cn('flex items-center gap-x-4 gap-y-2 text-xs text-zinc-500 flex-wrap', nestedInProject ? 'mt-3' : 'mt-4')}>
+                <div className="flex items-center gap-1.5 min-w-0">
                   <Target className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="font-medium">
+                  <span className="font-medium truncate">
                     {scenario.projectName || projectName || 'Unassigned Project'}
                   </span>
                 </div>
@@ -1825,31 +2461,33 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className={cn('flex items-center gap-2 shrink-0', nestedInProject ? 'xl:pt-0' : 'xl:pt-1')}>
               <Button
                 variant="ghost"
-                className="h-9 px-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg gap-2 text-sm"
+                className={cn(
+                  'text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg gap-2 text-sm font-medium',
+                  nestedInProject ? 'h-8 px-2.5' : 'h-9 px-3'
+                )}
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
               </Button>
-              <Button
-                className="h-9 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg gap-2 text-sm shadow-sm"
-                onClick={() => setShowGenModal(true)}
-              >
-                <Play className="w-4 h-4" />
-                Generate Tests
-              </Button>
             </div>
           </div>
 
           {/* Stats row */}
-          <div className="flex items-center gap-6 mt-5 pt-4 border-t border-zinc-50">
-            <StatPill icon={<Layers className="w-3.5 h-3.5" />} label="Sections" value={stats.totalSections} />
-            <StatPill icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="Test Cases" value={stats.totalTestCases} />
-            <StatPill icon={<Hash className="w-3.5 h-3.5" />} label="Steps" value={stats.totalSteps} />
+          <div
+            className={cn(
+              'flex items-center overflow-x-auto',
+              nestedInProject ? 'gap-2 mt-4 pb-1' : 'gap-8 mt-5 pt-4 border-t border-zinc-100'
+            )}
+          >
+            <StatPill compact={nestedInProject} icon={<Layers className="w-3.5 h-3.5" />} label="Sections" value={stats.totalSections} />
+            <StatPill compact={nestedInProject} icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="Test Cases" value={stats.totalTestCases} />
+            <StatPill compact={nestedInProject} icon={<Hash className="w-3.5 h-3.5" />} label="Steps" value={stats.totalSteps} />
             <StatPill
+              compact={nestedInProject}
               icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
               label="Automated"
               value={stats.automatedCount}
@@ -1857,6 +2495,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             />
             {stats.failCount > 0 && (
               <StatPill
+                compact={nestedInProject}
                 icon={<XCircle className="w-3.5 h-3.5 text-red-500" />}
                 label="Failing"
                 value={stats.failCount}
@@ -1881,10 +2520,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       {/* Main Content */}
       <div className="flex-1 overflow-hidden flex max-w-[1600px] mx-auto w-full">
         {/* Sidebar */}
-        <div className="w-64 shrink-0 border-r border-zinc-100 bg-zinc-50/30 hidden lg:flex flex-col">
-          <ScrollArea className="flex-1 px-3 py-4">
-            <div className="space-y-1">
-              <h3 className="px-3 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+        <div className="w-72 shrink-0 border-r border-zinc-100 bg-zinc-50/70 hidden lg:flex flex-col">
+          <ScrollArea className="flex-1 px-4 py-5">
+            <div className="space-y-2">
+              <h3 className="px-2 text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.14em] mb-3">
                 Sections
               </h3>
               {scenario.sections!.map(section => {
@@ -1935,33 +2574,39 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         </div>
 
         {/* Test Cases Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/40">
           <ScrollArea className="flex-1 px-4 lg:px-6 py-4 lg:py-6">
             {activeSection ? (
               <div className="space-y-4 w-full">
-                {/* Section header + controls */}
+                {/* Test case controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-zinc-900">{activeSection.title}</h2>
-                    {activeSection.description && (
-                      <p className="text-sm text-zinc-500 mt-0.5">{activeSection.description}</p>
-                    )}
+                  <div className="text-xs text-zinc-500">
+                    Showing{' '}
+                    <span className="font-semibold text-zinc-900">
+                      {Math.min(filteredTestCases.length, (page - 1) * ITEMS_PER_PAGE + 1)}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-semibold text-zinc-900">
+                      {Math.min(page * ITEMS_PER_PAGE, filteredTestCases.length)}
+                    </span>{' '}
+                    of <span className="font-semibold text-zinc-900">{filteredTestCases.length}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
                       <Input
                         placeholder="Search test cases..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="pl-8 h-8 w-52 text-sm rounded-lg bg-white border-zinc-200"
+                        className="pl-8 h-9 w-full sm:w-64 text-sm rounded-lg bg-white border-zinc-200 shadow-none"
                       />
                     </div>
                     <div className="relative">
                       <select
                         value={statusFilter}
                         onChange={e => setStatusFilter(e.target.value as TestCaseStatus | 'all')}
-                        className="h-8 pl-2.5 pr-7 text-sm rounded-lg bg-white border border-zinc-200 text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-300 appearance-none cursor-pointer"
+                        className="h-9 w-full sm:w-36 pl-3 pr-8 text-sm rounded-lg bg-white border border-zinc-200 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-200 appearance-none cursor-pointer"
                       >
                         <option value="all">All statuses</option>
                         <option value="ready">Ready</option>
@@ -1969,33 +2614,20 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                         <option value="blocked">Blocked</option>
                         <option value="deprecated">Deprecated</option>
                       </select>
-                      <Filter className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                      <Filter className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                     </div>
+                    {(searchQuery || statusFilter !== 'all') && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setStatusFilter('all');
+                        }}
+                        className="h-9 px-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
                   </div>
-                </div>
-
-                {/* Results count */}
-                <div className="flex items-center justify-between text-xs text-zinc-500">
-                  <span>
-                    Showing{' '}
-                    <span className="font-medium text-zinc-900">
-                      {Math.min(filteredTestCases.length, (page - 1) * ITEMS_PER_PAGE + 1)}
-                    </span>{' '}
-                    –{' '}
-                    <span className="font-medium text-zinc-900">
-                      {Math.min(page * ITEMS_PER_PAGE, filteredTestCases.length)}
-                    </span>{' '}
-                    of{' '}
-                    <span className="font-medium text-zinc-900">{filteredTestCases.length}</span>
-                  </span>
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="text-zinc-400 hover:text-zinc-600 transition-colors"
-                    >
-                      Clear search
-                    </button>
-                  )}
                 </div>
 
                 {/* Test Cases List */}
@@ -2009,16 +2641,20 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                       items={paginatedCases.map(tc => tc.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {paginatedCases.map(tc => (
                           <SortableTestCase
                             key={tc.id}
                             scenarioId={scenario.id}
+                            projectId={projectId || scenario.projectId}
                             sectionId={activeSection.id}
                             testCase={tc}
                             isExpanded={expandedIds.has(tc.id) || runState?.testCaseId === tc.id}
                             onToggle={() => toggleExpanded(tc.id)}
-                            onUpdate={updated => updateTestCase(activeSection.id, updated)}
+                            onUpdate={(updated, options) => updateTestCase(activeSection.id, updated, options)}
+                            onAutomationCategoryChange={(testCase, category) =>
+                              updateAutomationCategory(activeSection.id, testCase, category)
+                            }
                             runState={runState}
                             onRunStateChange={setRunState}
                           />
@@ -2076,17 +2712,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         </div>
       </div>
 
-      {/* Generation Modal */}
-      <SectionSelectModal
-        open={showGenModal}
-        sections={scenario.sections!}
-        onClose={() => setShowGenModal(false)}
-        onGenerate={ids => {
-          onGenerate(ids);
-          setShowGenModal(false);
-        }}
-      />
-
       {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
@@ -2120,13 +2745,34 @@ function StatPill({
   value,
   accent,
   danger,
+  compact,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
   accent?: boolean;
   danger?: boolean;
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-full border border-zinc-200/80 bg-white/75 px-3 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <span className={cn('text-zinc-400', danger && 'text-red-500', accent && 'text-emerald-600')}>
+          {icon}
+        </span>
+        <span className="font-medium text-zinc-500">{label}</span>
+        <span
+          className={cn(
+            'font-semibold tabular-nums',
+            danger ? 'text-red-600' : accent ? 'text-emerald-600' : 'text-zinc-900'
+          )}
+        >
+          {value}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col">
       <p
