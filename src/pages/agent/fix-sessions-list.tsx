@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigation } from '@/contexts/navigation-context';
-import { useFixSessions, useDeleteFixSession } from './hooks/use-fix-sessions';
-import { FixSession } from '@/types/agent-fix';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import React, { useState } from "react";
+import { useNavigation } from "@/contexts/navigation-context";
+import { useFixSessions, useDeleteFixSession } from "./hooks/use-fix-sessions";
+import { FixSession } from "@/types/agent-fix";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Clock,
   Trash2,
@@ -16,13 +16,13 @@ import {
   ExternalLink,
   CheckCircle2,
   XCircle,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,14 +32,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
-import { FixSessionDetailPanel } from './components/fix-session-detail-panel';
+} from "@/components/ui/alert-dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { FixSessionDetailPanel } from "./components/fix-session-detail-panel";
 
 interface FixSessionsListPageProps {
   portalContainer?: HTMLElement | null;
+  projectId?: string;
+  hideHeader?: boolean;
 }
 
 // Skeleton component for loading state
@@ -64,12 +66,20 @@ const FixSessionSkeleton: React.FC = () => {
   );
 };
 
-export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portalContainer }) => {
+export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
+  portalContainer,
+  projectId,
+  hideHeader = false,
+}) => {
   const { pop } = useNavigation();
-  const { sessions, isLoading, refetch } = useFixSessions();
+  const { sessions, isLoading, refetch } = useFixSessions(projectId);
   const deleteMutation = useDeleteFixSession();
-  const [sessionToDelete, setSessionToDelete] = useState<FixSession | null>(null);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<FixSession | null>(
+    null,
+  );
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
 
   const handleDeleteClick = (e: React.MouseEvent, session: FixSession) => {
     e.stopPropagation();
@@ -79,13 +89,16 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
   const handleConfirmDelete = async () => {
     if (sessionToDelete) {
       try {
-        await deleteMutation.mutateAsync(sessionToDelete.sessionId);
-        toast.success('Session deleted successfully');
+        await deleteMutation.mutateAsync({
+          sessionId: sessionToDelete.sessionId,
+          projectId,
+        });
+        toast.success("Session deleted successfully");
         if (selectedSessionId === sessionToDelete.sessionId) {
           setSelectedSessionId(null);
         }
       } catch (error) {
-        toast.error('Failed to delete session');
+        toast.error("Failed to delete session");
       }
       setSessionToDelete(null);
     }
@@ -104,44 +117,44 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
 
   // Format relative time
   const formatRelativeTime = (dateString: string | undefined | null) => {
-    if (!isValidDate(dateString)) return 'N/A';
+    if (!isValidDate(dateString)) return "N/A";
     try {
       return formatDistanceToNow(new Date(dateString!), { addSuffix: true });
     } catch {
-      return 'N/A';
+      return "N/A";
     }
   };
 
   // Get status badge config
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'running':
-      case 'fetching_issue':
-      case 'cloning_repo':
-      case 'creating_branch':
-      case 'agent_running':
-      case 'pushing_changes':
-      case 'creating_mr':
+      case "running":
+      case "fetching_issue":
+      case "cloning_repo":
+      case "creating_branch":
+      case "agent_running":
+      case "pushing_changes":
+      case "creating_mr":
         return {
-          color: 'bg-zinc-50 text-zinc-700 border-zinc-100',
+          color: "bg-zinc-50 text-zinc-700 border-zinc-100",
           icon: <Loader2 className="h-3 w-3 animate-spin" />,
-          label: 'Running',
+          label: "Running",
         };
-      case 'done':
+      case "done":
         return {
-          color: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+          color: "bg-emerald-50 text-emerald-700 border-emerald-100",
           icon: <CheckCircle2 className="h-3 w-3" />,
-          label: 'Complete',
+          label: "Complete",
         };
-      case 'error':
+      case "error":
         return {
-          color: 'bg-red-50 text-red-700 border-red-100',
+          color: "bg-red-50 text-red-700 border-red-100",
           icon: <XCircle className="h-3 w-3" />,
-          label: 'Failed',
+          label: "Failed",
         };
       default:
         return {
-          color: 'bg-gray-50 text-gray-700 border-gray-100',
+          color: "bg-gray-50 text-gray-700 border-gray-100",
           icon: <Clock className="h-3 w-3" />,
           label: status,
         };
@@ -151,18 +164,19 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
   // Get the selected session data from the list
   const getSelectedSession = (): FixSession | null => {
     if (!selectedSessionId) return null;
-    return sessions.find(s => s.sessionId === selectedSessionId) || null;
+    return sessions.find((s) => s.sessionId === selectedSessionId) || null;
   };
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
-      {/* Header */}
-      <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-white z-20">
-        <h1 className="text-2xl font-bold text-gray-900">Fix Sessions</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Monitor and manage your automated fix sessions
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-white z-20">
+          <h1 className="text-2xl font-bold text-gray-900">Fix Sessions</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Monitor and manage your automated fix sessions
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
@@ -187,8 +201,9 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                   <AnimatePresence>
                     {sessions.map((session: FixSession, index: number) => {
                       const statusConfig = getStatusConfig(session.status);
-                      const isSelected = selectedSessionId === session.sessionId;
-                      
+                      const isSelected =
+                        selectedSessionId === session.sessionId;
+
                       return (
                         <motion.div
                           key={session.sessionId}
@@ -196,24 +211,32 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, x: -10 }}
                           transition={{ delay: index * 0.03, duration: 0.2 }}
-                          onClick={() => setSelectedSessionId(session.sessionId)}
+                          onClick={() =>
+                            setSelectedSessionId(session.sessionId)
+                          }
                           className={cn(
-                            'group relative flex items-start gap-4 p-4 rounded-xl border cursor-pointer bg-white',
-                            'hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm',
-                            'transition-all duration-200',
-                            isSelected ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
+                            "group relative flex items-start gap-4 p-4 rounded-xl border cursor-pointer bg-white",
+                            "hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                            "transition-all duration-200",
+                            isSelected
+                              ? "border-gray-900 bg-gray-50"
+                              : "border-gray-200",
                           )}
                         >
                           {/* Icon */}
-                          <div className={cn(
-                            "h-11 w-11 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                            session.status === 'done' ? 'bg-emerald-50' :
-                            session.status === 'error' ? 'bg-red-50' :
-                            'bg-gray-100'
-                          )}>
-                            {session.status === 'done' ? (
+                          <div
+                            className={cn(
+                              "h-11 w-11 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                              session.status === "done"
+                                ? "bg-emerald-50"
+                                : session.status === "error"
+                                  ? "bg-red-50"
+                                  : "bg-gray-100",
+                            )}
+                          >
+                            {session.status === "done" ? (
                               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                            ) : session.status === 'error' ? (
+                            ) : session.status === "error" ? (
                               <XCircle className="h-5 w-5 text-red-500" />
                             ) : (
                               <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
@@ -225,23 +248,27 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-sm font-medium text-gray-900 truncate">
-                                  {session.issueTitle || `Issue #${session.issueIid}`}
+                                  {session.issueTitle ||
+                                    `Issue #${session.issueIid}`}
                                 </h3>
                                 <p className="text-xs text-gray-400 mt-0.5">
-                                  {session.projectName || `Project ${session.projectId}`}
+                                  {session.projectName ||
+                                    `Project ${session.projectId}`}
                                 </p>
                               </div>
-                              
+
                               <div className="flex items-center gap-2 shrink-0">
                                 {/* Status Badge */}
-                                <div className={cn(
-                                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
-                                  statusConfig.color
-                                )}>
+                                <div
+                                  className={cn(
+                                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+                                    statusConfig.color,
+                                  )}
+                                >
                                   {statusConfig.icon}
                                   <span>{statusConfig.label}</span>
                                 </div>
-                                
+
                                 {/* Delete Button */}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -249,7 +276,9 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                                       variant="ghost"
                                       size="icon"
                                       className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                      onClick={(e) => handleDeleteClick(e, session)}
+                                      onClick={(e) =>
+                                        handleDeleteClick(e, session)
+                                      }
                                       disabled={deleteMutation.isPending}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -263,14 +292,14 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                             </div>
 
                             {/* Status Message - only show if no error */}
-                            {session.status !== 'error' && session.message && (
+                            {session.status !== "error" && session.message && (
                               <p className="text-xs text-gray-500 line-clamp-2">
                                 {session.message}
                               </p>
                             )}
 
                             {/* Error message if failed */}
-                            {session.status === 'error' && session.error && (
+                            {session.status === "error" && session.error && (
                               <div className="flex items-start gap-2 mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
                                 <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
                                 <p className="text-xs text-red-600 line-clamp-2">
@@ -298,7 +327,9 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                             <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                <span>{formatRelativeTime(session.createdAt)}</span>
+                                <span>
+                                  {formatRelativeTime(session.createdAt)}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -340,11 +371,14 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                 onDelete={async () => {
                   if (selectedSessionId) {
                     try {
-                      await deleteMutation.mutateAsync(selectedSessionId);
-                      toast.success('Session deleted successfully');
+                      await deleteMutation.mutateAsync({
+                        sessionId: selectedSessionId,
+                        projectId,
+                      });
+                      toast.success("Session deleted successfully");
                       setSelectedSessionId(null);
                     } catch (error) {
-                      toast.error('Failed to delete session');
+                      toast.error("Failed to delete session");
                     }
                   }
                 }}
@@ -355,17 +389,22 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
       </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!sessionToDelete} onOpenChange={(open) => !open && handleCancelDelete()}>
+      <AlertDialog
+        open={!!sessionToDelete}
+        onOpenChange={(open) => !open && handleCancelDelete()}
+      >
         <AlertDialogContent container={portalContainer}>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Fix Session</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this fix session?
-              This action cannot be undone.
+              Are you sure you want to delete this fix session? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 text-white hover:bg-red-700"
@@ -377,7 +416,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({ portal
                   Deleting...
                 </>
               ) : (
-                'Delete'
+                "Delete"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
