@@ -1,3 +1,38 @@
+export interface AppProject {
+  id: string;
+  name: string;
+  description: string;
+  issueRepoId: number;
+  specsRepoId: number;
+  createdById?: number;
+  updatedById?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAppProjectRequest {
+  name: string;
+  description?: string;
+  issueRepoId: number;
+  specsRepoId: number;
+}
+
+export interface UpdateAppProjectRequest {
+  name?: string;
+  description?: string;
+  issueRepoId?: number;
+  specsRepoId?: number;
+}
+
+export interface AppProjectActivity {
+  id: string;
+  projectId: string;
+  actorId?: number;
+  action: 'created' | 'updated' | 'deleted';
+  changes?: Record<string, { old: unknown; new: unknown }>;
+  createdAt: string;
+}
+
 export interface GitLabUser {
   id: number;
   username: string;

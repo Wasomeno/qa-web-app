@@ -12,12 +12,17 @@ export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
 export type ScenarioStatus = 'draft' | 'uploaded' | 'ready' | 'generating' | 'failed';
 export type AutomationStatus = 'idle' | 'running' | 'pass' | 'fail';
+export type AutomationCategory = 'api' | 'e2e' | 'manual';
+export type ManualTestStatus = 'passed' | 'failed';
 
 export interface AutomationTest {
   id: string;
   name: string;
+  category?: AutomationCategory;
   framework?: string;
   status: AutomationStatus;
+  repoId?: string;
+  prompt?: string;
   lastRunAt?: string;
   runDurationMs?: number;
   steps?: RecordingStep[];
@@ -49,8 +54,31 @@ export interface TestCase {
   priority: Priority;
   type: string;
   status: TestCaseStatus;
+  automationType?: AutomationCategory;
   automationTest?: AutomationTest;
   note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManualEvidenceFile {
+  name: string;
+  url: string;
+  contentType?: string;
+  size?: number;
+  uploadedAt: string;
+}
+
+export interface ManualTestResult {
+  id: string;
+  projectId: string;
+  scenarioId: string;
+  sectionId?: string;
+  testCaseId: string;
+  status: ManualTestStatus;
+  description: string;
+  evidence: ManualEvidenceFile[];
+  testerId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,6 +108,11 @@ export interface TestScenario {
   sections?: TestSection[];
   projectId?: string;
   projectName?: string;
+  issueRepoId?: string;
+  specsRepoId?: string;
+  sourceType?: string;
+  sourcePath?: string;
+  sourceSha?: string;
   status: ScenarioStatus;
   error?: string;
   stats?: ScenarioStats;
