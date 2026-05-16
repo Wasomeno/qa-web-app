@@ -1,5 +1,5 @@
-import { api } from '@/services/api';
-import { UserBasic } from '@/api/user';
+import { api } from "@/services/api";
+import { UserBasic } from "@/api/user";
 
 export type Issue = {
   id: number;
@@ -173,7 +173,7 @@ export interface CreateIssueRequest {
   /**
    * The type of issue.
    */
-  issue_type?: 'issue' | 'incident' | 'test_case' | 'task';
+  issue_type?: "issue" | "incident" | "test_case" | "task";
 }
 
 export type UpdateIssueRequest = {
@@ -225,7 +225,7 @@ export type UpdateIssueRequest = {
   /**
    * Change the state of the issue.
    */
-  state_event?: 'close' | 'reopen';
+  state_event?: "close" | "reopen";
 
   /**
    * Date string in the format 'YYYY-MM-DD'.
@@ -240,7 +240,7 @@ export type UpdateIssueRequest = {
   /**
    * Type of issue (e.g., 'issue', 'incident', 'test_case').
    */
-  issue_type?: 'issue' | 'incident' | 'test_case' | 'task';
+  issue_type?: "issue" | "incident" | "test_case" | "task";
 
   /**
    * The ID of the epic to assign the issue to.
@@ -264,39 +264,40 @@ export interface IssueFilterParams {
 function buildIssueQueryParams(params: IssueFilterParams): string {
   const queryParams = new URLSearchParams();
 
-  if (params.search) queryParams.append('search', params.search);
-  if (params.project_id) queryParams.append('project_id', params.project_id.toString());
-  if (params.project_ids) queryParams.append('project_ids', params.project_ids);
-  if (params.state) queryParams.append('state', params.state);
+  if (params.search) queryParams.append("search", params.search);
+  if (params.project_id)
+    queryParams.append("project_id", params.project_id.toString());
+  if (params.project_ids) queryParams.append("project_ids", params.project_ids);
+  if (params.state) queryParams.append("state", params.state);
 
   if (params.labels && params.labels.length > 0) {
-    const activeLabels = params.labels.filter(l => l !== 'ALL');
+    const activeLabels = params.labels.filter((l) => l !== "ALL");
     if (activeLabels.length > 0) {
-      queryParams.append('labels', activeLabels.join(','));
+      queryParams.append("labels", activeLabels.join(","));
     }
   }
 
-  if (params.assignee_id && params.assignee_id !== 'ALL')
-    queryParams.append('assignee_id', params.assignee_id.toString());
-  if (params.assignee_ids && params.assignee_ids !== 'ALL')
-    queryParams.append('assignee_ids', params.assignee_ids);
-  if (params.author_id && params.author_id !== 'ALL')
-    queryParams.append('author_id', params.author_id.toString());
-  if (params.issue_ids) queryParams.append('issue_ids', params.issue_ids);
+  if (params.assignee_id && params.assignee_id !== "ALL")
+    queryParams.append("assignee_id", params.assignee_id.toString());
+  if (params.assignee_ids && params.assignee_ids !== "ALL")
+    queryParams.append("assignee_ids", params.assignee_ids);
+  if (params.author_id && params.author_id !== "ALL")
+    queryParams.append("author_id", params.author_id.toString());
+  if (params.issue_ids) queryParams.append("issue_ids", params.issue_ids);
 
   return queryParams.toString();
 }
 
 export async function getIssues(params: IssueFilterParams = {}) {
   const queryString = buildIssueQueryParams(params);
-  const url = queryString ? `/issues?${queryString}` : '/issues';
+  const url = queryString ? `/issues?${queryString}` : "/issues";
 
   return api.get<Issue[]>(url);
 }
 
 export async function getProjectIssues(
-  projectId: number,
-  params: IssueFilterParams = {}
+  projectId: number | string,
+  params: IssueFilterParams = {},
 ) {
   const { project_id, ...restParams } = params;
   const queryString = buildIssueQueryParams(restParams);
@@ -307,13 +308,13 @@ export async function getProjectIssues(
   return api.get<Issue[]>(url);
 }
 
-export async function getIssue(projectId: number, id: number) {
+export async function getIssue(projectId: number | string, id: number) {
   return api.get<Issue>(`/projects/${projectId}/issues/${id}`);
 }
 
 export async function createIssue(
-  projectId: number,
-  request: CreateIssueRequest
+  projectId: number | string,
+  request: CreateIssueRequest,
 ) {
   return api.post<Issue>(`/projects/${projectId}/issues`, {
     body: JSON.stringify(request),
@@ -321,18 +322,18 @@ export async function createIssue(
 }
 
 export async function updateIssue(
-  projectId: number,
+  projectId: number | string,
   id: number,
-  request: UpdateIssueRequest
+  request: UpdateIssueRequest,
 ) {
   return api.put<Issue>(`/projects/${projectId}/issues/${id}`, {
     body: JSON.stringify(request),
   });
 }
 
-export async function getIssueComments(projectId: number, id: number) {
+export async function getIssueComments(projectId: number | string, id: number) {
   return api.get<IssueComment[]>(
-    `/projects/${projectId}/issues/${id}/comments`
+    `/projects/${projectId}/issues/${id}/comments`,
   );
 }
 
@@ -346,39 +347,39 @@ export interface UpdateIssueCommentRequest {
 }
 
 export async function createIssueComment(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  request: CreateIssueCommentRequest
+  request: CreateIssueCommentRequest,
 ) {
   return api.post<IssueComment>(
     `/projects/${projectId}/issues/${issueIid}/comments`,
     {
       body: JSON.stringify(request),
-    }
+    },
   );
 }
 
 export async function updateIssueComment(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
   commentId: number,
-  request: UpdateIssueCommentRequest
+  request: UpdateIssueCommentRequest,
 ) {
   return api.put<IssueComment>(
     `/projects/${projectId}/issues/${issueIid}/comments/${commentId}`,
     {
       body: JSON.stringify(request),
-    }
+    },
   );
 }
 
 export async function deleteIssueComment(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  commentId: number
+  commentId: number,
 ) {
   return api.delete<void>(
-    `/projects/${projectId}/issues/${issueIid}/comments/${commentId}`
+    `/projects/${projectId}/issues/${issueIid}/comments/${commentId}`,
   );
 }
 export interface CreateIssueWithChildRequest extends CreateIssueRequest {
@@ -386,8 +387,8 @@ export interface CreateIssueWithChildRequest extends CreateIssueRequest {
 }
 
 export async function createIssueWithChild(
-  projectId: number,
-  request: CreateIssueWithChildRequest
+  projectId: number | string,
+  request: CreateIssueWithChildRequest,
 ) {
   return api.post<void>(`/projects/${projectId}/issues-with-child`, {
     body: JSON.stringify(request),
@@ -411,16 +412,19 @@ export interface IssueLink {
   assignees?: UserBasic[];
 }
 
-export async function getIssueLinks(projectId: number, issueIid: number) {
+export async function getIssueLinks(
+  projectId: number | string,
+  issueIid: number,
+) {
   return api.get<IssueLink[]>(
-    `/projects/${projectId}/issues/${issueIid}/links`
+    `/projects/${projectId}/issues/${issueIid}/links`,
   );
 }
 
 export async function createIssueLink(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  targetIssueIid: string
+  targetIssueIid: string,
 ) {
   return api.post<IssueLink>(
     `/projects/${projectId}/issues/${issueIid}/links`,
@@ -429,17 +433,17 @@ export async function createIssueLink(
         target_project_id: projectId.toString(),
         target_issue_iid: targetIssueIid,
       }),
-    }
+    },
   );
 }
 
 export async function deleteIssueLink(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  issueLinkId: number
+  issueLinkId: number,
 ) {
   return api.delete<void>(
-    `/projects/${projectId}/issues/${issueIid}/links/${issueLinkId}`
+    `/projects/${projectId}/issues/${issueIid}/links/${issueLinkId}`,
   );
 }
 
@@ -448,9 +452,9 @@ export interface CreateChildIssueRequest extends CreateIssueRequest {
 }
 
 export async function createChildIssue(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  request: CreateChildIssueRequest
+  request: CreateChildIssueRequest,
 ) {
   return api.post<Issue>(`/projects/${projectId}/issues/${issueIid}/children`, {
     body: JSON.stringify(request),
@@ -458,11 +462,11 @@ export async function createChildIssue(
 }
 
 export async function unlinkChildIssue(
-  projectId: number,
+  projectId: number | string,
   issueIid: number,
-  childIid: number
+  childIid: number,
 ) {
   return api.delete<void>(
-    `/projects/${projectId}/issues/${issueIid}/children/${childIid}`
+    `/projects/${projectId}/issues/${issueIid}/children/${childIid}`,
   );
 }
