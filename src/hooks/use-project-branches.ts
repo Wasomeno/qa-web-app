@@ -1,12 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
-import { getProjectBranches, type GitLabBranch } from '@/api/project';
+import { useQuery } from "@tanstack/react-query";
+import { getProjectBranches, type GitLabBranch } from "@/api/project";
 
 export function useProjectBranches(
   projectId: string | number | undefined,
-  search?: string
+  search?: string,
 ) {
   return useQuery({
-    queryKey: ['project-branches', projectId, search],
+    queryKey: ["project-branches", projectId, search],
     queryFn: () => getProjectBranches(projectId!, search),
     enabled: !!projectId,
     select: (data) => data.data?.branches ?? [],

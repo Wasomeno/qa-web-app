@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { getSpecsDirectory, type FileTreeNode } from '@/api/specs';
 
+const SPECS_ROOT_PATH = 'docs';
+
 /**
  * Manages a lazy-loaded file tree. Fetches only the root level initially,
  * then loads subdirectories on demand when expanded.
@@ -19,7 +21,7 @@ export function useLazyFileTree(
     if (!projectId) return;
     setLoading(true);
     try {
-      const res = await getSpecsDirectory(projectId, '', ref);
+      const res = await getSpecsDirectory(projectId, SPECS_ROOT_PATH, ref);
       const nodes = res.data?.tree ?? [];
       setTree(nodes);
       loadedPaths.current.clear();
