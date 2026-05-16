@@ -1,26 +1,29 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createIssueComment,
   updateIssueComment,
   deleteIssueComment,
   CreateIssueCommentRequest,
   UpdateIssueCommentRequest,
-} from '@/api/issue';
-import { toast } from 'sonner';
+} from "@/api/issue";
+import { toast } from "sonner";
 
-export function useIssueCommentMutations(projectId: number, issueIid: number) {
+export function useIssueCommentMutations(
+  projectId: number | string,
+  issueIid: number,
+) {
   const queryClient = useQueryClient();
-  const queryKey = ['issues', projectId, issueIid, 'comments'];
+  const queryKey = ["issues", projectId, issueIid, "comments"];
 
   const createMutation = useMutation({
     mutationFn: (data: CreateIssueCommentRequest) =>
       createIssueComment(projectId, issueIid, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Comment added');
+      toast.success("Comment added");
     },
     onError: () => {
-      toast.error('Failed to add comment');
+      toast.error("Failed to add comment");
     },
   });
 
@@ -34,10 +37,10 @@ export function useIssueCommentMutations(projectId: number, issueIid: number) {
     }) => updateIssueComment(projectId, issueIid, commentId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Comment updated');
+      toast.success("Comment updated");
     },
     onError: () => {
-      toast.error('Failed to update comment');
+      toast.error("Failed to update comment");
     },
   });
 
@@ -46,10 +49,10 @@ export function useIssueCommentMutations(projectId: number, issueIid: number) {
       deleteIssueComment(projectId, issueIid, commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Comment deleted');
+      toast.success("Comment deleted");
     },
     onError: () => {
-      toast.error('Failed to delete comment');
+      toast.error("Failed to delete comment");
     },
   });
 

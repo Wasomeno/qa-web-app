@@ -1,21 +1,24 @@
-import { getProjectIssues, getIssues, Issue } from '@/api/issue';
-import { useQuery } from '@tanstack/react-query';
-import { IssueFilterState } from '@/types/issues';
-import { useGetLoggedInUser } from '@/hooks/use-get-logged-in-user';
+import { getProjectIssues, getIssues, Issue } from "@/api/issue";
+import { useQuery } from "@tanstack/react-query";
+import { IssueFilterState } from "@/types/issues";
+import { useGetLoggedInUser } from "@/hooks/use-get-logged-in-user";
 
 // Dummy Label Names as per request
 const LABEL_NAMES = {
-  HIGH_PRIORITY: 'High Priority',
-  IN_QA: 'In QA',
-  BLOCKED: 'Blocked',
+  HIGH_PRIORITY: "High Priority",
+  IN_QA: "In QA",
+  BLOCKED: "Blocked",
 };
 
-export function useGetIssues(filters?: Partial<IssueFilterState>) {
+export function useGetIssues(
+  filters?: Partial<IssueFilterState>,
+  options?: { projectScoped?: boolean },
+) {
   const { data: currentUser, isLoading: isUserLoading } = useGetLoggedInUser();
 
   const query = useQuery({
     queryKey: [
-      'issues',
+      "issues",
       filters?.search,
       filters?.projectIds,
       filters?.status,
@@ -23,8 +26,9 @@ export function useGetIssues(filters?: Partial<IssueFilterState>) {
       filters?.issueIds,
       filters?.assigneeIds,
       filters?.quickFilters,
+      options?.projectScoped,
       // Use a stable user identifier or 'anonymous' as fallback
-      currentUser?.id ?? 'anonymous',
+      currentUser?.id ?? "anonymous",
     ],
     queryFn: () => {
       // If issueIds is provided but empty, return empty result immediately to avoid fetching all issues
@@ -43,29 +47,31 @@ export function useGetIssues(filters?: Partial<IssueFilterState>) {
 
       // Add any manually selected labels
       if (filters.labels && filters.labels.length > 0) {
-        const activeLabels = filters.labels.filter(l => l !== 'ALL');
+        const activeLabels = filters.labels.filter((l) => l !== "ALL");
         labels.push(...activeLabels);
       }
 
       let assigneeId: number | string | null | undefined = undefined;
       let assigneeIds: string | undefined = undefined;
 
-      const activeAssigneeIds = (filters.assigneeIds || []).filter(id => id !== 'ALL');
+      const activeAssigneeIds = (filters.assigneeIds || []).filter(
+        (id) => id !== "ALL",
+      );
       if (activeAssigneeIds.length > 0) {
-        const ids = activeAssigneeIds.map(id => {
-          if (id === 'ME' && currentUser) return currentUser.id;
+        const ids = activeAssigneeIds.map((id) => {
+          if (id === "ME" && currentUser) return currentUser.id;
           return id;
         });
 
         if (ids.length === 1) {
           assigneeId = ids[0];
         } else {
-          assigneeIds = ids.join(',');
+          assigneeIds = ids.join(",");
         }
       } else if (filters.quickFilters?.assignedToMe && currentUser) {
         assigneeId = currentUser.id;
       } else if (filters.quickFilters?.unassigned) {
-        assigneeId = 'None';
+        assigneeId = "None";
       }
 
       let authorId: number | string | undefined = undefined;
@@ -76,7 +82,7 @@ export function useGetIssues(filters?: Partial<IssueFilterState>) {
       const params: any = {
         search: filters.search || undefined,
         state:
-          filters.status && filters.status !== 'ALL'
+          filters.status && filters.status !== "ALL"
             ? filters.status.toLowerCase()
             : undefined,
         labels: labels.length > 0 ? labels : undefined,
@@ -86,17 +92,25 @@ export function useGetIssues(filters?: Partial<IssueFilterState>) {
       };
 
       if (filters.issueIds && filters.issueIds.length > 0) {
-        params.issue_ids = filters.issueIds.join(',');
+        params.issue_ids = filters.issueIds.join(",");
       }
 
-      const projectIds = (filters.projectIds || []).filter(id => id !== 'ALL');
+      const projectIds = (filters.projectIds || []).filter(
+        (id) => id !== "ALL",
+      );
       if (projectIds.length > 0) {
         if (projectIds.length === 1) {
-          return getProjectIssues(Number(projectIds[0]), params);
+          if (options?.projectScoped) {
+            return getProjectIssues(projectIds[0], params);
+          }
+          return getIssues({
+            ...params,
+            project_id: Number(projectIds[0]),
+          });
         } else {
           return getIssues({
             ...params,
-            project_ids: projectIds.join(','),
+            project_ids: projectIds.join(","),
           });
         }
       } else {

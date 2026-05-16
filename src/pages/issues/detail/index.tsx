@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ExternalLink,
@@ -15,59 +15,62 @@ import {
   ClipboardList,
   GitPullRequest,
   CircleDot,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
-import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import { Issue, updateIssue } from '@/api/issue';
-import { useGetProjectMembers } from '@/pages/issues/create/hooks/use-get-project-members';
-import { useGetProjectLabels } from '@/pages/issues/create/hooks/use-get-project-labels';
-import { AssigneePicker } from '@/pages/issues/create/components/assignee-picker';
-import { LabelPicker } from '@/pages/issues/create/components/label-picker';
-import { DescriptionEditor } from '@/pages/issues/create/components/description-editor';
-import { Button } from '@/components/ui/button';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { Issue, updateIssue } from "@/api/issue";
+import { useGetProjectMembers } from "@/pages/issues/create/hooks/use-get-project-members";
+import { useGetProjectLabels } from "@/pages/issues/create/hooks/use-get-project-labels";
+import { AssigneePicker } from "@/pages/issues/create/components/assignee-picker";
+import { LabelPicker } from "@/pages/issues/create/components/label-picker";
+import { DescriptionEditor } from "@/pages/issues/create/components/description-editor";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { usePinnedIssues } from '@/hooks/use-pinned-issues';
-import { useSession } from '@/contexts/session-context';
-import { useGetIssue } from '../hooks/use-get-issue';
-import { useGetIssueComments } from '../hooks/use-get-issue-comments';
-import { ChildIssuesList } from '@/pages/issues/detail/components/child-issues-list';
-import { useIssueCommentMutations } from '@/pages/issues/hooks/use-issue-comment-mutations';
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePinnedIssues } from "@/hooks/use-pinned-issues";
+import { useSession } from "@/contexts/session-context";
+import { useGetIssue } from "../hooks/use-get-issue";
+import { useGetIssueComments } from "../hooks/use-get-issue-comments";
+import { ChildIssuesList } from "@/pages/issues/detail/components/child-issues-list";
+import { useIssueCommentMutations } from "@/pages/issues/hooks/use-issue-comment-mutations";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 
 interface IssueDetailPageProps {
   issue?: Issue;
   issueId?: number;
-  projectId?: number;
+  projectId?: number | string;
   onBack: () => void;
   portalContainer?: HTMLElement | null;
 }
 
-const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
-  opened: { color: 'text-green-700', bg: 'bg-green-100', label: 'Open' },
-  closed: { color: 'text-gray-700', bg: 'bg-gray-100', label: 'Closed' },
+const statusConfig: Record<
+  string,
+  { color: string; bg: string; label: string }
+> = {
+  opened: { color: "text-green-700", bg: "bg-green-100", label: "Open" },
+  closed: { color: "text-gray-700", bg: "bg-gray-100", label: "Closed" },
 };
 
 const formatDate = (dateStr: string): string => {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 };
 
@@ -91,7 +94,7 @@ const StreamItem: React.FC<StreamItemProps> = ({
   className,
 }) => {
   return (
-    <div className={cn('flex gap-4 relative', className)}>
+    <div className={cn("flex gap-4 relative", className)}>
       {/* Avatar + thread line */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -101,7 +104,7 @@ const StreamItem: React.FC<StreamItemProps> = ({
       </div>
 
       {/* Content */}
-      <div className={cn('flex-1 min-w-0', !isLast ? 'pb-10' : 'pb-4')}>
+      <div className={cn("flex-1 min-w-0", !isLast ? "pb-10" : "pb-4")}>
         {header && <div className="mb-2">{header}</div>}
         {children}
       </div>
@@ -170,7 +173,7 @@ const MetadataRow: React.FC<MetadataRowProps> = ({
               className="h-7 text-xs gap-1.5"
             >
               {isSaving ? (
-                'Saving...'
+                "Saving..."
               ) : (
                 <>
                   <Save className="w-3 h-3" /> Save
@@ -207,7 +210,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
 
   const { data: fetchedIssueData, isLoading: isFetching } = useGetIssue(
     projectId!,
-    issueId!
+    issueId!,
   );
 
   const currentIssue = useMemo(() => {
@@ -220,21 +223,23 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
   }, [fetchedIssueData, issue]);
 
   const [editingField, setEditingField] = useState<
-    'description' | 'status' | 'assignee' | 'labels' | null
+    "description" | "status" | "assignee" | "labels" | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const { togglePin, isPinned } = usePinnedIssues();
 
-  const [description, setDescription] = useState(currentIssue?.description || '');
+  const [description, setDescription] = useState(
+    currentIssue?.description || "",
+  );
   const [status, setStatus] = useState<string>(
-    currentIssue?.state === 'closed' ? 'closed' : 'opened'
+    currentIssue?.state === "closed" ? "closed" : "opened",
   );
 
   const comments = useGetIssueComments(projectId!, issueId!);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editCommentBody, setEditCommentBody] = useState('');
+  const [editCommentBody, setEditCommentBody] = useState("");
 
   const {
     createComment,
@@ -247,7 +252,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
   const handleCreateComment = async () => {
     if (!newComment.trim()) return;
     await createComment({ body: newComment });
-    setNewComment('');
+    setNewComment("");
   };
 
   const handleUpdateComment = async (commentId: number) => {
@@ -257,7 +262,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
   };
 
   const handleDeleteComment = async (commentId: number) => {
-    if (confirm('Are you sure you want to delete this comment?')) {
+    if (confirm("Are you sure you want to delete this comment?")) {
       await deleteComment(commentId);
     }
   };
@@ -272,7 +277,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           webUrl: currentIssue.assignees[0].web_url,
           state: currentIssue.assignees[0].state,
         }
-      : undefined
+      : undefined,
   );
 
   const [selectedLabels, setSelectedLabels] = useState(
@@ -287,20 +292,23 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
       : (currentIssue?.labels || []).map((l) => ({
           id: String(l),
           name: String(l),
-          color: '#ccc',
-          textColor: '#000',
-          description: '',
-        }))
+          color: "#ccc",
+          textColor: "#000",
+          description: "",
+        })),
   );
 
-  const { data: members, isLoading: isLoadingMembers } = useGetProjectMembers(projectId!);
-  const { data: labels, isLoading: isLoadingLabels } = useGetProjectLabels(projectId!);
+  const metadataProjectId = currentIssue?.project_id;
+  const { data: members, isLoading: isLoadingMembers } =
+    useGetProjectMembers(metadataProjectId);
+  const { data: labels, isLoading: isLoadingLabels } =
+    useGetProjectLabels(metadataProjectId);
 
   useEffect(() => {
     if (fetchedIssueData?.data) {
       const data = fetchedIssueData.data;
-      setDescription(data.description || '');
-      setStatus((data.state || 'opened') === 'closed' ? 'closed' : 'opened');
+      setDescription(data.description || "");
+      setStatus((data.state || "opened") === "closed" ? "closed" : "opened");
       setSelectedAssignee(
         data.assignees?.[0]
           ? {
@@ -311,7 +319,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
               webUrl: data.assignees[0].web_url,
               state: data.assignees[0].state,
             }
-          : undefined
+          : undefined,
       );
     }
   }, [fetchedIssueData]);
@@ -320,29 +328,29 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
     if (!editingField) return;
     setIsSaving(true);
     try {
-      if (editingField === 'description') {
+      if (editingField === "description") {
         await updateIssue(projectId!, issueId!, { description });
-        toast.success('Description updated');
-      } else if (editingField === 'status') {
-        const event = status === 'closed' ? 'close' : 'reopen';
+        toast.success("Description updated");
+      } else if (editingField === "status") {
+        const event = status === "closed" ? "close" : "reopen";
         await updateIssue(projectId!, issueId!, { state_event: event });
-        toast.success('Status updated');
-      } else if (editingField === 'assignee') {
+        toast.success("Status updated");
+      } else if (editingField === "assignee") {
         await updateIssue(projectId!, issueId!, {
           assignee_ids: selectedAssignee ? [parseInt(selectedAssignee.id)] : [],
         });
-        toast.success('Assignee updated');
-      } else if (editingField === 'labels') {
+        toast.success("Assignee updated");
+      } else if (editingField === "labels") {
         await updateIssue(projectId!, issueId!, {
-          labels: selectedLabels.map((l) => l.name).join(','),
+          labels: selectedLabels.map((l) => l.name).join(","),
         });
-        toast.success('Labels updated');
+        toast.success("Labels updated");
       }
-      queryClient.invalidateQueries({ queryKey: ['issues'] });
-      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      queryClient.invalidateQueries({ queryKey: ["issues"] });
+      queryClient.invalidateQueries({ queryKey: ["issue", issueId] });
       setEditingField(null);
     } catch (error) {
-      toast.error('Failed to update issue');
+      toast.error("Failed to update issue");
     } finally {
       setIsSaving(false);
     }
@@ -351,9 +359,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
   const cancelEdit = () => {
     setEditingField(null);
     if (!currentIssue) return;
-    
-    setDescription(currentIssue.description || '');
-    setStatus((currentIssue.state || '') === 'closed' ? 'closed' : 'opened');
+
+    setDescription(currentIssue.description || "");
+    setStatus((currentIssue.state || "") === "closed" ? "closed" : "opened");
     setSelectedAssignee(
       currentIssue.assignees?.[0]
         ? {
@@ -364,7 +372,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
             webUrl: currentIssue.assignees[0].web_url,
             state: currentIssue.assignees[0].state,
           }
-        : undefined
+        : undefined,
     );
     if (currentIssue.label_details && currentIssue.label_details.length > 0) {
       setSelectedLabels(
@@ -374,7 +382,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           color: l.color,
           textColor: l.text_color,
           description: l.description,
-        }))
+        })),
       );
     }
   };
@@ -489,12 +497,17 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
               <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-gray-500 mt-1.5">
                 <span
                   className={cn(
-                    'text-xs px-2 py-0.5 rounded-full font-medium',
-                    (statusConfig[currentIssue.state] || statusConfig.opened).bg,
-                    (statusConfig[currentIssue.state] || statusConfig.opened).color
+                    "text-xs px-2 py-0.5 rounded-full font-medium",
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .bg,
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .color,
                   )}
                 >
-                  {(statusConfig[currentIssue.state] || statusConfig.opened).label}
+                  {
+                    (statusConfig[currentIssue.state] || statusConfig.opened)
+                      .label
+                  }
                 </span>
                 <span className="text-gray-300">•</span>
                 <span className="font-medium text-gray-600">
@@ -537,14 +550,14 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-500">
-                    {(currentIssue.author?.name || '?').charAt(0).toUpperCase()}
+                    {(currentIssue.author?.name || "?").charAt(0).toUpperCase()}
                   </div>
                 )
               }
               header={
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <span className="font-semibold text-gray-900">
-                    {currentIssue.author?.name || 'Unknown'}
+                    {currentIssue.author?.name || "Unknown"}
                   </span>
                   <span>opened this issue</span>
                   <span className="text-gray-300">•</span>
@@ -552,7 +565,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                 </div>
               }
             >
-              {editingField === 'description' ? (
+              {editingField === "description" ? (
                 <div className="space-y-3 bg-white p-3 rounded-lg border border-zinc-100 shadow-sm ring-2 ring-zinc-50">
                   <DescriptionEditor
                     content={description}
@@ -576,7 +589,13 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       disabled={isSaving}
                       className="h-7 text-xs gap-1.5"
                     >
-                      {isSaving ? 'Saving...' : <><Save className="w-3 h-3" /> Save</>}
+                      {isSaving ? (
+                        "Saving..."
+                      ) : (
+                        <>
+                          <Save className="w-3 h-3" /> Save
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -589,12 +608,14 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       <Skeleton className="h-4 w-3/4" />
                     </div>
                   ) : (
-                    <MarkdownRenderer content={currentIssue.description || ''} />
+                    <MarkdownRenderer
+                      content={currentIssue.description || ""}
+                    />
                   )}
                   <button
                     onClick={() => {
-                      setDescription(currentIssue.description || '');
-                      setEditingField('description');
+                      setDescription(currentIssue.description || "");
+                      setEditingField("description");
                     }}
                     className="absolute -right-2 -top-2 opacity-0 group-hover/description:opacity-100 p-1.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-full transition-all z-10"
                   >
@@ -607,14 +628,16 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
             {/* Child Tasks */}
             {hasChildIssues && (
               <StreamItem
-                avatar={
-                  <ClipboardList className="w-4 h-4 text-gray-500" />
-                }
+                avatar={<ClipboardList className="w-4 h-4 text-gray-500" />}
                 header={
                   <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="font-semibold text-gray-900">Child Tasks</span>
+                    <span className="font-semibold text-gray-900">
+                      Child Tasks
+                    </span>
                     <span className="text-gray-300">•</span>
-                    <span className="text-xs">{currentIssue.child!.amount} linked</span>
+                    <span className="text-xs">
+                      {currentIssue.child!.amount} linked
+                    </span>
                   </div>
                 }
               >
@@ -645,7 +668,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                           <span className="font-semibold text-gray-900">
                             {comment.author.name}
                           </span>
-                          <span className="text-gray-400">@{comment.author.username}</span>
+                          <span className="text-gray-400">
+                            @{comment.author.username}
+                          </span>
                           <span className="text-gray-300">•</span>
                           <span>{formatDate(comment.created_at)}</span>
                         </div>
@@ -686,7 +711,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                           content={editCommentBody}
                           onChange={setEditCommentBody}
                           className="min-h-[100px]"
-                          portalContainer={portalContainer || containerRef.current}
+                          portalContainer={
+                            portalContainer || containerRef.current
+                          }
                         />
                         <div className="flex justify-end gap-2">
                           <Button
@@ -706,7 +733,10 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                         </div>
                       </div>
                     ) : (
-                      <MarkdownRenderer content={comment.body} className="text-sm" />
+                      <MarkdownRenderer
+                        content={comment.body}
+                        className="text-sm"
+                      />
                     )}
                   </StreamItem>
                 ))}
@@ -725,7 +755,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-500">
-                      {(user.name || user.username || 'U').charAt(0).toUpperCase()}
+                      {(user.name || user.username || "U")
+                        .charAt(0)
+                        .toUpperCase()}
                     </div>
                   )
                 }
@@ -744,7 +776,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       onClick={handleCreateComment}
                       disabled={isCreating || !newComment.trim()}
                     >
-                      {isCreating ? 'Posting...' : 'Post Comment'}
+                      {isCreating ? "Posting..." : "Post Comment"}
                     </Button>
                   </div>
                 </div>
@@ -770,36 +802,40 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       onClick={() => {
                         const content = [
                           `# ${currentIssue.title}`,
-                          '',
+                          "",
                           `**Description:**`,
-                          currentIssue.description || '_No description_',
-                          '',
-                          `**Labels:** ${currentIssue.labels?.join(', ') || 'None'}`,
-                          '',
-                          `**Assignees:** ${currentIssue.assignees?.map((a: any) => a.name).join(', ') || 'Unassigned'}`,
-                          '',
-                          `**Status:** ${currentIssue.state || 'Open'}`,
-                          '',
+                          currentIssue.description || "_No description_",
+                          "",
+                          `**Labels:** ${currentIssue.labels?.join(", ") || "None"}`,
+                          "",
+                          `**Assignees:** ${currentIssue.assignees?.map((a: any) => a.name).join(", ") || "Unassigned"}`,
+                          "",
+                          `**Status:** ${currentIssue.state || "Open"}`,
+                          "",
                           `**Link:** ${currentIssue.web_url}`,
                         ]
                           .filter(Boolean)
-                          .join('\n');
+                          .join("\n");
                         navigator.clipboard.writeText(content);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
                       className={cn(
-                        'p-2 rounded-lg transition-colors',
+                        "p-2 rounded-lg transition-colors",
                         copied
-                          ? 'text-green-600'
-                          : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'
+                          ? "text-green-600"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-700",
                       )}
                     >
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </motion.button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
+                    <p>{copied ? "Copied!" : "Copy to clipboard"}</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -809,7 +845,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       whileTap={{ scale: 0.9 }}
                       transition={{ duration: 0.1 }}
                       onClick={() =>
-                        currentIssue.web_url && window.open(currentIssue.web_url, '_blank')
+                        currentIssue.web_url &&
+                        window.open(currentIssue.web_url, "_blank")
                       }
                       className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-zinc-600 transition-colors"
                     >
@@ -828,16 +865,17 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       transition={{ duration: 0.1 }}
                       onClick={() => togglePin(currentIssue)}
                       className={cn(
-                        'p-2 rounded-lg transition-colors',
+                        "p-2 rounded-lg transition-colors",
                         isPinned(currentIssue.iid, currentIssue.project_id)
-                          ? 'bg-amber-100 text-amber-500 hover:bg-amber-200 hover:text-amber-600'
-                          : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+                          ? "bg-amber-100 text-amber-500 hover:bg-amber-200 hover:text-amber-600"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-900",
                       )}
                     >
                       <Pin
                         className={cn(
-                          'w-4 h-4',
-                          isPinned(currentIssue.iid, currentIssue.project_id) && 'fill-current'
+                          "w-4 h-4",
+                          isPinned(currentIssue.iid, currentIssue.project_id) &&
+                            "fill-current",
                         )}
                       />
                     </motion.button>
@@ -845,8 +883,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                   <TooltipContent side="bottom">
                     <p>
                       {isPinned(currentIssue.iid, currentIssue.project_id)
-                        ? 'Unpin Issue'
-                        : 'Pin Issue'}
+                        ? "Unpin Issue"
+                        : "Pin Issue"}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -857,10 +895,12 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           {/* Status */}
           <MetadataRow
             label="Status"
-            isEditing={editingField === 'status'}
+            isEditing={editingField === "status"}
             onEdit={() => {
-              setStatus((currentIssue.state || '') === 'closed' ? 'closed' : 'opened');
-              setEditingField('status');
+              setStatus(
+                (currentIssue.state || "") === "closed" ? "closed" : "opened",
+              );
+              setEditingField("status");
             }}
             onCancel={cancelEdit}
             onSave={handleUpdate}
@@ -870,7 +910,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                 <SelectTrigger className="w-full h-8 text-xs">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent container={portalContainer || containerRef.current}>
+                <SelectContent
+                  container={portalContainer || containerRef.current}
+                >
                   <SelectItem value="opened">Open</SelectItem>
                   <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
@@ -879,9 +921,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           >
             <span
               className={cn(
-                'text-xs px-2 py-1 rounded-full font-medium inline-flex items-center gap-1.5',
+                "text-xs px-2 py-1 rounded-full font-medium inline-flex items-center gap-1.5",
                 (statusConfig[currentIssue.state] || statusConfig.opened).bg,
-                (statusConfig[currentIssue.state] || statusConfig.opened).color
+                (statusConfig[currentIssue.state] || statusConfig.opened).color,
               )}
             >
               <CircleDot className="w-3 h-3" />
@@ -892,7 +934,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           {/* Assignee */}
           <MetadataRow
             label="Assignee"
-            isEditing={editingField === 'assignee'}
+            isEditing={editingField === "assignee"}
             onEdit={() => {
               setSelectedAssignee(
                 currentIssue.assignees?.[0]
@@ -904,9 +946,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       webUrl: currentIssue.assignees[0].web_url,
                       state: currentIssue.assignees[0].state,
                     }
-                  : undefined
+                  : undefined,
               );
-              setEditingField('assignee');
+              setEditingField("assignee");
             }}
             onCancel={cancelEdit}
             onSave={handleUpdate}
@@ -943,7 +985,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           {/* Labels */}
           <MetadataRow
             label="Labels"
-            isEditing={editingField === 'labels'}
+            isEditing={editingField === "labels"}
             onEdit={() => {
               setSelectedLabels(
                 currentIssue.label_details
@@ -957,12 +999,12 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                   : (currentIssue.labels || []).map((l) => ({
                       id: String(l),
                       name: String(l),
-                      color: '#ccc',
-                      textColor: '#000',
-                      description: '',
-                    }))
+                      color: "#ccc",
+                      textColor: "#000",
+                      description: "",
+                    })),
               );
-              setEditingField('labels');
+              setEditingField("labels");
             }}
             onCancel={cancelEdit}
             onSave={handleUpdate}
@@ -975,7 +1017,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                 onToggle={(label) => {
                   const exists = selectedLabels.some((l) => l.id === label.id);
                   if (exists) {
-                    setSelectedLabels((prev) => prev.filter((l) => l.id !== label.id));
+                    setSelectedLabels((prev) =>
+                      prev.filter((l) => l.id !== label.id),
+                    );
                   } else {
                     setSelectedLabels((prev) => [...prev, label]);
                   }
@@ -987,15 +1031,18 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           >
             <div className="flex flex-wrap gap-1.5">
               {isFetching &&
-              (!currentIssue.label_details || currentIssue.label_details.length === 0) &&
+              (!currentIssue.label_details ||
+                currentIssue.label_details.length === 0) &&
               (!currentIssue.labels || currentIssue.labels.length === 0) ? (
                 <>
                   <Skeleton className="h-5 w-16 rounded" />
                   <Skeleton className="h-5 w-12 rounded" />
                 </>
-              ) : (currentIssue.label_details && currentIssue.label_details.length > 0) ||
+              ) : (currentIssue.label_details &&
+                  currentIssue.label_details.length > 0) ||
                 (labels && labels.length > 0) ? (
-                (currentIssue.label_details && currentIssue.label_details.length > 0
+                (currentIssue.label_details &&
+                currentIssue.label_details.length > 0
                   ? currentIssue.label_details
                   : (currentIssue.labels || []).map((l) => {
                       const name = String(l);
@@ -1004,8 +1051,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                         detail || {
                           id: name,
                           name,
-                          color: '#ccc',
-                          text_color: '#000',
+                          color: "#ccc",
+                          text_color: "#000",
                         }
                       );
                     })

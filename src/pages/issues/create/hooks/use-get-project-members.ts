@@ -1,9 +1,9 @@
-import { getProjectMembers } from '@/api/project';
-import { useQuery } from '@tanstack/react-query';
+import { getProjectMembers } from "@/api/project";
+import { useQuery } from "@tanstack/react-query";
 
-export function useGetProjectMembers(projectId?: number) {
+export function useGetProjectMembers(projectId?: number | string) {
   const query = useQuery({
-    queryKey: ['project-members', projectId],
+    queryKey: ["project-members", projectId],
     queryFn: () => getProjectMembers(projectId!),
     enabled: !!projectId,
     refetchOnWindowFocus: false,

@@ -1,9 +1,9 @@
-import { getIssueComments } from '@/api/issue';
-import { useQuery } from '@tanstack/react-query';
+import { getIssueComments } from "@/api/issue";
+import { useQuery } from "@tanstack/react-query";
 
-export function useGetIssueComments(projectId: number, id: number) {
+export function useGetIssueComments(projectId: number | string, id: number) {
   const query = useQuery({
-    queryKey: ['issues', projectId, id, 'comments'],
+    queryKey: ["issues", projectId, id, "comments"],
     queryFn: () => getIssueComments(projectId, id),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
