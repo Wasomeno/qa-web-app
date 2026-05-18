@@ -156,7 +156,7 @@ function CreateProjectDialog({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
+            <div className="grid gap-2 min-w-0">
               <Label>Issues and boards repository</Label>
               <ProjectSelect
                 value={issueRepo?.id ?? null}
@@ -168,7 +168,7 @@ function CreateProjectDialog({
                 GitLab issues and issue boards will come from this repository.
               </p>
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 min-w-0">
               <Label>Specs repository</Label>
               <ProjectSelect
                 value={specsRepo?.id ?? null}
@@ -192,7 +192,11 @@ function CreateProjectDialog({
           >
             Cancel
           </Button>
-          <Button onClick={() => createMutation.mutate()} disabled={!canSubmit}>
+          <Button
+            onClick={() => createMutation.mutate()}
+            disabled={!canSubmit}
+            className="bg-zinc-900 text-white hover:bg-zinc-800"
+          >
             {createMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -216,7 +220,7 @@ export function ProjectsPage() {
   const projects = data?.data?.projects ?? [];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[#F9FAFB]">
+    <div className="flex h-full flex-col overflow-hidden bg-white">
       <div className="border-b border-gray-100/80 bg-white/85 px-4 pb-6 pt-6 backdrop-blur-xl md:px-8 md:pt-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -233,7 +237,7 @@ export function ProjectsPage() {
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="gap-2 self-start md:self-auto"
+            className="gap-2 self-start md:self-auto bg-zinc-900 text-white hover:bg-zinc-800"
           >
             <Plus className="h-4 w-4" />
             Create project
@@ -255,7 +259,10 @@ export function ProjectsPage() {
               title="Create your first project"
               description="Projects are public workspaces. Pick one GitLab repo for issues and boards, then one for specs."
               action={
-                <Button onClick={() => setCreateOpen(true)}>
+                <Button
+                  onClick={() => setCreateOpen(true)}
+                  className="bg-zinc-900 text-white hover:bg-zinc-800"
+                >
                   Create project
                 </Button>
               }
@@ -544,7 +551,7 @@ export function ProjectDetailPage({
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col bg-[#F9FAFB]">
+      <div className="flex h-full flex-col bg-white">
         <div className="border-b bg-white px-8 py-8">
           <Skeleton className="h-10 w-72" />
         </div>
@@ -557,7 +564,7 @@ export function ProjectDetailPage({
 
   if (!project) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#F9FAFB] p-8">
+      <div className="flex h-full items-center justify-center bg-white p-8">
         <EmptyState
           icon={FolderKanban}
           title="Project not found"
@@ -623,7 +630,7 @@ export function ProjectDetailPage({
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[#F9FAFB]">
+    <div className="flex h-full flex-col overflow-hidden bg-white">
       <div className="border-b border-gray-100/80 bg-white/85 px-4 pt-6 backdrop-blur-xl md:px-8 md:pt-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
