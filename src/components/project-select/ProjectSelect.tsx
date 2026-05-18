@@ -15,6 +15,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useGetProjects } from '@/hooks/use-get-projects';
 import { useDebounce } from '@/utils/useDebounce';
 import { GitLabProject } from '@/types/project';
@@ -370,57 +376,73 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
   };
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger
-        asChild
-        onClick={handleTriggerClick}
-        onPointerDown={handleTriggerPointerDown}
-      >
+    <TooltipProvider>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         {size === 'compact' ? (
-          <button
-            type="button"
-            className={cn(
-              'h-6 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors flex items-center gap-1',
-              !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
-              className
-            )}
+          <PopoverTrigger
+            asChild
+            onClick={handleTriggerClick}
+            onPointerDown={handleTriggerPointerDown}
           >
-            {!projectDetails && (isFetching || isFetchingSelected) ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <>
-                <span className="truncate max-w-[120px]">{triggerLabel}</span>
-                <ChevronsUpDown className="w-3 h-3 shrink-0 opacity-60" />
-              </>
-            )}
-          </button>
-        ) : (
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={!projectDetails && (isFetching || isFetchingSelected)}
-            className={cn(
-              'w-full justify-between text-left font-normal bg-white border-theme-border rounded-xl',
-              'focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 hover:text-gray-900 transition-all',
-              !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
-              className
-            )}
-          >
-            <span
+            <button
+              type="button"
               className={cn(
-                'truncate',
-                triggerLabel && triggerLabel !== placeholder
-                  ? 'text-gray-900'
-                  : 'text-gray-500'
+                'h-6 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors flex items-center gap-1',
+                !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
+                className
               )}
             >
-              {triggerLabel}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+              {!projectDetails && (isFetching || isFetchingSelected) ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <>
+                  <span className="truncate max-w-[120px]">{triggerLabel}</span>
+                  <ChevronsUpDown className="w-3 h-3 shrink-0 opacity-60" />
+                </>
+              )}
+            </button>
+          </PopoverTrigger>
+        ) : (
+          <Tooltip>
+            <PopoverTrigger
+              asChild
+              onClick={handleTriggerClick}
+              onPointerDown={handleTriggerPointerDown}
+            >
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  disabled={!projectDetails && (isFetching || isFetchingSelected)}
+                  className={cn(
+                    'w-full min-w-0 justify-between text-left font-normal bg-white border-theme-border rounded-xl',
+                    'focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 hover:text-gray-900 transition-all',
+                    !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
+                    className
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'truncate',
+                      triggerLabel && triggerLabel !== placeholder
+                        ? 'text-gray-900'
+                        : 'text-gray-500'
+                    )}
+                  >
+                    {triggerLabel}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </TooltipTrigger>
+            </PopoverTrigger>
+            {triggerLabel && triggerLabel !== placeholder && (
+              <TooltipContent side="bottom" align="start" className="break-words">
+                {triggerLabel}
+              </TooltipContent>
+            )}
+          </Tooltip>
         )}
-      </PopoverTrigger>
 
       <PopoverContent
         className={cn('p-0', size === 'compact' ? 'w-[200px]' : 'w-[300px]')}
@@ -522,5 +544,6 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
         </Command>
       </PopoverContent>
     </Popover>
+    </TooltipProvider>
   );
 };
