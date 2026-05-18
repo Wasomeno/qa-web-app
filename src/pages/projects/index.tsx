@@ -290,13 +290,13 @@ export function ProjectsPage() {
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
                     <span>Issues repo</span>
                     <span className="font-mono text-gray-700">
-                      #{project.issueRepoId}
+                      {project.issueRepoName}
                     </span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
                     <span>Specs repo</span>
                     <span className="font-mono text-gray-700">
-                      #{project.specsRepoId}
+                      {project.specsRepoName}
                     </span>
                   </div>
                 </div>
@@ -370,17 +370,17 @@ function ProjectOverview({ project }: { project: AppProject }) {
             </p>
           </div>
           <div className="grid min-w-72 gap-2 text-sm">
-            <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
+            <div className="rounded-xl bg-gray-50 px-3 py-2">
               <span className="text-gray-500">Issues repo</span>
-              <span className="font-mono text-gray-800">
-                #{project.issueRepoId}
-              </span>
+              <p className="mt-0.5 font-mono text-gray-800 break-words">
+                {project.issueRepoName}
+              </p>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
+            <div className="rounded-xl bg-gray-50 px-3 py-2">
               <span className="text-gray-500">Specs repo</span>
-              <span className="font-mono text-gray-800">
-                #{project.specsRepoId}
-              </span>
+              <p className="mt-0.5 font-mono text-gray-800 break-words">
+                {project.specsRepoName}
+              </p>
             </div>
           </div>
         </div>
@@ -462,7 +462,7 @@ function ProjectSettings({ project }: { project: AppProject }) {
               Issues repo
             </dt>
             <dd className="mt-1 font-mono text-gray-900">
-              #{project.issueRepoId}
+              {project.issueRepoName}
             </dd>
           </div>
           <div>
@@ -470,7 +470,7 @@ function ProjectSettings({ project }: { project: AppProject }) {
               Specs repo
             </dt>
             <dd className="mt-1 font-mono text-gray-900">
-              #{project.specsRepoId}
+              {project.specsRepoName}
             </dd>
           </div>
         </dl>
@@ -593,7 +593,7 @@ export function ProjectDetailPage({
         return (
           <SpecsPage
             projectId={project.id}
-            branchProjectId={project.specsRepoId}
+            branchProjectId={project.specsRepoName}
             projectName={project.name}
           />
         );
@@ -644,13 +644,13 @@ export function ProjectDetailPage({
             <div className="flex justify-between gap-4">
               <span>Issues repo</span>
               <span className="font-mono text-gray-800">
-                #{project.issueRepoId}
+                {project.issueRepoName}
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span>Specs repo</span>
               <span className="font-mono text-gray-800">
-                #{project.specsRepoId}
+                {project.specsRepoName}
               </span>
             </div>
           </div>

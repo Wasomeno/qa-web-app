@@ -2,12 +2,12 @@ export interface AppProject {
   id: string;
   name: string;
   description: string;
-  issueRepoId: number;
-  specsRepoId: number;
+  issueRepoName: string;
+  specsRepoName: string;
   createdById?: number;
   updatedById?: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string;   // ISO 8601 date string
+  updatedAt: string;   // ISO 8601 date string
 }
 
 export interface CreateAppProjectRequest {
