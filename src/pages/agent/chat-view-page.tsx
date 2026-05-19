@@ -66,7 +66,7 @@ export const ChatViewPage: React.FC<ChatViewPageProps> = ({ sessionId }) => {
   if (isLoadingApi && !hasInitialized) {
     return (
       <div className="flex flex-col h-full w-full bg-background items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         <p className="text-muted-foreground mt-4">Loading session...</p>
       </div>
     );

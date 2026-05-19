@@ -63,12 +63,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         className={cn(
           'h-9 w-9 border transition-all duration-300',
           !isUser &&
-            'bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20 shadow-sm shadow-primary/10'
+            'bg-gradient-to-br from-muted-foreground/10 to-muted-foreground/5 border-muted shadow-sm'
         )}
       >
         {isUser ? (
           <>
-            <AvatarFallback className="bg-primary/90 text-primary-foreground">
+            <AvatarFallback className="bg-muted-foreground/20 text-muted-foreground">
               <User className="h-4 w-4" />
             </AvatarFallback>
           </>
@@ -80,7 +80,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               {isError ? (
                 <AlertCircle className="h-4 w-4" />
               ) : (
-                <Bot className="h-5 w-5 text-primary" />
+                <Bot className="h-5 w-5 text-muted-foreground" />
               )}
             </AvatarFallback>
           </>
@@ -140,7 +140,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           className={cn(
             'px-4 py-2.5 rounded-2xl shadow-sm text-sm relative overflow-hidden break-words',
             isUser
-              ? 'bg-primary text-primary-foreground rounded-tr-none shadow-primary/10'
+              ? 'bg-muted/80 text-foreground rounded-tr-none shadow-black/5'
               : cn(
                   'bg-card/50 backdrop-blur-md border rounded-tl-none shadow-black/5',
                   isError && 'border-destructive/30 bg-destructive/5'

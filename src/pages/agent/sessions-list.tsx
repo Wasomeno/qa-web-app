@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { 
-  Trash2, 
+import {
+  Trash2,
   MessageCircle,
   Loader2
 } from 'lucide-react';
@@ -86,9 +86,9 @@ export const SessionsListPage: React.FC = () => {
   // Handle session click - navigate to session detail page
   const handleSessionClick = (session: ChatSession) => {
     setLoadingSessionId(session.session_id);
-    navigate({ 
-      to: '/chat-sessions/$sessionId', 
-      params: { sessionId: session.session_id } 
+    navigate({
+      to: '/chat-sessions/$sessionId',
+      params: { sessionId: session.session_id }
     });
   };
 
@@ -150,7 +150,7 @@ export const SessionsListPage: React.FC = () => {
               <AnimatePresence>
                 {sessions.map((session: ChatSession, index: number) => {
                   const isLoading = loadingSessionId === session.session_id;
-                  
+
                   return (
                     <motion.div
                       key={session.session_id}
@@ -162,9 +162,9 @@ export const SessionsListPage: React.FC = () => {
                       className={cn(
                         'group flex items-center gap-3 p-3 rounded-lg border cursor-pointer',
                         'transition-all duration-200',
-                        isLoading 
-                          ? 'bg-primary/5 border-primary/30' 
-                          : 'hover:bg-accent/50 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5'
+                        isLoading
+                          ? 'bg-muted/30 border-muted'
+                          : 'hover:bg-accent/50 hover:border-muted hover:shadow-md'
                       )}
                     >
                       <div className="flex-1 min-w-0">
@@ -175,7 +175,7 @@ export const SessionsListPage: React.FC = () => {
                           {formatRelativeTime(session.last_update_time)}
                         </p>
                       </div>
-                      
+
                       {isLoading ? (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.8 }}
@@ -185,7 +185,7 @@ export const SessionsListPage: React.FC = () => {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                            className="h-5 w-5 rounded-full border-[1.5px] border-primary/20 border-t-primary"
+                            className="h-5 w-5 rounded-full border-[1.5px] border-muted-foreground/20 border-t-muted-foreground/60"
                           />
                         </motion.div>
                       ) : (
@@ -225,7 +225,7 @@ export const SessionsListPage: React.FC = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700"
             >

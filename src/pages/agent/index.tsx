@@ -53,7 +53,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
   const navigate = useNavigate();
   const search = useSearch({ from: '/' });
   const [ref, bounds] = useMeasure();
-  
+
   // Local storage for messages (for display)
   const {
     currentSessionId,
@@ -69,7 +69,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
 
   // Track if we're loading a session from the backend
   const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
-  
+
   // Fetch session details when loading a session from the backend
   const { data: sessionDetail, isLoading: isLoadingSession } = useChatSessionApi(loadingSessionId);
 
@@ -167,9 +167,9 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
   // Resume a session from the API list - navigate to session detail page
   const handleResumeSession = (session: ApiChatSession) => {
     setLoadingSessionId(session.session_id);
-    navigate({ 
-      to: '/chat-sessions/$sessionId', 
-      params: { sessionId: session.session_id } 
+    navigate({
+      to: '/chat-sessions/$sessionId',
+      params: { sessionId: session.session_id }
     });
   };
 
@@ -194,7 +194,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
     return (
       <div className="flex flex-col h-full w-full bg-background relative overflow-hidden">
         {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent pointer-events-none" />
 
         {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 relative z-10 overflow-auto">
@@ -337,7 +337,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                   <AnimatePresence>
                     {apiSessions.slice(0, 3).map((session, index) => {
                       const isLoading = loadingSessionId === session.session_id;
-                      
+
                       return (
                         <motion.div
                           key={session.session_id}
@@ -349,9 +349,9 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                           className={cn(
                             "group flex items-center gap-3 p-3 sm:p-3 rounded-lg border cursor-pointer",
                             "transition-all duration-200",
-                            isLoading 
-                              ? "bg-primary/5 border-primary/30" 
-                              : "hover:bg-accent/50 hover:border-primary/20"
+                            isLoading
+                              ? "bg-muted/30 border-muted"
+                              : "hover:bg-accent/50 hover:border-muted"
                           )}
                         >
                           <div className="flex-1 min-w-0">
@@ -362,7 +362,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                               {formatRelativeTimeApi(session.last_update_time)}
                             </p>
                           </div>
-                          
+
                           {isLoading ? (
                             <motion.div
                               initial={{ opacity: 0, scale: 0.8 }}
@@ -372,7 +372,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
                               <motion.div
                                 animate={{ rotate: 360 }}
                                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                                className="h-5 w-5 rounded-full border-[1.5px] border-primary/20 border-t-primary"
+                                className="h-5 w-5 rounded-full border-[1.5px] border-muted-foreground/20 border-t-muted-foreground/60"
                               />
                             </motion.div>
                           ) : (
@@ -564,8 +564,8 @@ const ChatView: React.FC<ChatViewProps> = ({
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                   className="flex w-full gap-3 py-4"
                 >
-                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 relative">
-                    <Bot className="h-5 w-5 text-primary" />
+                  <div className="h-9 w-9 rounded-full bg-muted/40 flex items-center justify-center border border-muted relative">
+                    <Bot className="h-5 w-5 text-muted-foreground" />
                     <motion.div
                       animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                       transition={{
@@ -573,40 +573,40 @@ const ChatView: React.FC<ChatViewProps> = ({
                         duration: 2,
                         ease: "easeInOut",
                       }}
-                      className="absolute inset-0 rounded-full bg-primary/20"
+                      className="absolute inset-0 rounded-full bg-muted-foreground/10"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center space-x-1.5 px-4 py-3 bg-muted/40 backdrop-blur-sm rounded-2xl rounded-tl-none border shadow-sm">
                       <motion.div
-                        animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                        animate={{ y: [0, -4, 0], opacity: [0.3, 0.8, 0.3] }}
                         transition={{
                           repeat: Infinity,
                           duration: 1.2,
                           delay: 0,
                           ease: "easeInOut",
                         }}
-                        className="w-1.5 h-1.5 bg-primary/60 rounded-full"
+                        className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
                       />
                       <motion.div
-                        animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                        animate={{ y: [0, -4, 0], opacity: [0.3, 0.8, 0.3] }}
                         transition={{
                           repeat: Infinity,
                           duration: 1.2,
                           delay: 0.15,
                           ease: "easeInOut",
                         }}
-                        className="w-1.5 h-1.5 bg-primary/60 rounded-full"
+                        className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
                       />
                       <motion.div
-                        animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                        animate={{ y: [0, -4, 0], opacity: [0.3, 0.8, 0.3] }}
                         transition={{
                           repeat: Infinity,
                           duration: 1.2,
                           delay: 0.3,
                           ease: "easeInOut",
                         }}
-                        className="w-1.5 h-1.5 bg-primary/60 rounded-full"
+                        className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
                       />
                     </div>
                     {progressMessage && (
