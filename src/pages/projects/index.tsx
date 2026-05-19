@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -41,33 +41,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { IssuesPage } from "@/pages/issues";
-import { BoardsPage } from "@/pages/boards";
-import { TestScenariosPage } from "@/pages/test-scenarios";
-import { RecordingsPage } from "@/pages/recordings";
-import { FixSessionsListPage } from "@/pages/agent/fix-sessions-list";
-import { SpecsPage } from "@/pages/specs/specs-page";
-
-const tabs = [
-  { id: "overview", label: "Overview", icon: FolderKanban },
-  { id: "issues", label: "Issues", icon: GitPullRequest },
-  { id: "boards", label: "Boards", icon: SquareKanban },
-  { id: "specs", label: "Specs", icon: FileText },
-  {
-    id: "test-scenarios",
-    label: "Test Scenarios",
-    icon: ClipboardList,
-  },
-  { id: "recordings", label: "Recordings", icon: Video },
-  {
-    id: "fix-sessions",
-    label: "Fix Sessions",
-    icon: Wrench,
-  },
-  { id: "settings", label: "Settings", icon: GitBranch },
-] as const;
-
-type ProjectTab = (typeof tabs)[number]["id"];
 
 function formatDate(value?: string) {
   if (!value) return "Unknown";
@@ -322,114 +295,200 @@ export function ProjectsPage() {
   );
 }
 
-function ProjectOverview({ project }: { project: AppProject }) {
+export function ProjectOverview({ project }: { project: AppProject }) {
   const navigate = useNavigate();
-  const modules = [
+
+  const metrics = [
     {
-      label: "Issues",
-      path: "issues",
+      label: "Open Issues",
+      value: "—",
       icon: GitPullRequest,
-      text: "Triage bugs and feature requests from the configured GitLab repository.",
+      href: "issues",
+      color: "text-zinc-700",
+      bg: "bg-zinc-100",
     },
     {
       label: "Boards",
-      path: "boards",
+      value: "—",
       icon: SquareKanban,
-      text: "Move issues across board columns and workflow labels.",
-    },
-    {
-      label: "Specs",
-      path: "specs",
-      icon: FileText,
-      text: "Browse and edit specs in the configured specs repository.",
+      href: "boards",
+      color: "text-zinc-700",
+      bg: "bg-zinc-100",
     },
     {
       label: "Test Scenarios",
-      path: "test-scenarios",
+      value: "—",
       icon: ClipboardList,
-      text: "Sync Markdown scenarios from specs and choose automation per test case.",
+      href: "test-scenarios",
+      color: "text-zinc-700",
+      bg: "bg-zinc-100",
     },
     {
       label: "Recordings",
-      path: "recordings",
+      value: "—",
       icon: Video,
-      text: "Review browser recordings and saved blueprints.",
+      href: "recordings",
+      color: "text-zinc-700",
+      bg: "bg-zinc-100",
     },
     {
       label: "Fix Sessions",
-      path: "fix-sessions",
+      value: "—",
       icon: Wrench,
-      text: "Track AI-assisted fixes for project issues.",
+      href: "fix-sessions",
+      color: "text-zinc-700",
+      bg: "bg-zinc-100",
     },
   ];
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
+    <div className="space-y-8 p-4 md:p-8">
+      {/* Project card */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {project.name}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-zinc-900 p-1.5 text-white">
+                <FolderKanban className="h-4 w-4" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {project.name}
+              </h2>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-gray-500">
               {project.description ||
-                "Add a description in settings to help teammates understand this workspace."}
+                "Shared QA workspace for tracking issues, test scenarios, and recordings."}
             </p>
           </div>
-          <div className="grid min-w-72 gap-2 text-sm">
-            <div className="rounded-xl bg-gray-50 px-3 py-2">
+          <div className="grid min-w-64 gap-1.5 text-xs">
+            <div className="flex justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2">
               <span className="text-gray-500">Issues repo</span>
-              <p className="mt-0.5 font-mono text-gray-800 break-words">
+              <span className="font-mono text-gray-800">
                 {project.issueRepoName}
-              </p>
+              </span>
             </div>
-            <div className="rounded-xl bg-gray-50 px-3 py-2">
+            <div className="flex justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2">
               <span className="text-gray-500">Specs repo</span>
-              <p className="mt-0.5 font-mono text-gray-800 break-words">
+              <span className="font-mono text-gray-800">
                 {project.specsRepoName}
-              </p>
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {modules.map((module) => {
-          const Icon = module.icon;
+      {/* Metrics row */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
           return (
             <button
-              key={module.path}
+              key={metric.href}
               onClick={() =>
                 navigate({
                   to: "/projects/$id" as any,
                   params: { id: project.id } as any,
-                  search: { tab: module.path } as any,
+                  search: { tab: metric.href } as any,
                 })
               }
-              className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm text-left transition-colors hover:border-gray-300 hover:bg-gray-50/40 cursor-pointer"
+              className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm text-left transition-all hover:border-gray-300 hover:shadow-md cursor-pointer group"
             >
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-zinc-100 p-2 text-zinc-700">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {module.label}
-                  </h3>
-                  <p className="mt-1 text-sm leading-5 text-gray-500">
-                    {module.text}
-                  </p>
+              <div className="flex items-center justify-between">
+                <div className={cn("rounded-xl p-2.5", metric.bg)}>
+                  <Icon className={cn("h-4 w-4", metric.color)} />
                 </div>
               </div>
+              <p className="mt-4 text-2xl font-semibold tracking-tight text-gray-900">
+                {metric.value}
+              </p>
+              <p className="mt-1 text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                {metric.label}
+              </p>
             </button>
           );
         })}
+      </div>
+
+      {/* Quick links / activity placeholder */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900">Quick actions</h3>
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={() =>
+                navigate({
+                  to: "/projects/$id" as any,
+                  params: { id: project.id } as any,
+                  search: { tab: "issues" } as any,
+                })
+              }
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            >
+              <GitPullRequest className="h-4 w-4 text-gray-400" />
+              Browse open issues
+            </button>
+            <button
+              onClick={() =>
+                navigate({
+                  to: "/projects/$id" as any,
+                  params: { id: project.id } as any,
+                  search: { tab: "recordings" } as any,
+                })
+              }
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            >
+              <Video className="h-4 w-4 text-gray-400" />
+              Review recent recordings
+            </button>
+            <button
+              onClick={() =>
+                navigate({
+                  to: "/projects/$id" as any,
+                  params: { id: project.id } as any,
+                  search: { tab: "test-scenarios" } as any,
+                })
+              }
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            >
+              <ClipboardList className="h-4 w-4 text-gray-400" />
+              View test scenarios
+            </button>
+            <button
+              onClick={() =>
+                navigate({
+                  to: "/projects/$id" as any,
+                  params: { id: project.id } as any,
+                  search: { tab: "fix-sessions" } as any,
+                })
+              }
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            >
+              <Wrench className="h-4 w-4 text-gray-400" />
+              Check fix sessions
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900">Recent activity</h3>
+          <div className="mt-4 space-y-0">
+            <div className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0">
+              <div className="h-2 w-2 rounded-full bg-gray-300 shrink-0" />
+              <p className="text-sm text-gray-500">
+                Project created{" "}
+                <span className="text-gray-400">
+                  {formatDate(project.createdAt)}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function ProjectSettings({ project }: { project: AppProject }) {
+export function ProjectSettings({ project }: { project: AppProject }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState("");
@@ -523,177 +582,6 @@ function ProjectSettings({ project }: { project: AppProject }) {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function ProjectDetailPage({
-  projectId,
-  activeTab,
-  nestedContent,
-}: {
-  projectId: string;
-  activeTab: ProjectTab;
-  nestedContent?: React.ReactNode;
-}) {
-  const navigate = useNavigate();
-  const { data, isLoading } = useQuery({
-    queryKey: ["app-project", projectId],
-    queryFn: () => getAppProject(projectId),
-  });
-  const project = data?.data;
-
-  const currentTab = useMemo(
-    () => tabs.find((tab) => tab.id === activeTab) ?? tabs[0],
-    [activeTab],
-  );
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full flex-col bg-white">
-        <div className="border-b bg-white px-8 py-8">
-          <Skeleton className="h-10 w-72" />
-        </div>
-        <div className="p-8">
-          <Skeleton className="h-80 rounded-2xl" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!project) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white p-8">
-        <EmptyState
-          icon={FolderKanban}
-          title="Project not found"
-          description="The project may have been deleted."
-        />
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    switch (currentTab.id) {
-      case "issues":
-        return (
-          <IssuesPage
-            appProjectId={project.id}
-            hideHeader
-          />
-        );
-      case "boards":
-        return (
-          <BoardsPage
-            projectId={project.id}
-            hideHeader
-            onNavigateToIssue={(issue) =>
-              navigate({
-                to: "/projects/$id/issues/$iid",
-                params: { id: project.id, iid: String(issue.iid) },
-              })
-            }
-          />
-        );
-      case "specs":
-        return (
-          <SpecsPage
-            projectId={project.id}
-            branchProjectId={project.specsRepoName}
-            projectName={project.name}
-          />
-        );
-      case "test-scenarios":
-        return (
-          <TestScenariosPage
-            projectId={project.id}
-            projectName={project.name}
-            hideHeader
-          />
-        );
-      case "recordings":
-        return (
-          <RecordingsPage
-            projectId={project.id}
-            projectName={project.name}
-            hideHeader
-          />
-        );
-      case "fix-sessions":
-        return <FixSessionsListPage projectId={project.id} hideHeader />;
-      case "settings":
-        return <ProjectSettings project={project} />;
-      default:
-        return <ProjectOverview project={project} />;
-    }
-  };
-
-  return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
-      <div className="border-b border-gray-100/80 bg-white/85 px-4 pt-6 backdrop-blur-xl md:px-8 md:pt-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
-            <Link
-              to="/projects"
-              className="text-xs font-medium uppercase tracking-[0.18em] text-gray-400 hover:text-gray-600"
-            >
-              Projects
-            </Link>
-            <h1 className="mt-2 truncate text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl">
-              {project.name}
-            </h1>
-            <p className="mt-1 max-w-3xl text-sm text-gray-500">
-              {project.description || "Shared QA workspace"}
-            </p>
-          </div>
-          <div className="grid gap-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-500 md:min-w-64">
-            <div className="flex justify-between gap-4">
-              <span>Issues repo</span>
-              <span className="font-mono text-gray-800">
-                {project.issueRepoName}
-              </span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span>Specs repo</span>
-              <span className="font-mono text-gray-800">
-                {project.specsRepoName}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex gap-1 overflow-x-auto pb-3">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === currentTab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() =>
-                  navigate({
-                    to: "/projects/$id" as any,
-                    params: { id: project.id } as any,
-                    search: { tab: tab.id } as any,
-                  })
-                }
-                className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-zinc-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-hidden">
-        {nestedContent ?? renderContent()}
       </div>
     </div>
   );

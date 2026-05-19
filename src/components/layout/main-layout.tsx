@@ -1,8 +1,23 @@
 import React, { useState } from "react";
-import { Pin, FolderKanban, Home, LogOut, Loader2 } from "lucide-react";
-import { Link, useLocation } from "@tanstack/react-router";
+import {
+  Pin,
+  FolderKanban,
+  Home,
+  LogOut,
+  Loader2,
+  GitPullRequest,
+  SquareKanban,
+  FileText,
+  ClipboardList,
+  Video,
+  Wrench,
+  GitBranch,
+  ArrowLeft,
+} from "lucide-react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/contexts/session-context";
 import { useLogout } from "@/hooks/use-logout";
+import { useProjectSidebar } from "@/contexts/project-sidebar-context";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -67,19 +82,48 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+interface ProjectNavItem {
+  id: string;
+  path: string;
+  label: string;
+  icon: React.ElementType;
+  exact?: boolean;
+}
+
+const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
+  { id: "overview", path: "", label: "Overview", icon: FolderKanban, exact: true },
+  { id: "issues", path: "/issues", label: "Issues", icon: GitPullRequest },
+  { id: "boards", path: "/boards", label: "Boards", icon: SquareKanban },
+  { id: "specs", path: "/specs", label: "Specs", icon: FileText },
+  { id: "test-scenarios", path: "/test-scenarios", label: "Test Scenarios", icon: ClipboardList },
+  { id: "recordings", path: "/recordings", label: "Recordings", icon: Video },
+  { id: "fix-sessions", path: "/fix-sessions", label: "Fix Sessions", icon: Wrench },
+  { id: "settings", path: "/settings", label: "Settings", icon: GitBranch },
+];
+
 function isRouteActive(locationPath: string, item: NavItem): boolean {
   if (item.exact) return locationPath === item.path;
   return locationPath === item.path || locationPath.startsWith(item.path + "/");
+}
+
+function isProjectActiveRoute(locationPath: string, projectBase: string, item: ProjectNavItem): boolean {
+  const fullPath = item.path ? `${projectBase}${item.path}` : projectBase;
+  if (item.exact) return locationPath === fullPath;
+  return locationPath === fullPath || locationPath.startsWith(fullPath + "/");
 }
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const session = useSession();
   const user = session?.user;
   const logoutMutation = useLogout();
+  const { project } = useProjectSidebar();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
+
+  const projectBase = project ? `/projects/${project.projectId}` : "";
 
   return (
     <div ref={setContainer} className="fixed inset-0 flex flex-col bg-white">
@@ -90,120 +134,224 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           portalContainer={container}
         >
           <Sidebar collapsible="icon">
-            {/* Header */}
-            <SidebarHeader className="px-3 py-3">
-              <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
-                <Link
-                  to="/"
-                  className="flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden"
-                >
-                  <FlowGLogo className="h-6 w-6 shrink-0 text-zinc-500" />
-                  <span className="text-lg font-bold tracking-tight text-gray-900">
-                    FlowG
-                  </span>
-                </Link>
-                <SidebarTrigger className="ml-auto group-data-[collapsible=icon]:ml-0" />
-              </div>
-            </SidebarHeader>
-
-            {/* Navigation */}
-            <SidebarContent className="gap-0">
-              {NAV_GROUPS.map((group) => (
-                <SidebarGroup key={group.label} className="py-1.5">
-                  <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                      {group.label}
-                    </span>
+            {project ? (
+              /* ─── Project Context Sidebar ─── */
+              <>
+                <SidebarHeader className="px-3 py-3">
+                  <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+                    <Link
+                      to="/projects"
+                      className="flex items-center gap-2 overflow-hidden group-data-[collapsible=icon]:hidden"
+                    >
+                      <ArrowLeft className="h-4 w-4 shrink-0 text-zinc-400" />
+                      <span className="text-sm font-medium text-zinc-500 truncate">
+                        Projects
+                      </span>
+                    </Link>
+                    <SidebarTrigger className="ml-auto group-data-[collapsible=icon]:ml-0" />
                   </div>
-                  <SidebarGroupContent>
-                    <SidebarMenu className="gap-0.5 px-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-                      {group.items.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = isRouteActive(location.pathname, item);
+                  {/* Project name — visible when expanded */}
+                  <div className="mt-3 group-data-[collapsible=icon]:hidden">
+                    <h2 className="truncate text-sm font-semibold text-zinc-900">
+                      {project.projectName}
+                    </h2>
+                  </div>
+                  {/* Collapsed state — just icon */}
+                  <div className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mt-1">
+                    <Link
+                      to="/projects"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors"
+                      title="Back to projects"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </SidebarHeader>
 
-                        return (
-                          <SidebarMenuItem key={item.id}>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={isActive}
-                              tooltip={item.label}
-                              className={cn(
-                                "relative h-9 transition-colors",
-                                isActive &&
-                                  "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700",
-                              )}
-                            >
-                              <Link to={item.path}>
-                                <Icon
+                <SidebarContent className="gap-0">
+                  <SidebarGroup className="py-1.5">
+                    <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                        {project.projectName}
+                      </span>
+                    </div>
+                    <SidebarGroupContent>
+                      <SidebarMenu className="gap-0.5 px-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+                        {PROJECT_NAV_ITEMS.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = isProjectActiveRoute(location.pathname, projectBase, item);
+
+                          return (
+                            <SidebarMenuItem key={item.id}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={isActive}
+                                tooltip={item.label}
+                                className={cn(
+                                  "relative h-9 transition-colors",
+                                  isActive &&
+                                    "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700",
+                                )}
+                              >
+                                <button
+                                  onClick={() => {
+                                    if (item.id === 'overview') {
+                                      navigate({
+                                        to: "/projects/$id" as any,
+                                        params: { id: project.projectId } as any,
+                                      } as any);
+                                    } else {
+                                      navigate({
+                                        to: `/projects/$id${item.path}` as any,
+                                        params: { id: project.projectId } as any,
+                                      } as any);
+                                    }
+                                  }}
+                                >
+                                  <Icon
+                                    className={cn(
+                                      "shrink-0",
+                                      isActive
+                                        ? "text-zinc-500"
+                                        : "text-gray-500",
+                                    )}
+                                  />
+                                  <span
+                                    className={cn(
+                                      isActive
+                                        ? "font-semibold text-zinc-700"
+                                        : "font-medium text-gray-700",
+                                    )}
+                                  >
+                                    {item.label}
+                                  </span>
+                                </button>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </>
+            ) : (
+              /* ─── Workspace Context Sidebar ─── */
+              <>
+                <SidebarHeader className="px-3 py-3">
+                  <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+                    <Link
+                      to="/"
+                      className="flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden"
+                    >
+                      <FlowGLogo className="h-6 w-6 shrink-0 text-zinc-500" />
+                      <span className="text-lg font-bold tracking-tight text-gray-900">
+                        FlowG
+                      </span>
+                    </Link>
+                    <SidebarTrigger className="ml-auto group-data-[collapsible=icon]:ml-0" />
+                  </div>
+                </SidebarHeader>
+
+                <SidebarContent className="gap-0">
+                  {NAV_GROUPS.map((group) => (
+                    <SidebarGroup key={group.label} className="py-1.5">
+                      <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                          {group.label}
+                        </span>
+                      </div>
+                      <SidebarGroupContent>
+                        <SidebarMenu className="gap-0.5 px-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+                          {group.items.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = isRouteActive(location.pathname, item);
+
+                            return (
+                              <SidebarMenuItem key={item.id}>
+                                <SidebarMenuButton
+                                  asChild
+                                  isActive={isActive}
+                                  tooltip={item.label}
                                   className={cn(
-                                    "shrink-0",
-                                    isActive
-                                      ? "text-zinc-500"
-                                      : "text-gray-500",
-                                  )}
-                                />
-                                <span
-                                  className={cn(
-                                    isActive
-                                      ? "font-semibold text-zinc-700"
-                                      : "font-medium text-gray-700",
+                                    "relative h-9 transition-colors",
+                                    isActive &&
+                                      "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700",
                                   )}
                                 >
-                                  {item.label}
-                                </span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              ))}
-            </SidebarContent>
+                                  <Link to={item.path}>
+                                    <Icon
+                                      className={cn(
+                                        "shrink-0",
+                                        isActive
+                                          ? "text-zinc-500"
+                                          : "text-gray-500",
+                                      )}
+                                    />
+                                    <span
+                                      className={cn(
+                                        isActive
+                                          ? "font-semibold text-zinc-700"
+                                          : "font-medium text-gray-700",
+                                      )}
+                                    >
+                                      {item.label}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            );
+                          })}
+                        </SidebarMenu>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
+                  ))}
+                </SidebarContent>
 
-            {/* Footer — Download Extension CTA */}
-            <div className="px-4 py-2 mt-auto border-t border-gray-100 group-data-[collapsible=icon]:hidden">
-              <div className="rounded-xl bg-zinc-50 p-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-2 opacity-10">
-                  <FlowGLogo className="w-16 h-16" />
+                {/* Download Extension CTA — Workspace only */}
+                <div className="px-4 py-2 mt-auto border-t border-gray-100 group-data-[collapsible=icon]:hidden">
+                  <div className="rounded-xl bg-zinc-50 p-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-2 opacity-10">
+                      <FlowGLogo className="w-16 h-16" />
+                    </div>
+                    <div className="relative z-10">
+                      <h4 className="text-sm font-semibold text-zinc-900 mb-1">
+                        Get the Extension
+                      </h4>
+                      <p className="text-xs text-zinc-700 mb-3 leading-relaxed">
+                        Download FlowG extension to capture your QA sessions
+                        effortlessly.
+                      </p>
+                      <a
+                        href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+                      >
+                        Download FlowG
+                      </a>
+                    </div>
+                  </div>
                 </div>
-                <div className="relative z-10">
-                  <h4 className="text-sm font-semibold text-zinc-900 mb-1">
-                    Get the Extension
-                  </h4>
-                  <p className="text-xs text-zinc-700 mb-3 leading-relaxed">
-                    Download FlowG extension to capture your QA sessions
-                    effortlessly.
-                  </p>
+
+                {/* Collapsed state Download Extension CTA */}
+                <div className="hidden border-t border-gray-100 py-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
                   <a
                     href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     download
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+                    title="Download FlowG Extension"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-600 transition-colors hover:bg-zinc-100"
                   >
-                    Download FlowG
+                    <FlowGLogo className="h-4 w-4" />
                   </a>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Collapsed state Download Extension CTA */}
-            <div className="hidden border-t border-gray-100 py-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-              <a
-                href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                title="Download FlowG Extension"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-600 transition-colors hover:bg-zinc-100"
-              >
-                <FlowGLogo className="h-4 w-4" />
-              </a>
-            </div>
-
-            {/* Footer — User & Logout */}
+            {/* Footer — User & Logout (shared across contexts) */}
             <SidebarFooter className="border-t border-gray-100 p-3">
               <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                 <Link to="/profile" className="relative shrink-0">

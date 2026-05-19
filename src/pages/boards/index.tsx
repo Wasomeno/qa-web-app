@@ -150,7 +150,12 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header & Filters */}
-      <div className="flex-none px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+      <div
+        className={cn(
+          "flex-none px-4 md:px-8 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          hideHeader ? "pt-4 pb-4" : "pt-6 md:pt-10 pb-6",
+        )}
+      >
         {!hideHeader && (
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -162,7 +167,7 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
           </div>
         )}
 
-        <div className={cn("flex items-center gap-3 overflow-x-auto pb-1 md:pb-0", hideHeader && "pt-3")}>
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 md:pb-0">
             {/* Density Toggle */}
             <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-100 shrink-0">
               <button

@@ -23,6 +23,7 @@ import {
 
 import { SearchablePicker } from "../issues/components/searchable-picker";
 import { ScenarioItem } from "./components/scenario-item";
+import { cn } from "@/lib/utils";
 
 const ScenarioSkeleton = () => (
   <div className="flex flex-col border border-zinc-100 rounded-xl overflow-hidden bg-white h-full">
@@ -235,7 +236,12 @@ export const TestScenariosPage: React.FC<{
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Header & Filters */}
-      <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+      <div
+        className={cn(
+          "flex-none border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          hideHeader ? "px-4 py-4 md:px-8" : "px-8 pt-10 pb-6",
+        )}
+      >
         {!hideHeader && (
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -265,7 +271,7 @@ export const TestScenariosPage: React.FC<{
             </div>
           </div>
         )}
-        <div className="flex items-center justify-between gap-2 mt-5">
+        <div className={cn("flex items-center justify-between gap-2", !hideHeader && "mt-5")}>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

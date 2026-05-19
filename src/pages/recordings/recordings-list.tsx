@@ -31,6 +31,7 @@ import {
   SelectAllCheckbox,
   StyledCheckbox,
 } from "@/components/ui/styled-checkbox";
+import { cn } from "@/lib/utils";
 
 const RecordingSkeleton = () => {
   return (
@@ -279,7 +280,12 @@ export const RecordingsPage: React.FC<{
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Header & Filters */}
-      <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+      <div
+        className={cn(
+          "flex-none border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          hideHeader ? "px-4 py-4 md:px-8" : "px-8 pt-10 pb-6",
+        )}
+      >
         {!hideHeader && (
           <div className="flex items-start justify-between gap-4">
             <div>

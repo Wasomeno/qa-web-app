@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { SessionsListPage } from '@/pages/agent/sessions-list';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/chat-sessions')({
-  component: SessionsListPage,
+  component: () => <Outlet />,
 });

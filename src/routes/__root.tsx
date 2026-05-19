@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { MainLayout } from '@/components/layout/main-layout';
 import { NavigationProvider } from '@/contexts/navigation-context';
+import { ProjectSidebarProvider } from '@/contexts/project-sidebar-context';
 import { useSession } from '@/contexts/session-context';
 import { Loader2 } from 'lucide-react';
 
@@ -50,14 +51,16 @@ export const Route = createRootRoute({
 
     return (
       <NavigationProvider initialView="agent">
-        {isLoginPage ? (
-          <AnimatedOutlet />
-        ) : (
-          <MainLayout>
+        <ProjectSidebarProvider>
+          {isLoginPage ? (
             <AnimatedOutlet />
-          </MainLayout>
-        )}
-        <Toaster position="bottom-right" />
+          ) : (
+            <MainLayout>
+              <AnimatedOutlet />
+            </MainLayout>
+          )}
+          <Toaster position="bottom-right" />
+        </ProjectSidebarProvider>
       </NavigationProvider>
     );
   },
