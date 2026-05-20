@@ -1,7 +1,12 @@
-import { getProjectIssues, getIssues, Issue } from "@/api/issue";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  getProjectIssuesPaginated,
+  getIssuesPaginated,
+  Issue,
+} from "@/api/issue";
 import { IssueFilterState } from "@/types/issues";
 import { useGetLoggedInUser } from "@/hooks/use-get-logged-in-user";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 // Dummy Label Names as per request
 const LABEL_NAMES = {
@@ -10,13 +15,24 @@ const LABEL_NAMES = {
   BLOCKED: "Blocked",
 };
 
+const ISSUES_PER_PAGE = 20;
+
 export function useGetIssues(
   filters?: Partial<IssueFilterState>,
   options?: { projectScoped?: boolean },
 ) {
   const { data: currentUser, isLoading: isUserLoading } = useGetLoggedInUser();
 
-  const query = useQuery({
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfiniteQuery({
     queryKey: [
       "issues",
       filters?.search,
@@ -27,17 +43,16 @@ export function useGetIssues(
       filters?.assigneeIds,
       filters?.quickFilters,
       options?.projectScoped,
-      // Use a stable user identifier or 'anonymous' as fallback
       currentUser?.id ?? "anonymous",
     ],
-    queryFn: () => {
-      // If issueIds is provided but empty, return empty result immediately to avoid fetching all issues
+    queryFn: async ({ pageParam = 1 }) => {
+      // If issueIds is provided but empty, return empty result immediately
       if (filters?.issueIds && filters.issueIds.length === 0) {
-        return Promise.resolve({ data: [] } as any);
+        return { data: [], page: 1, per_page: ISSUES_PER_PAGE, hasMore: false };
       }
 
       // If no filters at all, fetch default global issues
-      if (!filters) return getIssues();
+      if (!filters) return getIssuesPaginated({ page: pageParam, per_page: ISSUES_PER_PAGE });
 
       const labels: string[] = [];
       if (filters.quickFilters?.highPriority)
@@ -89,6 +104,8 @@ export function useGetIssues(
         assignee_id: assigneeId,
         assignee_ids: assigneeIds,
         author_id: authorId,
+        page: pageParam,
+        per_page: ISSUES_PER_PAGE,
       };
 
       if (filters.issueIds && filters.issueIds.length > 0) {
@@ -101,34 +118,76 @@ export function useGetIssues(
       if (projectIds.length > 0) {
         if (projectIds.length === 1) {
           if (options?.projectScoped) {
-            return getProjectIssues(projectIds[0], params);
+            return getProjectIssuesPaginated(projectIds[0], params);
           }
-          return getIssues({
+          return getIssuesPaginated({
             ...params,
             project_id: Number(projectIds[0]),
           });
         } else {
-          return getIssues({
+          return getIssuesPaginated({
             ...params,
             project_ids: projectIds.join(","),
           });
         }
       } else {
-        return getIssues({
+        return getIssuesPaginated({
           ...params,
           project_id: undefined,
         });
       }
     },
-    // Don't run the query while the user is still loading to prevent double requests
-    // The query will run once the user is loaded (or immediately if using cached user data)
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) return undefined;
+      return lastPage.page + 1;
+    },
     enabled: !isUserLoading,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
+  // Flatten and dedupe pages into a single array
+  const data = useMemo(() => {
+    const seen = new Set<number>();
+    return (infiniteData?.pages.flatMap((page) => page.data) ?? []).filter(
+      (issue) => {
+        if (seen.has(issue.id)) return false;
+        seen.add(issue.id);
+        return true;
+      },
+    );
+  }, [infiniteData]);
+
+  // Scroll ref for the scrollable container
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const maybeFetchNextPage = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    if (scrollHeight - scrollTop - clientHeight <= 300) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Also check after data/layout changes so we load again if the first page
+  // doesn't fill the scroll container enough to create a scroll event.
+  useEffect(() => {
+    maybeFetchNextPage();
+  }, [maybeFetchNextPage, data.length]);
+
   return {
-    ...query,
-    data: query.data?.data || [],
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    scrollRef,
+    maybeFetchNextPage,
   };
 }

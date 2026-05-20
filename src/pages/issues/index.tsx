@@ -12,6 +12,7 @@ import { useGetLoggedInUser } from "@/hooks/use-get-logged-in-user";
 import { usePinnedIssues } from "@/hooks/use-pinned-issues";
 import { Issue } from "@/api/issue";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { Loader2 } from "lucide-react";
 
 interface IssuesPageProps {
   initialIssue?: Issue | null;
@@ -71,7 +72,13 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
     { appProject: !!appProjectId },
   );
 
-  const issues = useGetIssues(memoizedFilters, {
+  const {
+    data: issues,
+    isLoading: isIssuesLoading,
+    isFetchingNextPage,
+    scrollRef,
+    maybeFetchNextPage,
+  } = useGetIssues(memoizedFilters, {
     projectScoped: !!appProjectId,
   });
   const { togglePin, isPinned } = usePinnedIssues();
@@ -83,7 +90,7 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
   const isUserLoading = useGetLoggedInUser().isLoading;
 
   // Show loading skeleton while either user is loading or issues are fetching
-  const isInitialLoading = isUserLoading || issues.isLoading;
+  const isInitialLoading = isUserLoading || isIssuesLoading;
 
   const labelOptions = useMemo(() => {
     return labels.data.map((l) => ({
@@ -125,8 +132,6 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
     });
   }
 
-  console.log("ISSUEs", issues.data);
-
   return (
     <div className="flex flex-1 w-full flex-col overflow-hidden bg-[#F9FAFB]">
       {/* Header & Filters */}
@@ -157,10 +162,15 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col w-full overflow-y-auto overscroll-contain px-4 md:px-8 py-6 md:py-8">
+      <div
+        ref={scrollRef}
+        onScroll={maybeFetchNextPage}
+        className="flex-1 w-full overflow-y-auto overscroll-contain px-4 md:px-8 py-6 md:py-8"
+      >
         <IssueList
-          issues={issues.data}
+          issues={issues}
           isLoading={isInitialLoading}
+          isFetchingNextPage={isFetchingNextPage}
           isProjectFiltered={!!appProjectId || filters.projectIds.length === 1}
           onIssueClick={(issue) =>
             appProjectId

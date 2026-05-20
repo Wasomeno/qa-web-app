@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, Loader2 } from 'lucide-react';
 import { Issue } from '@/api/issue';
 import { IssueCard } from './issue-card';
 import { IssueCardSkeleton } from './issue-card-skeleton';
@@ -11,6 +11,7 @@ interface IssueListProps {
   onIssueClick: (issue: Issue) => void;
   onPin?: (issue: Issue) => void;
   isLoading?: boolean;
+  isFetchingNextPage?: boolean;
   isPinned?: (issueIid: number, projectId: number) => boolean;
   onFixIssue?: (issue: Issue) => void;
 }
@@ -21,6 +22,7 @@ export const IssueList: React.FC<IssueListProps> = ({
   onIssueClick,
   onPin,
   isLoading = false,
+  isFetchingNextPage = false,
   isPinned,
   onFixIssue,
 }) => {
@@ -69,7 +71,7 @@ export const IssueList: React.FC<IssueListProps> = ({
 
   if (issues.length === 0) {
     return (
-      <div className="flex flex-col flex-1 w-full items-center justify-center py-16 text-center">
+      <div className="flex flex-col h-full w-full items-center justify-center py-16 text-center">
         <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
           <FolderOpen className="w-9 h-9 text-gray-300" />
         </div>
@@ -99,12 +101,20 @@ export const IssueList: React.FC<IssueListProps> = ({
             }
           />
         ))}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-6">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading more issues...
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-12 flex flex-1 flex-col w-full">
+    <div className="space-y-6 pb-12 w-full">
       {projectGroups.map(group => {
         const isCollapsed = collapsedProjects[group.projectId];
 
@@ -165,6 +175,14 @@ export const IssueList: React.FC<IssueListProps> = ({
           </motion.div>
         );
       })}
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-6">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading more issues...
+          </div>
+        </div>
+      )}
     </div>
   );
 };
