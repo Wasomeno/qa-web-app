@@ -259,6 +259,16 @@ export interface IssueFilterParams {
   assignee_ids?: string;
   author_id?: number | string | null;
   issue_ids?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface PaginatedIssuesResponse {
+  data: Issue[];
+  page: number;
+  per_page: number;
+  hasMore: boolean;
+  total?: number;
 }
 
 function buildIssueQueryParams(params: IssueFilterParams): string {
@@ -284,6 +294,10 @@ function buildIssueQueryParams(params: IssueFilterParams): string {
   if (params.author_id && params.author_id !== "ALL")
     queryParams.append("author_id", params.author_id.toString());
   if (params.issue_ids) queryParams.append("issue_ids", params.issue_ids);
+  if (params.page !== undefined)
+    queryParams.append("page", String(params.page));
+  if (params.per_page !== undefined)
+    queryParams.append("per_page", String(params.per_page));
 
   return queryParams.toString();
 }
@@ -306,6 +320,84 @@ export async function getProjectIssues(
     : `/projects/${projectId}/issues`;
 
   return api.get<Issue[]>(url);
+}
+
+/**
+ * Fetch issues with pagination support.
+ * Reads response headers (X-Page, X-Next-Page, X-Total) to determine pagination state.
+ */
+export async function getIssuesPaginated(
+  params: IssueFilterParams = {},
+): Promise<PaginatedIssuesResponse> {
+  const queryString = buildIssueQueryParams(params);
+  const url = queryString ? `/issues?${queryString}` : "/issues";
+
+  const response = await api.get<Issue[]>(url);
+  const rawResponse = response as any;
+
+  // Try to read pagination from response headers (GitLab API)
+  const headers = rawResponse?.headers ?? {};
+  const currentPage = Number(params.page ?? 1);
+  const perPage = Number(params.per_page ?? 20);
+
+  const totalHeader = headers["x-total"] ?? headers["X-Total"];
+  const totalPagesHeader = headers["x-total-pages"] ?? headers["X-Total-Pages"];
+  const nextPageHeader = headers["x-next-page"] ?? headers["X-Next-Page"];
+
+  const hasMore =
+    nextPageHeader !== undefined && nextPageHeader !== ""
+      ? Number(nextPageHeader) > currentPage
+      : totalPagesHeader !== undefined && totalPagesHeader !== ""
+        ? currentPage < Number(totalPagesHeader)
+        : Array.isArray(response.data) && response.data.length >= perPage;
+
+  return {
+    data: response.data ?? [],
+    page: currentPage,
+    per_page: perPage,
+    hasMore,
+    total: totalHeader ? Number(totalHeader) : undefined,
+  };
+}
+
+/**
+ * Fetch project-scoped issues with pagination support.
+ */
+export async function getProjectIssuesPaginated(
+  projectId: number | string,
+  params: IssueFilterParams = {},
+): Promise<PaginatedIssuesResponse> {
+  const { project_id, ...restParams } = params;
+  const queryString = buildIssueQueryParams(restParams);
+  const url = queryString
+    ? `/projects/${projectId}/issues?${queryString}`
+    : `/projects/${projectId}/issues`;
+
+  const response = await api.get<Issue[]>(url);
+  const rawResponse = response as any;
+
+  const headers = rawResponse?.headers ?? {};
+  const currentPage = Number(params.page ?? 1);
+  const perPage = Number(params.per_page ?? 20);
+
+  const totalHeader = headers["x-total"] ?? headers["X-Total"];
+  const totalPagesHeader = headers["x-total-pages"] ?? headers["X-Total-Pages"];
+  const nextPageHeader = headers["x-next-page"] ?? headers["X-Next-Page"];
+
+  const hasMore =
+    nextPageHeader !== undefined && nextPageHeader !== ""
+      ? Number(nextPageHeader) > currentPage
+      : totalPagesHeader !== undefined && totalPagesHeader !== ""
+        ? currentPage < Number(totalPagesHeader)
+        : Array.isArray(response.data) && response.data.length >= perPage;
+
+  return {
+    data: response.data ?? [],
+    page: currentPage,
+    per_page: perPage,
+    hasMore,
+    total: totalHeader ? Number(totalHeader) : undefined,
+  };
 }
 
 export async function getIssue(projectId: number | string, id: number) {
