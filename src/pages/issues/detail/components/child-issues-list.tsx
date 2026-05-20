@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { AddChildModal } from './add-child-modal';
 import { toast } from 'sonner';
-import { ChildIssue } from '@/types/issues';
 import { cn } from '@/lib/utils';
 import { IssueFormState } from '@/pages/issues/create/components/issue-form-fields';
 
@@ -159,7 +158,7 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
       <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
         {childIssues && childIssues.length > 0 ? (
           <div className="divide-y divide-gray-100">
-            {childIssues.map((issue: ChildIssue) => (
+            {childIssues.map((issue: Issue) => (
               <div
                 key={issue.id}
                 className="group flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
