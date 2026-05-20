@@ -61,13 +61,65 @@ export const testScenarioApi = {
     }
   },
 
-  listScenarios: async (projectId?: string): Promise<TestScenario[]> => {
-    const response = await api.get<TestScenario[]>(
-      projectId ? `/projects/${projectId}/test-scenarios` : "/test-scenarios",
-    );
+  listScenarios: async (
+    projectId?: string,
+    search?: string,
+    page?: number,
+    limit?: number,
+  ): Promise<{
+    scenarios: TestScenario[];
+    total?: number;
+    page: number;
+    limit: number;
+    hasMore?: boolean;
+  }> => {
+    let url = projectId
+      ? `/projects/${projectId}/test-scenarios`
+      : "/test-scenarios";
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (page !== undefined) params.set("page", String(page));
+    if (limit !== undefined) params.set("limit", String(limit));
+    const qs = params.toString();
+    if (qs) url += `?${qs}`;
+
+    const response = await api.get<any>(url);
     if (!response.success) throw new Error(response.error);
-    return response.data || [];
-  },
+
+    const raw = response.data;
+    const requestedPage = page ?? 1;
+    const requestedLimit = limit ?? 0;
+
+    // Some endpoints return a bare page array instead of pagination metadata.
+    // Treat `array.length === requestedLimit` as "maybe more" so page 2 can be requested.
+    if (Array.isArray(raw)) {
+      const resolvedLimit = requestedLimit || raw.length;
+      return {
+        scenarios: raw,
+        page: requestedPage,
+        limit: resolvedLimit,
+        hasMore: resolvedLimit > 0 && raw.length === resolvedLimit,
+      };
+    }
+
+    const pagination = raw?.pagination ?? raw?.meta?.pagination ?? raw?.meta ?? {};
+    const scenarios = raw?.scenarios ?? raw?.data ?? raw?.items ?? [];
+    const resolvedPage = Number(raw?.page ?? pagination.page ?? pagination.currentPage ?? pagination.current_page ?? requestedPage);
+    const resolvedLimit = Number(raw?.limit ?? pagination.limit ?? pagination.perPage ?? pagination.per_page ?? requestedLimit ?? scenarios.length);
+    const total = raw?.total ?? raw?.count ?? pagination.total ?? pagination.totalItems ?? pagination.total_items;
+    const totalPages = raw?.totalPages ?? raw?.total_pages ?? pagination.totalPages ?? pagination.total_pages;
+    const hasMore = raw?.hasMore ?? raw?.has_more ?? pagination.hasMore ?? pagination.has_more ?? (
+      totalPages !== undefined ? resolvedPage < Number(totalPages) : undefined
+    );
+
+    return {
+      scenarios,
+      total: total !== undefined ? Number(total) : undefined,
+      page: resolvedPage,
+      limit: resolvedLimit,
+      hasMore,
+    };
+  }, 
 
   syncScenarios: async (projectId: string): Promise<{ scenarios: TestScenario[]; count: number }> => {
     const response = await api.post<{ scenarios: TestScenario[]; count: number }>(
