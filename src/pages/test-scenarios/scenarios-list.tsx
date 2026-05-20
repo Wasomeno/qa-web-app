@@ -1,18 +1,17 @@
-import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, RefreshCw, Terminal, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
+import { useDebounce } from "@/utils/useDebounce";
 
-import { useNavigation } from "@/contexts/navigation-context";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectSelect } from "@/components/project-select";
@@ -21,9 +20,10 @@ import {
   SelectAllCheckbox,
 } from "@/components/ui/styled-checkbox";
 
-import { SearchablePicker } from "../issues/components/searchable-picker";
 import { ScenarioItem } from "./components/scenario-item";
 import { cn } from "@/lib/utils";
+
+const SCENARIOS_PER_PAGE = 20;
 
 const ScenarioSkeleton = () => (
   <div className="flex flex-col border border-zinc-100 rounded-xl overflow-hidden bg-white h-full">
@@ -43,6 +43,15 @@ const ScenarioSkeleton = () => (
   </div>
 );
 
+const LoadMoreSkeleton = () => (
+  <div className="flex justify-center py-8">
+    <div className="flex items-center gap-3 text-sm text-zinc-400">
+      <Loader2 className="w-4 h-4 animate-spin" />
+      Loading more scenarios...
+    </div>
+  </div>
+);
+
 export const TestScenariosPage: React.FC<{
   portalContainer?: HTMLElement | null;
   projectId?: string;
@@ -50,8 +59,8 @@ export const TestScenariosPage: React.FC<{
   hideHeader?: boolean;
 }> = ({ portalContainer, projectId, projectName, hideHeader = false }) => {
   const navigate = useNavigate();
-  const { push } = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -116,36 +125,93 @@ export const TestScenariosPage: React.FC<{
     </Button>
   );
 
-  // Queries
+  // Infinite scroll queries
   const {
-    data: scenariosResponse,
+    data: infiniteData,
     refetch,
-    isLoading: isScenariosLoading,
-  } = useQuery({
-    queryKey: ["test-scenarios", activeProjectId],
-    queryFn: async () => {
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["test-scenarios", activeProjectId, debouncedSearch],
+    queryFn: async ({ pageParam = 1 }) => {
       const result = await testScenarioApi.listScenarios(
         activeProjectId ?? undefined,
+        debouncedSearch || undefined,
+        pageParam,
+        SCENARIOS_PER_PAGE,
       );
-      console.log("API Response for scenarios:", result);
-      // Handle both array response and paginated response { data: [...] }
-      if (
-        result &&
-        typeof result === "object" &&
-        !Array.isArray(result) &&
-        "data" in result
-      ) {
-        return (result as any).data || [];
+      return result;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const currentPage = Number(lastPage.page) || allPages.length;
+      const pageLimit = Number(lastPage.limit) || SCENARIOS_PER_PAGE;
+      const nextPage = currentPage + 1;
+
+      if (lastPage.scenarios.length === 0) return undefined;
+
+      // If a backend ignores page params and returns the same page repeatedly,
+      // stop after detecting an all-duplicate page.
+      if (allPages.length > 1) {
+        const previousIds = new Set(
+          allPages
+            .slice(0, -1)
+            .flatMap((page) => page.scenarios.map((scenario) => scenario.id)),
+        );
+        if (
+          lastPage.scenarios.length > 0 &&
+          lastPage.scenarios.every((scenario) => previousIds.has(scenario.id))
+        ) {
+          return undefined;
+        }
       }
-      return Array.isArray(result) ? result : [];
+
+      if (typeof lastPage.hasMore === "boolean") {
+        return lastPage.hasMore ? nextPage : undefined;
+      }
+
+      if (typeof lastPage.total === "number" && lastPage.total > 0) {
+        const totalPages = Math.ceil(lastPage.total / pageLimit);
+        return nextPage <= totalPages ? nextPage : undefined;
+      }
+
+      return lastPage.scenarios.length >= pageLimit ? nextPage : undefined;
     },
     refetchInterval: 5000, // Poll every 5s for generation status updates
   });
 
-  const scenarios = Array.isArray(scenariosResponse) ? scenariosResponse : [];
+  // Flatten and dedupe pages into a single array
+  const scenarios = useMemo(() => {
+    const seen = new Set<string>();
+    return (infiniteData?.pages.flatMap((page) => page.scenarios) ?? []).filter(
+      (scenario) => {
+        if (seen.has(scenario.id)) return false;
+        seen.add(scenario.id);
+        return true;
+      },
+    );
+  }, [infiniteData]);
 
-  // Projects are fetched by ProjectSelect component internally
-  const isLoading = isScenariosLoading;
+  // Ref to the scrollable container with overflow-y: auto
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const maybeFetchNextPage = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    if (scrollHeight - scrollTop - clientHeight <= 300) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Also check after data/layout changes so we load again if the first page
+  // doesn't fill the scroll container enough to create a scroll event.
+  useEffect(() => {
+    maybeFetchNextPage();
+  }, [maybeFetchNextPage, scenarios.length]);
 
   // Handlers
   const handleDelete = async (id: string) => {
@@ -207,26 +273,16 @@ export const TestScenariosPage: React.FC<{
     }
   };
 
-  const handleGenerate = (id: string, sectionIds: string[]) => {
-    // Triggers generation for selected sections from the outer view
-    testScenarioApi
-      .generateTests(id, { sectionIds, projectId })
-      .then(() => refetch());
-  };
-
   const filteredItems = useMemo(() => {
-    const searchLower = searchQuery.toLowerCase();
     const items = Array.isArray(scenarios) ? scenarios : [];
     return items.filter((s) => {
-      const title = s.title || "";
-      const matchesSearch = title.toLowerCase().includes(searchLower);
       const matchesProject =
         !!projectId ||
         !activeProjectId ||
         s.projectId?.toString() === activeProjectId;
-      return matchesSearch && matchesProject;
+      return matchesProject;
     });
-  }, [scenarios, activeProjectId, projectId, searchQuery]);
+  }, [scenarios, activeProjectId, projectId]);
 
   const allSelected =
     filteredItems.length > 0 && selectedIds.size === filteredItems.length;
@@ -234,7 +290,7 @@ export const TestScenariosPage: React.FC<{
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden relative">
+    <div className="flex flex-col h-full bg-white relative">
       {/* Header & Filters */}
       <div
         className={cn(
@@ -301,117 +357,129 @@ export const TestScenariosPage: React.FC<{
         </div>
       </div>
 
-      {/* Main Container */}
-      <div className="flex flex-1 min-h-0 relative">
-        <div className="flex-1 flex flex-col min-w-0">
-          <ScrollArea className="flex-1">
-            {isLoading ? (
-              <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <ScenarioSkeleton key={i} />
-                  ))}
+      {/* Scrollable content area */}
+      <div
+        ref={scrollRef}
+        onScroll={maybeFetchNextPage}
+        className="flex-1 overflow-y-auto min-h-0"
+      >
+        {isLoading ? (
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ScenarioSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        ) : filteredItems.length > 0 ? (
+          <div className="p-6">
+            <section>
+              {filteredItems.length > 0 && (
+                <div className="mb-4">
+                  <SelectAllCheckbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onChange={toggleSelectAll}
+                    label="Select all"
+                  />
                 </div>
+              )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {filteredItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    onClick={(e) => e.stopPropagation()}
+                    className="relative"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03, duration: 0.25 }}
+                  >
+                    <AnimatePresence>
+                      {selectedIds.size > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute top-4 right-4 z-20"
+                        >
+                          <StyledCheckbox
+                            checked={selectedIds.has(item.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleSelection(item.id);
+                            }}
+                            size="md"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <ScenarioItem
+                      scenario={item}
+                      isSelected={false}
+                      onClick={() => {
+                        projectId
+                          ? navigate({
+                              to: "/projects/$id/test-scenarios/$scenarioId" as any,
+                              params: {
+                                id: projectId,
+                                scenarioId: item.id,
+                              } as any,
+                            })
+                          : navigate({
+                              to: "/test-scenarios/$id",
+                              params: { id: item.id },
+                            });
+                      }}
+                      onGenerate={(e) => {
+                        e.stopPropagation();
+                        projectId
+                          ? navigate({
+                              to: "/projects/$id/test-scenarios/$scenarioId" as any,
+                              params: {
+                                id: projectId,
+                                scenarioId: item.id,
+                              } as any,
+                            })
+                          : navigate({
+                              to: "/test-scenarios/$id",
+                              params: { id: item.id },
+                            });
+                      }}
+                      onDelete={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
+                      isDeleting={deletingId === item.id}
+                      deleteError={
+                        deletingId === item.id ? deleteError : null
+                      }
+                    />
+                  </motion.div>
+                ))}
               </div>
-            ) : filteredItems.length > 0 ? (
-              <div className="p-6">
-                <section>
-                  {filteredItems.length > 0 && (
-                    <div className="mb-4">
-                      <SelectAllCheckbox
-                        checked={allSelected}
-                        indeterminate={someSelected}
-                        onChange={toggleSelectAll}
-                        label="Select all"
-                      />
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    {filteredItems.map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        onClick={(e) => e.stopPropagation()}
-                        className="relative"
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.25 }}
-                      >
-                        <AnimatePresence>
-                          {selectedIds.size > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              transition={{ duration: 0.15 }}
-                              className="absolute top-4 right-4 z-20"
-                            >
-                              <StyledCheckbox
-                                checked={selectedIds.has(item.id)}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  toggleSelection(item.id);
-                                }}
-                                size="md"
-                              />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        <ScenarioItem
-                          scenario={item}
-                          isSelected={false}
-                          onClick={() => {
-                            projectId
-                              ? navigate({
-                                  to: "/projects/$id/test-scenarios/$scenarioId" as any,
-                                  params: {
-                                    id: projectId,
-                                    scenarioId: item.id,
-                                  } as any,
-                                })
-                              : navigate({
-                                  to: "/test-scenarios/$id",
-                                  params: { id: item.id },
-                                });
-                          }}
-                          onGenerate={(e) => {
-                            e.stopPropagation();
-                            projectId
-                              ? navigate({
-                                  to: "/projects/$id/test-scenarios/$scenarioId" as any,
-                                  params: {
-                                    id: projectId,
-                                    scenarioId: item.id,
-                                  } as any,
-                                })
-                              : navigate({
-                                  to: "/test-scenarios/$id",
-                                  params: { id: item.id },
-                                });
-                          }}
-                          onDelete={(e) => {
-                            e.stopPropagation();
-                            handleDelete(item.id);
-                          }}
-                          isDeleting={deletingId === item.id}
-                          deleteError={
-                            deletingId === item.id ? deleteError : null
-                          }
-                        />
-                      </motion.div>
-                    ))}
+
+              {/* Infinite scroll sentinel & load more indicator */}
+              <div className="w-full">
+                {isFetchingNextPage && <LoadMoreSkeleton />}
+                {!hasNextPage && !isFetchingNextPage && scenarios.length > SCENARIOS_PER_PAGE && (
+                  <div className="flex justify-center py-8">
+                    <p className="text-sm text-zinc-400">
+                      All {scenarios.length} scenarios loaded
+                    </p>
                   </div>
-                </section>
+                )}
               </div>
-            ) : (
-              <EmptyState
-                icon={Terminal}
-                title="No test scenarios found"
-                description="Sync docs/test-scenarios from the selected specs repository."
-                className="h-full min-h-[400px]"
-              />
-            )}
-          </ScrollArea>
-        </div>
+            </section>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Terminal}
+            title="No test scenarios found"
+            description="Sync docs/test-scenarios from the selected specs repository."
+            className="h-full min-h-[400px]"
+          />
+        )}
       </div>
 
       {/* Sticky Floating Bulk Action Bar */}
