@@ -138,14 +138,14 @@ export async function getSpecsCommits(
   params?: {
     path?: string;
     ref?: string;
-    perPage?: number;
+    per_page?: number;
     page?: number;
   }
 ) {
   const searchParams = new URLSearchParams();
   if (params?.path) searchParams.set('path', params.path);
   if (params?.ref) searchParams.set('ref', params.ref);
-  if (params?.perPage) searchParams.set('perPage', String(params.perPage));
+  if (params?.per_page) searchParams.set('per_page', String(params.per_page));
   if (params?.page) searchParams.set('page', String(params.page));
   return api.get<{ commits: SpecCommit[] }>(
     `/projects/${projectId}/specs/commits?${searchParams}`
