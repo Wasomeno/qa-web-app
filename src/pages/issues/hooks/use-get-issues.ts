@@ -15,7 +15,7 @@ const LABEL_NAMES = {
   BLOCKED: "Blocked",
 };
 
-const ISSUES_PER_PAGE = 20;
+const ISSUES_PER_PAGE = 10;
 
 export function useGetIssues(
   filters?: Partial<IssueFilterState>,
