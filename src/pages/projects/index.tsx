@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
-  ArrowRight,
+  ChevronDown,
+  ChevronRight,
   ClipboardList,
   FileText,
   FolderKanban,
-  GitBranch,
   GitPullRequest,
+  Info,
   Loader2,
   Plus,
   SquareKanban,
@@ -42,6 +44,40 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+const DEFAULT_TEST_CONTEXT_TEMPLATE = `# Project Test Context
+
+## Test Users
+- Admin user:
+  - email:
+  - password:
+  - role: admin
+- Regular user:
+  - email:
+  - password:
+  - role: user
+
+## Authentication
+- Login endpoint:
+- Token/header format:
+
+## Common Fixtures
+- Existing entities that tests can rely on:
+- How to create required data:
+
+## Business Rules
+- Important permissions, validations, and workflow rules:
+
+## API Notes
+- Base URL:
+- Relevant endpoints and request/response details:
+
+## E2E Selectors and UI Notes
+- Stable selectors, labels, routes, and UI behavior:
+
+## Known Edge Cases
+- Cases the automation generator should explicitly cover:
+`;
+
 function formatDate(value?: string) {
   if (!value) return "Unknown";
   return new Date(value).toLocaleDateString("en-US", {
@@ -64,12 +100,15 @@ function CreateProjectDialog({
   const [description, setDescription] = useState("");
   const [issueRepo, setIssueRepo] = useState<GitLabProject | null>(null);
   const [specsRepo, setSpecsRepo] = useState<GitLabProject | null>(null);
+  const [testContextMarkdown, setTestContextMarkdown] = useState("");
+  const [showTestContext, setShowTestContext] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: () =>
       createAppProject({
         name: name.trim(),
         description: description.trim(),
+        testContextMarkdown: testContextMarkdown.trim() || undefined,
         issueRepoId: issueRepo!.id,
         specsRepoId: specsRepo!.id,
       }),
@@ -82,6 +121,8 @@ function CreateProjectDialog({
       setDescription("");
       setIssueRepo(null);
       setSpecsRepo(null);
+      setTestContextMarkdown("");
+      setShowTestContext(false);
       if (created?.id) {
         navigate({ to: "/projects/$id", params: { id: created.id } });
       }
@@ -154,6 +195,51 @@ function CreateProjectDialog({
                 repository.
               </p>
             </div>
+          </div>
+
+          {/* Test Context (collapsible) */}
+          <div className="rounded-xl border border-gray-200">
+            <button
+              type="button"
+              onClick={() => setShowTestContext(!showTestContext)}
+              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors rounded-xl"
+            >
+              {showTestContext ? (
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              )}
+              <Info className="h-4 w-4 text-gray-400" />
+              Test Context
+              {testContextMarkdown.trim() ? (
+                <span className="ml-auto text-xs text-emerald-600 font-normal">
+                  Configured
+                </span>
+              ) : (
+                <span className="ml-auto text-xs text-gray-400 font-normal">
+                  Optional
+                </span>
+              )}
+            </button>
+            {showTestContext && (
+              <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Provide project-level context for AI test scenario generation:
+                  test users, auth, fixtures, business rules, API details, UI
+                  selectors, and known edge cases. If left empty, a default
+                  template will be used.
+                </p>
+                <Textarea
+                  value={testContextMarkdown}
+                  onChange={(e) => setTestContextMarkdown(e.target.value)}
+                  placeholder={DEFAULT_TEST_CONTEXT_TEMPLATE}
+                  className="min-h-48 resize-y font-mono text-xs leading-5"
+                />
+                <div className="mt-1 text-right text-xs text-gray-400">
+                  {new TextEncoder().encode(testContextMarkdown).length} / 204800 bytes
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
