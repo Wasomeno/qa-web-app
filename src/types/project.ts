@@ -2,6 +2,7 @@ export interface AppProject {
   id: string;
   name: string;
   description: string;
+  testContextMarkdown?: string;
   issueRepoName: string;
   specsRepoName: string;
   createdById?: number;
@@ -13,8 +14,16 @@ export interface AppProject {
 export interface CreateAppProjectRequest {
   name: string;
   description?: string;
+  testContextMarkdown?: string;
   issueRepoId: number;
   specsRepoId: number;
+}
+
+export interface ProjectTestContextResponse {
+  projectId: string;
+  markdown: string;
+  template: string;
+  maxBytes: number;
 }
 
 export interface UpdateAppProjectRequest {
