@@ -463,6 +463,26 @@ export function ProjectOverview({ project }: { project: AppProject }) {
               {project.description ||
                 "Shared QA workspace for tracking issues, test scenarios, and recordings."}
             </p>
+            <div className="mt-3 flex items-center gap-2">
+              {project.testContextMarkdown ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                  Test context configured
+                </span>
+              ) : (
+                <button
+                  onClick={() =>
+                    navigate({
+                      to: "/projects/$id" as any,
+                      params: { id: project.id } as any,
+                      search: { tab: "settings" } as any,
+                    })
+                  }
+                  className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-400 ring-1 ring-inset ring-gray-200 hover:text-gray-600 hover:ring-gray-300 transition-colors"
+                >
+                  No test context — add in Settings
+                </button>
+              )}
+            </div>
           </div>
           <div className="grid min-w-64 gap-1.5 text-xs">
             <div className="flex justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2">
