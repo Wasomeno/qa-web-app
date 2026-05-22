@@ -7,6 +7,7 @@ import {
   GitlabProjectLabel,
   GitLabProjectMember,
   GetProjectBoardsResponse,
+  ProjectTestContextResponse,
   UpdateAppProjectRequest,
 } from "@/types/project";
 
@@ -71,6 +72,22 @@ export async function deleteAppProject(projectId: string) {
 export async function getAppProjectActivity(projectId: string) {
   return api.get<{ activity: AppProjectActivity[] }>(
     `/projects/${projectId}/activity`,
+  );
+}
+
+export async function getProjectTestContext(projectId: string) {
+  return api.get<ProjectTestContextResponse>(
+    `/projects/${projectId}/test-context`,
+  );
+}
+
+export async function updateProjectTestContext(
+  projectId: string,
+  markdown: string,
+) {
+  return api.put<{ projectId: string; markdown: string; maxBytes: number }>(
+    `/projects/${projectId}/test-context`,
+    { body: JSON.stringify({ markdown }) },
   );
 }
 
