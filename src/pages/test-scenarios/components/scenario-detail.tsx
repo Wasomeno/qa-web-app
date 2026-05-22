@@ -8,33 +8,28 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronRight,
-  ChevronUp,
   Search,
   Play,
   Square,
-  Trash2,
   CheckCircle2,
   XCircle,
   Clock,
   Loader2,
   Layers,
-  Hash,
   Tag,
   ArrowUp,
   ArrowDown,
-  Plus,
-  MoreHorizontal,
+
   AlertCircle,
   FileSpreadsheet,
-  Target,
-  Calendar,
   ExternalLink,
   Pencil,
   Check,
-  Filter,
   RotateCcw,
   Sparkles,
   Eye,
+  History,
+  MoreHorizontal,
   Server,
   Monitor,
   ClipboardCheck,
@@ -42,8 +37,6 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  DndContext,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -52,9 +45,7 @@ import {
 } from "@dnd-kit/core";
 import {
   arrayMove,
-  SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -67,19 +58,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getGitLabProjects } from "@/api/project";
 import {
@@ -661,25 +648,30 @@ const AutomationCategorySelect: React.FC<{
   const meta = CATEGORY_META[value];
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
-      <select
+      <Select
         value={value}
-        onChange={(e) => onChange(e.target.value as AutomationCategory)}
+        onValueChange={(v) => onChange(v as AutomationCategory)}
         disabled={disabled}
-        className={cn(
-          "h-7 rounded-md border py-0 pl-7 pr-7 text-[11px] font-semibold outline-none transition-colors appearance-none cursor-pointer",
-          disabled && "cursor-wait opacity-70",
-          meta.classes,
-        )}
-        aria-label="Automation category"
       >
-        <option value="api">API Test</option>
-        <option value="e2e">End to End</option>
-        <option value="manual">Manual</option>
-      </select>
-      <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
-        {meta.icon}
-      </span>
-      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-60" />
+        <SelectTrigger
+          aria-label="Automation category"
+          className={cn(
+            "h-7 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold outline-none transition-colors cursor-pointer",
+            disabled && "cursor-wait opacity-70",
+            meta.classes,
+          )}
+        >
+          <div className="flex items-center gap-1.5">
+            {meta.icon}
+            <SelectValue />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="api">API Test</SelectItem>
+          <SelectItem value="e2e">End to End</SelectItem>
+          <SelectItem value="manual">Manual</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };
@@ -1372,14 +1364,15 @@ const ManualAutomationPanel: React.FC<{
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             Result
           </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as ManualTestStatus)}
-            className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:ring-1 focus:ring-zinc-300"
-          >
-            <option value="passed">Passed</option>
-            <option value="failed">Failed</option>
-          </select>
+          <Select value={status} onValueChange={(v) => setStatus(v as ManualTestStatus)}>
+            <SelectTrigger className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:ring-1 focus:ring-zinc-300">
+              <SelectValue placeholder="Select result" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="passed">Passed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -2382,60 +2375,6 @@ const SortableTestCase: React.FC<{
 // ─────────────────────────────────────────────
 // Section Sidebar Item
 // ─────────────────────────────────────────────
-const SectionSidebarItem: React.FC<{
-  section: TestSection;
-  isActive: boolean;
-  onSelect: () => void;
-  automationPercent: number;
-}> = ({ section, isActive, onSelect, automationPercent }) => {
-  return (
-    <button
-      onClick={onSelect}
-      className={cn(
-        "w-full text-left rounded-xl px-3 py-3 transition-all group border",
-        isActive
-          ? "bg-white border-zinc-200 shadow-sm shadow-zinc-950/[0.03]"
-          : "border-transparent hover:bg-white/80 hover:border-zinc-200/70",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            "text-sm font-semibold truncate",
-            isActive
-              ? "text-zinc-950"
-              : "text-zinc-600 group-hover:text-zinc-900",
-          )}
-        >
-          {section.title}
-        </span>
-        <span
-          className={cn(
-            "shrink-0 text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md",
-            isActive
-              ? "bg-zinc-100 text-zinc-700"
-              : "bg-white/80 text-zinc-500",
-          )}
-        >
-          {section.testCases.length}
-        </span>
-      </div>
-      {/* Automation coverage bar */}
-      <div className="mt-2 flex items-center gap-2">
-        <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-emerald-500 rounded-full transition-all"
-            style={{ width: `${automationPercent}%` }}
-          />
-        </div>
-        <span className="text-[10px] text-zinc-400 font-medium tabular-nums">
-          {automationPercent}%
-        </span>
-      </div>
-    </button>
-  );
-};
-
 // ─────────────────────────────────────────────
 // Section Selection Modal (for generation)
 // ─────────────────────────────────────────────
@@ -2595,21 +2534,49 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 }) => {
   const [scenario, setScenario] = useState<TestScenario>(initialScenario);
   const nestedInProject = Boolean(projectId);
-  const [activeSectionId, setActiveSectionId] = useState<string>(
-    initialScenario.sections?.[0]?.id || "",
-  );
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<TestCaseStatus | "all">(
     "all",
   );
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [runState, setRunState] = useState<TestRunState | null>(null);
+  const [selectedTestCaseId, setSelectedTestCaseId] = useState<string | null>(
+    null,
+  );
+
   const ITEMS_PER_PAGE = 10;
   const sections = scenario.sections ?? [];
 
-  const activeSection = sections.find((s) => s.id === activeSectionId);
+  // Flatten all test cases from all sections into one list
+  const allTestCases = useMemo(
+    () =>
+      sections.flatMap((s) =>
+        s.testCases.map((tc) => ({ ...tc, _sectionId: s.id })),
+      ),
+    [sections],
+  );
+
+  // Derive available sections and types for sidebar filters
+  const availableSections = useMemo(
+    () =>
+      sections.map((s) => ({
+        id: s.id,
+        title: `${s.title} (${s.testCases.length})`,
+      })),
+    [sections],
+  );
+  const availableTypes = useMemo<string[]>(() => {
+    const types = new Set(allTestCases.map((tc) => tc.type).filter(Boolean));
+    return Array.from(types).sort();
+  }, [allTestCases]);
+  const sectionTitleLookup = useMemo(() => {
+    const map = new Map<string, string>();
+    sections.forEach((s) => map.set(s.id, s.title));
+    return map;
+  }, [sections]);
   const automationGenerationPollKey = useMemo(
     () => getAutomationGenerationPollKey(scenario),
     [scenario],
@@ -2658,12 +2625,17 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     }),
   );
 
-  // Filtered test cases
+  // Filtered test cases (flattened across all sections)
   const filteredTestCases = useMemo(() => {
-    if (!activeSection) return [];
-    let cases = [...activeSection.testCases];
+    let cases = [...allTestCases];
     if (statusFilter !== "all") {
       cases = cases.filter((tc) => tc.status === statusFilter);
+    }
+    if (sectionFilter !== "all") {
+      cases = cases.filter((tc) => (tc as any)._sectionId === sectionFilter);
+    }
+    if (typeFilter !== "all") {
+      cases = cases.filter((tc) => tc.type === typeFilter);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -2675,55 +2647,68 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       );
     }
     return cases;
-  }, [activeSection, searchQuery, statusFilter]);
+  }, [allTestCases, searchQuery, statusFilter, sectionFilter, typeFilter]);
+
+  // Derived: selected test case
+  const selectedTestCase = useMemo(() => {
+    if (!selectedTestCaseId) return null;
+    return (
+      filteredTestCases.find((tc) => tc.id === selectedTestCaseId) || null
+    );
+  }, [filteredTestCases, selectedTestCaseId]);
 
   // Pagination
   const totalPages = Math.max(
     1,
     Math.ceil(filteredTestCases.length / ITEMS_PER_PAGE),
   );
-  const paginatedCases = filteredTestCases.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE,
-  );
 
   // Reset page when filters change
   React.useEffect(() => {
     setPage(1);
-  }, [activeSectionId, searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter]);
 
-  // Drag end handler
+  // Drag end handler (works on flattened list, persists per-section)
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
-      if (!over || active.id === over.id || !activeSection) return;
+      if (!over || active.id === over.id) return;
 
-      const oldIndex = activeSection.testCases.findIndex(
-        (tc) => tc.id === active.id,
-      );
-      const newIndex = activeSection.testCases.findIndex(
-        (tc) => tc.id === over.id,
-      );
+      const oldIndex = allTestCases.findIndex((tc) => tc.id === active.id);
+      const newIndex = allTestCases.findIndex((tc) => tc.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const newCases = arrayMove(activeSection.testCases, oldIndex, newIndex);
-      newCases.forEach((tc, i) => (tc.order = i + 1));
+      // Reorder the flattened array
+      const reordered = arrayMove(allTestCases, oldIndex, newIndex);
+      reordered.forEach((tc, i) => (tc.order = i + 1));
 
+      // Group the new ordering by section for persistence
+      const sectionOrderMap = new Map<string, string[]>();
+      reordered.forEach((tc) => {
+        const secId = (tc as any)._sectionId;
+        if (!sectionOrderMap.has(secId)) sectionOrderMap.set(secId, []);
+        sectionOrderMap.get(secId)!.push(tc.id);
+      });
+
+      // Update local state
       setScenario((prev) => ({
         ...prev,
-        sections: (prev.sections ?? []).map((s) =>
-          s.id === activeSection.id ? { ...s, testCases: newCases } : s,
-        ),
+        sections: (prev.sections ?? []).map((s) => ({
+          ...s,
+          testCases: reordered
+            .filter((tc) => (tc as any)._sectionId === s.id)
+            .map((tc, i) => ({ ...tc, order: i + 1 })),
+        })),
       }));
 
+      // Persist per-section reorder
       if (onReorderTestCases) {
-        onReorderTestCases(
-          activeSection.id,
-          newCases.map((tc) => tc.id),
-        ).catch(console.error);
+        sectionOrderMap.forEach((orderedIds, secId) => {
+          onReorderTestCases(secId, orderedIds).catch(console.error);
+        });
       }
     },
-    [activeSection, onReorderTestCases],
+    [allTestCases, onReorderTestCases],
   );
 
   // Update a test case
