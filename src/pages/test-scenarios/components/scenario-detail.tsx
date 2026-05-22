@@ -89,132 +89,133 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
   nested = false,
 }) => {
   return (
-    <div
-      className={cn(
-        "flex flex-col h-full",
-        nested ? "bg-[#F9FAFB]" : "bg-white",
-      )}
-    >
-      {/* Header Skeleton */}
-      <div
-        className={cn(
-          "shrink-0 border-b border-zinc-100",
-          nested ? "bg-[#F9FAFB]/95" : "bg-white",
-        )}
-      >
-        <div
-          className={cn(
-            "max-w-[1600px] mx-auto px-4 lg:px-6",
-            nested ? "py-4" : "py-6",
-          )}
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-4 flex-1">
-              <div className="flex items-center gap-3">
-                {!nested && <Skeleton className="h-9 w-9 rounded-lg" />}
-                <div className="space-y-2">
-                  <Skeleton
-                    className={cn(
-                      "rounded-md",
-                      nested ? "h-5 w-56" : "h-7 w-64",
-                    )}
-                  />
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-32 rounded" />
-                    <div className="h-3 w-3 rounded-full bg-zinc-100" />
-                    <Skeleton className="h-4 w-24 rounded" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-9 w-24 rounded-lg" />
-              <Skeleton className="h-9 w-32 rounded-lg" />
-            </div>
+    <div className="flex flex-col h-full bg-[#F9FAFB]">
+      {/* TopAppBar Skeleton */}
+      <header className="h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-16 rounded" />
+        </div>
+        <div className="flex-1 flex justify-center px-4">
+          <Skeleton className="h-5 w-48 rounded-md" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-28 rounded-lg" />
+          <div className="flex items-center gap-1 border-l border-zinc-200 pl-2 ml-1">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
           </div>
-          <div
-            className={cn(
-              "flex items-center overflow-hidden",
-              nested ? "gap-2 mt-4" : "gap-6 mt-8 pt-6 border-t border-zinc-50",
-            )}
-          >
-            {[1, 2, 3, 4].map((i) => (
+        </div>
+      </header>
+
+      {/* Split View Skeleton */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar Skeleton */}
+        <aside className="w-[300px] shrink-0 border-r border-zinc-200 bg-[#F9FAFB] flex flex-col">
+          <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between">
+            <Skeleton className="h-4 w-24 rounded" />
+            <Skeleton className="h-4 w-8 rounded" />
+          </div>
+          <div className="p-3 border-b border-zinc-200 bg-white">
+            <Skeleton className="h-8 w-full rounded-lg" />
+          </div>
+          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <Skeleton className="h-7 w-full rounded-md" />
+          </div>
+          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <Skeleton className="h-7 w-full rounded-md" />
+          </div>
+          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <Skeleton className="h-7 w-full rounded-md" />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
                 key={i}
-                className={cn(
-                  "flex items-center gap-2",
-                  nested &&
-                    "rounded-full border border-zinc-200 bg-white/70 px-3 py-2",
-                )}
+                className="px-4 py-2.5 border-b border-zinc-100"
               >
-                <Skeleton
-                  className={cn("rounded", nested ? "h-3.5 w-3.5" : "h-4 w-4")}
-                />
-                <Skeleton
-                  className={cn("rounded", nested ? "h-3 w-14" : "h-4 w-20")}
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <Skeleton className="h-3 w-16 rounded" />
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-full rounded mb-1" />
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-3 w-20 rounded" />
+                  <Skeleton className="h-3 w-10 rounded" />
+                  <Skeleton className="h-3 w-12 rounded" />
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
+          <div className="px-3 py-2 border-t border-zinc-200 bg-white flex items-center justify-between">
+            <Skeleton className="h-3 w-8 rounded" />
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-6 w-6 rounded" />
+              <Skeleton className="h-6 w-6 rounded" />
+            </div>
+          </div>
+        </aside>
 
-      <div className="flex-1 overflow-hidden flex max-w-[1600px] mx-auto w-full">
-        {/* Sidebar Skeleton */}
-        <div className="w-64 shrink-0 border-r border-zinc-100 bg-zinc-50/30 hidden lg:flex flex-col">
-          <div className="flex-1 px-3 py-6 space-y-6">
-            <div className="px-3">
-              <Skeleton className="h-3 w-16 mb-4" />
-              <div className="space-y-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="p-3 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-6 rounded-md" />
-                    </div>
-                    <Skeleton className="h-1.5 w-full rounded-full" />
+        {/* Content Skeleton */}
+        <main className="flex-1 overflow-y-auto bg-white">
+          <div className="max-w-3xl mx-auto p-6 pb-6">
+            {/* Header Data */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2.5 mb-2">
+                <Skeleton className="h-5 w-16 rounded" />
+                <Skeleton className="h-5 w-14 rounded" />
+                <Skeleton className="h-5 w-14 rounded" />
+                <Skeleton className="h-5 w-20 rounded" />
+              </div>
+              <Skeleton className="h-7 w-3/4 rounded-md mb-3" />
+              <Skeleton className="h-4 w-full rounded" />
+            </div>
+
+            {/* Automation Category Panel */}
+            <div className="mb-6">
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </div>
+
+            {/* Environment Grid */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-3 border border-zinc-200 rounded-lg">
+                  <Skeleton className="h-3 w-20 rounded mb-2" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                </div>
+              ))}
+            </div>
+
+            {/* Steps Table */}
+            <div className="mb-6">
+              <Skeleton className="h-5 w-32 rounded mb-3" />
+              <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-[#F9FAFB] border-b border-zinc-200">
+                  <Skeleton className="h-3 w-4 rounded" />
+                  <Skeleton className="h-3 w-12 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
+                </div>
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-zinc-100"
+                  >
+                    <Skeleton className="h-3 w-4 rounded mx-auto" />
+                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-4 w-3/4 rounded" />
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Content Skeleton */}
-        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/10">
-          <div className="flex-1 px-4 lg:px-8 py-8 space-y-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-96" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-48 rounded-lg" />
-                <Skeleton className="h-8 w-32 rounded-lg" />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white border border-zinc-100 rounded-xl p-4 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <Skeleton className="h-4 w-4" />
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-5 w-1/3" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                    <Skeleton className="h-8 w-8 rounded-lg" />
-                  </div>
-                </div>
-              ))}
+            {/* Evidence */}
+            <div>
+              <Skeleton className="h-5 w-40 rounded mb-3" />
+              <Skeleton className="h-40 w-full rounded-xl" />
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
@@ -2803,199 +2804,66 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     draftCount: 0,
   };
 
-  // Scenario status color
-  const scenarioStatusColor =
-    scenario.status === "ready"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-      : scenario.status === "generating"
-        ? "bg-amber-50 text-amber-700 border-amber-200"
-        : scenario.status === "failed"
-          ? "bg-red-50 text-red-700 border-red-200"
-          : "bg-zinc-50 text-zinc-700 border-zinc-200";
-
   return (
-    <div
-      className={cn(
-        "flex flex-col h-full",
-        nestedInProject ? "bg-[#F9FAFB]" : "bg-zinc-50/60",
-      )}
-    >
-      {/* Top Header */}
-      <div
-        className={cn(
-          "shrink-0 border-b",
-          nestedInProject
-            ? "bg-[#F9FAFB]/95 border-zinc-100/80"
-            : "bg-white border-zinc-100",
-        )}
-      >
-        <div
-          className={cn(
-            "max-w-[1600px] mx-auto",
-            nestedInProject
-              ? "px-4 lg:px-6 pt-4 pb-3"
-              : "px-5 lg:px-8 pt-5 pb-5",
-          )}
-        >
-          {/* Breadcrumb */}
+    <div className="flex flex-col h-full bg-[#F9FAFB]">
+      {/* ─── TopAppBar ─── */}
+      <header className="h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+        {/* Left: Back */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onClose}
-            className={cn(
-              "flex items-center gap-1.5 font-medium text-zinc-500 hover:text-zinc-900 transition-colors",
-              nestedInProject ? "mb-3 text-xs" : "mb-5 text-sm",
-            )}
+            className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-zinc-900 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to test scenarios
+            <span>Back</span>
           </button>
+        </div>
 
-          <div
-            className={cn(
-              "flex flex-col xl:flex-row xl:items-start justify-between",
-              nestedInProject ? "gap-4" : "gap-6",
-            )}
+        {/* Center: Scenario Title */}
+        <div className="flex-1 flex justify-center min-w-0 px-4">
+          <h2 className="text-base font-semibold text-zinc-900 truncate max-w-md">
+            {scenario.title}
+          </h2>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="h-8 px-4 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs"
           >
-            <div className="flex-1 min-w-0">
-              {/* Title */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1
-                  className={cn(
-                    "font-semibold tracking-[-0.02em] text-zinc-950",
-                    nestedInProject
-                      ? "text-xl leading-7"
-                      : "text-[1.6rem] leading-8",
-                  )}
-                >
-                  <InlineField
-                    value={scenario.title}
-                    onChange={(v) => {
-                      setScenario((prev) => ({ ...prev, title: v }));
-                      if (onUpdateScenario)
-                        onUpdateScenario(scenario.id, { title: v }).catch(
-                          console.error,
-                        );
-                    }}
-                    inputClassName={cn(
-                      "font-semibold tracking-tight",
-                      nestedInProject ? "text-xl" : "text-2xl",
-                    )}
-                  />
-                </h1>
-              </div>
-
-              {/* Description */}
-              <div
-                className={cn(
-                  "text-sm text-zinc-500 leading-6",
-                  nestedInProject ? "mt-1 max-w-3xl" : "mt-2 max-w-4xl",
-                )}
-              >
-                <InlineField
-                  value={scenario.description || ""}
-                  onChange={(v) => {
-                    setScenario((prev) => ({ ...prev, description: v }));
-                    if (onUpdateScenario)
-                      onUpdateScenario(scenario.id, { description: v }).catch(
-                        console.error,
-                      );
-                  }}
-                  multiline
-                  placeholder="Add a description..."
-                />
-              </div>
-
-              {/* Meta row */}
-              <div
-                className={cn(
-                  "flex items-center gap-x-4 gap-y-2 text-xs text-zinc-500 flex-wrap",
-                  nestedInProject ? "mt-3" : "mt-4",
-                )}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="font-medium">
-                    {new Date(scenario.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-                {scenario.creatorId?.toString() && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-medium">
-                      by {scenario.creatorId?.toString()}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div
-              className={cn(
-                "flex items-center gap-2 shrink-0",
-                nestedInProject ? "xl:pt-0" : "xl:pt-1",
-              )}
+            <Play className="w-3.5 h-3.5 mr-1.5" />
+            Run Scenario
+          </Button>
+          <div className="flex items-center gap-0.5 border-l border-zinc-200 pl-2 ml-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
             >
-              <Button
-                variant="ghost"
-                className={cn(
-                  "text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg gap-2 text-sm font-medium",
-                  nestedInProject ? "h-8 px-2.5" : "h-9 px-3",
-                )}
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </Button>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div
-            className={cn(
-              "flex items-center overflow-x-auto",
-              nestedInProject
-                ? "gap-2 mt-4 pb-1"
-                : "gap-8 mt-5 pt-4 border-t border-zinc-100",
-            )}
-          >
-            <StatPill
-              compact={nestedInProject}
-              icon={<FileSpreadsheet className="w-3.5 h-3.5" />}
-              label="Test Cases"
-              value={stats.totalTestCases}
-            />
-            <StatPill
-              compact={nestedInProject}
-              icon={<Hash className="w-3.5 h-3.5" />}
-              label="Steps"
-              value={stats.totalSteps}
-            />
-            <StatPill
-              compact={nestedInProject}
-              icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-              label="Automated"
-              value={stats.automatedCount}
-              accent
-            />
-            {stats.failCount > 0 && (
-              <StatPill
-                compact={nestedInProject}
-                icon={<XCircle className="w-3.5 h-3.5 text-red-500" />}
-                label="Failing"
-                value={stats.failCount}
-                danger
-              />
-            )}
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            >
+              <History className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Error Banner */}
       {scenario.error && (
-        <div className="shrink-0 mx-6 mt-4 p-3.5 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 max-w-[1600px]">
+        <div className="shrink-0 mx-4 lg:mx-6 mt-3 p-3.5 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium text-red-800 text-sm">
@@ -3006,328 +2874,483 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden flex max-w-[1600px] mx-auto w-full">
-        {/* Sidebar */}
-        <div className="w-72 shrink-0 border-r border-zinc-100 bg-zinc-50/70 hidden lg:flex flex-col">
-          <ScrollArea className="flex-1 px-4 py-5">
-            <div className="space-y-2">
-              <h3 className="px-2 text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.14em] mb-3">
-                Sections
-              </h3>
-              {sections.map((section) => {
-                const autoCount = section.testCases.filter(
-                  (tc) => tc.automationTest,
-                ).length;
-                const pct = Math.round(
-                  (autoCount / Math.max(1, section.testCases.length)) * 100,
+      {/* Split View Workspace */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* ── Left Sidebar: Test Cases List ── */}
+        <aside className="w-[300px] shrink-0 border-r border-zinc-200 bg-[#F9FAFB] flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-zinc-900">
+              Test Cases
+            </h3>
+            <span className="text-[11px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
+              {filteredTestCases.length}
+            </span>
+          </div>
+
+          {/* Search */}
+          <div className="p-3 border-b border-zinc-200 bg-white">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+              <input
+                placeholder="Filter cases..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-8 pl-8 pr-3 bg-[#F9FAFB] border border-zinc-200 rounded-lg text-sm placeholder-zinc-400 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+              />
+            </div>
+          </div>
+
+          {/* Section Filter */}
+          {availableSections.length > 1 && (
+            <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+              <Select
+                value={sectionFilter}
+                onValueChange={(v) => {
+                  setSectionFilter(v);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+                  <SelectValue placeholder="All sections" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All sections</SelectItem>
+                  {availableSections.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Type Filter */}
+          {availableTypes.length > 1 && (
+            <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+              <Select
+                value={typeFilter}
+                onValueChange={(v) => {
+                  setTypeFilter(v);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {availableTypes.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Status Filter */}
+          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v as TestCaseStatus | "all");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+                <SelectItem value="deprecated">Deprecated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Test Case Items */}
+          <div className="flex-1 overflow-y-auto">
+            {filteredTestCases.length > 0 ? (
+              filteredTestCases
+                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                .map((tc) => {
+                const isSelected = selectedTestCaseId === tc.id;
+                const sectionName = sectionTitleLookup.get(
+                  (tc as any)._sectionId,
                 );
                 return (
-                  <SectionSidebarItem
-                    key={section.id}
-                    section={section}
-                    isActive={section.id === activeSectionId}
-                    onSelect={() => {
-                      setActiveSectionId(section.id);
-                      setExpandedIds(new Set());
-                    }}
-                    automationPercent={pct}
-                  />
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Mobile Section Selector */}
-        <div className="lg:hidden px-4 pt-4 pb-0 shrink-0 w-full">
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-            {sections.map((section) => {
-              const isActive = section.id === activeSectionId;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    setActiveSectionId(section.id);
-                    setExpandedIds(new Set());
-                  }}
-                  className={cn(
-                    "shrink-0 px-3 py-2 rounded-lg text-sm font-medium border transition-all",
-                    isActive
-                      ? "bg-white border-zinc-300 text-zinc-900 shadow-sm"
-                      : "bg-white border-zinc-100 text-zinc-500 hover:border-zinc-200",
-                  )}
-                >
-                  {section.title}
-                  <span className="ml-1.5 text-xs text-zinc-400">
-                    {section.testCases.length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Test Cases Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/40">
-          <ScrollArea className="flex-1 px-4 lg:px-6 py-4 lg:py-6">
-            {activeSection ? (
-              <div className="space-y-4 w-full">
-                {/* Test case controls */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="text-xs text-zinc-500">
-                    Showing{" "}
-                    <span className="font-semibold text-zinc-900">
-                      {Math.min(
-                        filteredTestCases.length,
-                        (page - 1) * ITEMS_PER_PAGE + 1,
-                      )}
-                    </span>{" "}
-                    to{" "}
-                    <span className="font-semibold text-zinc-900">
-                      {Math.min(
-                        page * ITEMS_PER_PAGE,
-                        filteredTestCases.length,
-                      )}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-zinc-900">
-                      {filteredTestCases.length}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
-                      <Input
-                        placeholder="Search test cases..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8 h-9 w-full sm:w-64 text-sm rounded-lg bg-white border-zinc-200 shadow-none"
-                      />
-                    </div>
-                    <div className="relative">
-                      <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                          setStatusFilter(
-                            e.target.value as TestCaseStatus | "all",
-                          )
-                        }
-                        className="h-9 w-full sm:w-36 pl-3 pr-8 text-sm rounded-lg bg-white border border-zinc-200 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-200 appearance-none cursor-pointer"
-                      >
-                        <option value="all">All statuses</option>
-                        <option value="ready">Ready</option>
-                        <option value="draft">Draft</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="deprecated">Deprecated</option>
-                      </select>
-                      <Filter className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                    </div>
-                    {(searchQuery || statusFilter !== "all") && (
-                      <button
-                        onClick={() => {
-                          setSearchQuery("");
-                          setStatusFilter("all");
-                        }}
-                        className="h-9 px-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
-                      >
-                        Clear
-                      </button>
+                  <div
+                    key={tc.id}
+                    onClick={() => setSelectedTestCaseId(tc.id)}
+                    className={cn(
+                      "px-4 py-2.5 flex flex-col justify-center border-b border-zinc-100 cursor-pointer transition-colors min-h-[52px]",
+                      isSelected
+                        ? "bg-white border-l-2 border-l-zinc-900 shadow-[inset_4px_0_0_0_rgba(0,0,0,0.04)]"
+                        : "hover:bg-zinc-50",
                     )}
-                  </div>
-                </div>
-
-                {/* Test Cases List */}
-                {paginatedCases.length > 0 ? (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
                   >
-                    <SortableContext
-                      items={paginatedCases.map((tc) => tc.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2.5">
-                        {paginatedCases.map((tc) => (
-                          <SortableTestCase
-                            key={tc.id}
-                            scenarioId={scenario.id}
-                            projectId={projectId || scenario.projectId}
-                            sectionId={activeSection.id}
-                            testCase={tc}
-                            isExpanded={
-                              expandedIds.has(tc.id) ||
-                              runState?.testCaseId === tc.id
-                            }
-                            onToggle={() => toggleExpanded(tc.id)}
-                            onUpdate={(updated, options) =>
-                              updateTestCase(activeSection.id, updated, options)
-                            }
-                            onAutomationCategoryChange={(testCase, category) =>
-                              updateAutomationCategory(
-                                activeSection.id,
-                                testCase,
-                                category,
-                              )
-                            }
-                            runState={runState}
-                            onRunStateChange={setRunState}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                ) : (
-                  <div className="text-center py-16 rounded-2xl bg-white border border-zinc-100">
-                    <FileSpreadsheet className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
-                    <p className="text-sm text-zinc-500">
-                      {searchQuery || statusFilter !== "all"
-                        ? "No test cases match your filters."
-                        : "No test cases in this section."}
-                    </p>
-                  </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2 pb-4">
-                    <span className="text-xs text-zinc-500">
-                      Page{" "}
-                      <span className="font-medium text-zinc-900">{page}</span>{" "}
-                      of{" "}
-                      <span className="font-medium text-zinc-900">
-                        {totalPages}
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span
+                        className={cn(
+                          "text-[11px] font-mono",
+                          isSelected
+                            ? "text-zinc-900 font-semibold"
+                            : "text-zinc-500",
+                        )}
+                      >
+                        {tc.code}
                       </span>
+                    </div>
+                    <span className="text-sm text-zinc-800 truncate leading-tight mb-0.5">
+                      {tc.title}
                     </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 rounded-lg"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {sectionName && (
+                        <span className="text-[10px] text-zinc-400 truncate">
+                          {sectionName}
+                        </span>
+                      )}
+                      {tc.type && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1 rounded">
+                          {tc.type}
+                        </span>
+                      )}
+                      <span
+                        className={cn(
+                          "text-[10px] px-1 rounded",
+                          tc.priority === "critical" &&
+                            "text-red-600 bg-red-50",
+                          tc.priority === "high" &&
+                            "text-orange-600 bg-orange-50",
+                          tc.priority === "medium" &&
+                            "text-amber-600 bg-amber-50",
+                          tc.priority === "low" &&
+                            "text-zinc-500 bg-zinc-100",
+                        )}
                       >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 rounded-lg"
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
+                        {PRIORITY_META[tc.priority].label}
+                      </span>
+                      {(() => {
+                        const cat = inferAutomationCategory(tc);
+                        const catMeta = CATEGORY_META[cat];
+                        return (
+                          <span
+                            className={cn(
+                              "text-[10px] px-1 rounded",
+                              cat === "api" && "text-sky-600 bg-sky-50",
+                              cat === "e2e" && "text-violet-600 bg-violet-50",
+                              cat === "manual" &&
+                                "text-zinc-500 bg-zinc-100",
+                            )}
+                          >
+                            {catMeta.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
-                )}
-              </div>
+                );
+              })
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-zinc-400">
-                Select a section to view test cases
+              <div className="flex items-center justify-center h-32 text-sm text-zinc-400">
+                {searchQuery || statusFilter !== "all" || sectionFilter !== "all" || typeFilter !== "all"
+                  ? "No matches"
+                  : "No test cases"}
               </div>
             )}
-          </ScrollArea>
-        </div>
-      </div>
+          </div>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Test Scenario</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{scenario.title}</strong>?
-              This action cannot be undone. All test cases and their automation
-              data will be permanently removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={onDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-3 py-2 border-t border-zinc-200 bg-white flex items-center justify-between">
+              <span className="text-[11px] text-zinc-500">
+                {page}/{totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="h-6 w-6 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-100 disabled:opacity-30"
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() =>
+                    setPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={page === totalPages}
+                  className="h-6 w-6 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-100 disabled:opacity-30"
+                >
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* ── Main Content: Selected Test Case Detail ── */}
+        <main className="flex-1 overflow-y-auto bg-white">
+          {selectedTestCase ? (
+            <div className="max-w-3xl mx-auto p-6 pb-6">
+              {/* Header Data */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <span className="text-[11px] font-mono px-2 py-1 bg-zinc-50 text-zinc-600 rounded border border-zinc-200">
+                    {selectedTestCase.code}
+                  </span>
+                  <StatusBadge status={selectedTestCase.status} />
+                  <PriorityBadge priority={selectedTestCase.priority} />
+                  <AutomationCategorySelect
+                    value={inferAutomationCategory(selectedTestCase)}
+                    onChange={(category) =>
+                      updateAutomationCategory(
+                        (selectedTestCase as any)._sectionId,
+                        selectedTestCase,
+                        category,
+                      )
+                    }
+                  />
+                </div>
+                <h1 className="text-lg font-semibold text-zinc-900 mb-3 leading-snug">
+                  {selectedTestCase.title}
+                </h1>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {selectedTestCase.description || (
+                    <span className="italic text-zinc-300">
+                      No description provided.
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* Automation Category Panel */}
+              <div className="mb-6">
+                <AutomationCategoryPanel
+                  scenarioId={scenario.id}
+                  projectId={projectId || scenario.projectId}
+                  sectionId={(selectedTestCase as any)._sectionId}
+                  testCase={selectedTestCase}
+                  category={inferAutomationCategory(selectedTestCase)}
+                  onUpdate={(updated) =>
+                    updateTestCase(
+                      (selectedTestCase as any)._sectionId,
+                      updated,
+                    )
+                  }
+                />
+              </div>
+
+              {/* Environment & Meta */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
+                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                    Environment
+                  </span>
+                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
+                    <Server className="w-3.5 h-3.5 text-zinc-400" />
+                    {scenario.projectName || "N/A"}
+                  </span>
+                </div>
+                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
+                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                    Platform
+                  </span>
+                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
+                    <Monitor className="w-3.5 h-3.5 text-zinc-400" />
+                    Web
+                  </span>
+                </div>
+                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
+                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                    Assignee
+                  </span>
+                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center text-[10px] font-medium">
+                      {scenario.creatorId
+                        ? String(scenario.creatorId).slice(0, 2).toUpperCase()
+                        : "?"}
+                    </span>
+                    {scenario.creatorId
+                      ? `User #${scenario.creatorId}`
+                      : "Unassigned"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Steps Table */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                  Execution Steps
+                </h3>
+                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-[#F9FAFB] border-b border-zinc-200 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                    <div className="text-center">#</div>
+                    <div>Action</div>
+                    <div>Expected Result</div>
+                  </div>
+                  {/* Rows */}
+                  {selectedTestCase.steps.map((step) => (
+                    <div
+                      key={step.id}
+                      className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-zinc-100 last:border-b-0 items-start hover:bg-zinc-50/50 transition-colors"
+                    >
+                      <div className="text-[11px] font-mono text-zinc-400 text-center pt-1">
+                        {step.order}
+                      </div>
+                      <div className="text-sm text-zinc-800 leading-snug">
+                        {step.action}
+                      </div>
+                      <div className="text-sm text-zinc-500 leading-snug">
+                        {step.expected}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Evidence & Artifacts */}
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                  Evidence &amp; Artifacts
+                </h3>
+                <div className="border-2 border-dashed border-zinc-200 rounded-xl p-8 bg-zinc-50/30 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center mb-4">
+                    <Upload className="w-5 h-5 text-zinc-400" />
+                  </div>
+                  <p className="text-sm text-zinc-700 mb-1">
+                    Drag and drop screenshots or screen recordings here
+                  </p>
+                  <p className="text-xs text-zinc-400 mb-4">
+                    Supports PNG, JPG, MP4 (Max 50MB)
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-lg text-xs border-zinc-200 text-zinc-600"
+                  >
+                    Browse Files
+                  </Button>
+                </div>
+              </div>
+
+              {/* Execution Result (for non-manual types - Manual panel handles this above) */}
+              {inferAutomationCategory(selectedTestCase) !== "manual" && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                    Execution Result
+                  </h3>
+                  <div className="border border-zinc-200 rounded-lg p-4 bg-zinc-50/30 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-zinc-500 font-medium">
+                        Status:
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-1.5 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="exec_status"
+                            className="w-3.5 h-3.5 text-emerald-500 border-zinc-300 focus:ring-emerald-500"
+                          />
+                          <span className="text-xs text-zinc-700 group-hover:text-emerald-600 transition-colors">
+                            Pass
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="exec_status"
+                            className="w-3.5 h-3.5 text-red-500 border-zinc-300 focus:ring-red-500"
+                          />
+                          <span className="text-xs text-zinc-700 group-hover:text-red-600 transition-colors">
+                            Fail
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="exec_status"
+                            className="w-3.5 h-3.5 text-amber-500 border-zinc-300 focus:ring-amber-500"
+                          />
+                          <span className="text-xs text-zinc-700 group-hover:text-amber-600 transition-colors">
+                            Block
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <textarea
+                        placeholder="Add notes about this execution result..."
+                        className="w-full min-h-[60px] text-sm border border-zinc-200 rounded-lg p-2.5 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300 resize-y"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        className="h-8 px-4 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs shadow-sm"
+                      >
+                        Submit Result
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center px-8">
+                <FileSpreadsheet className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+                <p className="text-sm font-medium text-zinc-600 mb-1">
+                  Select a test case
+                </p>
+                <p className="text-xs text-zinc-400">
+                  Choose a test case from the sidebar to view its details and
+                  steps.
+                </p>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
-
 // ─────────────────────────────────────────────
-// Stat Pill
+// Metric Item (for header metrics bar)
 // ─────────────────────────────────────────────
-function StatPill({
-  icon,
+function MetricItem({
   label,
   value,
   accent,
   danger,
-  compact,
 }: {
-  icon: React.ReactNode;
   label: string;
   value: number;
   accent?: boolean;
   danger?: boolean;
-  compact?: boolean;
 }) {
-  if (compact) {
-    return (
-      <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-full border border-zinc-200/80 bg-white/75 px-3 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <span
-          className={cn(
-            "text-zinc-400",
-            danger && "text-red-500",
-            accent && "text-emerald-600",
-          )}
-        >
-          {icon}
-        </span>
-        <span className="font-medium text-zinc-500">{label}</span>
-        <span
-          className={cn(
-            "font-semibold tabular-nums",
-            danger
-              ? "text-red-600"
-              : accent
-                ? "text-emerald-600"
-                : "text-zinc-900",
-          )}
-        >
-          {value}
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col">
-      <p
+    <div className="flex items-baseline gap-1.5 shrink-0">
+      <span
         className={cn(
-          "text-lg font-semibold leading-none",
+          "text-xl font-bold tabular-nums leading-none",
           danger
             ? "text-red-600"
             : accent
               ? "text-emerald-600"
-              : "text-zinc-900",
+              : "text-zinc-950",
         )}
       >
         {value}
-      </p>
-      <div className="flex items-center gap-1.5 mt-1.5 text-zinc-500">
-        {icon}
-        <span className="text-[11px] font-medium uppercase tracking-wider">
-          {label}
-        </span>
-      </div>
+      </span>
+      <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+        {label}
+      </span>
     </div>
   );
 }
