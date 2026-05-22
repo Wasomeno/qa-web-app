@@ -306,10 +306,27 @@ export function ProjectsPage() {
 
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
         {isLoading ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-44 rounded-2xl" />
-            ))}
+          <div className="min-w-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Name</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Issues Repo</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Specs Repo</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <tr key={index} className="border-b border-gray-50">
+                    <td className="py-4 pr-4"><Skeleton className="h-4 w-48" /></td>
+                    <td className="py-4 pr-4"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-4 pr-4"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-4 pl-4 text-right"><Skeleton className="h-4 w-20 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : projects.length === 0 ? (
           <div className="mx-auto max-w-xl pt-16">
@@ -328,50 +345,51 @@ export function ProjectsPage() {
             />
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {projects.map((project) => (
-              <button
-                key={project.id}
-                onClick={() =>
-                  navigate({
-                    to: "/projects/$id" as any,
-                    params: { id: project.id } as any,
-                  })
-                }
-                className="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50/40 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 cursor-pointer text-left w-full"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-semibold text-gray-900">
-                      {project.name}
-                    </h2>
-                    <p className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-gray-500">
-                      {project.description || "No description yet."}
-                    </p>
-                  </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-500" />
-                </div>
-
-                <div className="mt-5 grid gap-2 text-xs text-gray-500">
-                  <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span>Issues repo</span>
-                    <span className="font-mono text-gray-700">
-                      {project.issueRepoName}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span>Specs repo</span>
-                    <span className="font-mono text-gray-700">
-                      {project.specsRepoName}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-xs text-gray-400">
-                  Updated {formatDate(project.updatedAt)}
-                </div>
-              </button>
-            ))}
+          <div className="min-w-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Name</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Issues Repo</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Specs Repo</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project) => (
+                  <tr
+                    key={project.id}
+                    onClick={() =>
+                      navigate({
+                        to: "/projects/$id" as any,
+                        params: { id: project.id } as any,
+                      })
+                    }
+                    className="border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50/60 group"
+                  >
+                    <td className="py-4 pr-4">
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-primary-500 transition-colors">
+                        {project.name}
+                      </div>
+                      <div className="mt-0.5 max-w-md truncate text-sm text-gray-500">
+                        {project.description || "No description yet."}
+                      </div>
+                    </td>
+                    <td className="py-4 pr-4">
+                      <span className="text-sm text-gray-500">{project.issueRepoName}</span>
+                    </td>
+                    <td className="py-4 pr-4">
+                      <span className="text-sm text-gray-500">{project.specsRepoName}</span>
+                    </td>
+                    <td className="py-4 pl-4 text-right">
+                      <span className="whitespace-nowrap text-sm text-gray-400">
+                        {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
