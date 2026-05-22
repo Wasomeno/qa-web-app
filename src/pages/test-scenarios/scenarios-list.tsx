@@ -61,6 +61,10 @@ export const TestScenariosPage: React.FC<{
     string | null
   >("test-scenarios-project-id", null);
 
+  const [testContextOpen, setTestContextOpen] = useState(false);
+  const [testContextEditing, setTestContextEditing] = useState(false);
+  const [testContextEditValue, setTestContextEditValue] = useState("");
+
   const handleProjectSelect = (
     project: { id: number; name: string } | null,
   ) => {
@@ -69,6 +73,36 @@ export const TestScenariosPage: React.FC<{
   };
 
   const activeProjectId = projectId || selectedProjectId;
+
+  const queryClient = useQueryClient();
+
+  const testContextQuery = useQuery({
+    queryKey: ["project-test-context", activeProjectId],
+    queryFn: () => getProjectTestContext(activeProjectId!),
+    enabled: !!activeProjectId && testContextOpen,
+  });
+
+  const saveTestContextMutation = useMutation({
+    mutationFn: (markdown: string) =>
+      updateProjectTestContext(activeProjectId!, markdown),
+    onSuccess: () => {
+      toast.success("Test context saved");
+      setTestContextEditing(false);
+      queryClient.invalidateQueries({
+        queryKey: ["project-test-context", activeProjectId],
+      });
+    },
+    onError: (error: any) =>
+      toast.error(error?.message || "Failed to save test context"),
+  });
+
+  const resetToTemplate = () => {
+    const template = testContextQuery.data?.data?.template ?? "";
+    if (template) {
+      setTestContextEditValue(template);
+      setTestContextEditing(true);
+    }
+  };
 
   const handleSync = async () => {
     if (!activeProjectId) {
@@ -270,6 +304,18 @@ export const TestScenariosPage: React.FC<{
                 placeholder="All Projects"
                 extraOptions={{ allProjects: true }}
               />
+            )}
+            {activeProjectId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTestContextOpen(true)}
+                className="h-10 gap-1.5 rounded-xl text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                title="View project test context"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Test Context
+              </Button>
             )}
           </div>
           {hideHeader && (
@@ -503,6 +549,113 @@ export const TestScenariosPage: React.FC<{
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Test Context Dialog */}
+      <Dialog open={testContextOpen} onOpenChange={setTestContextOpen}>
+        <DialogContent className="max-w-2xl h-[520px] flex flex-col">
+          <DialogHeader>
+            <div className="flex items-start justify-between gap-4 pr-8">
+              <div>
+                <DialogTitle>Project Test Context</DialogTitle>
+                <DialogDescription>
+                  Project-level knowledge base used when generating API and E2E
+                  automation tests.
+                </DialogDescription>
+              </div>
+              <div className="flex shrink-0 gap-2 pt-1">
+                {!testContextEditing ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setTestContextEditValue(
+                        testContextQuery.data?.data?.markdown ?? "",
+                      );
+                      setTestContextEditing(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetToTemplate}
+                    >
+                      Reset to template
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setTestContextEditing(false);
+                        setTestContextEditValue("");
+                      }}
+                      disabled={saveTestContextMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-zinc-900 text-white hover:bg-zinc-800"
+                      onClick={() =>
+                        saveTestContextMutation.mutate(testContextEditValue)
+                      }
+                      disabled={saveTestContextMutation.isPending}
+                    >
+                      {saveTestContextMutation.isPending ? (
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Save
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 flex flex-col min-h-0">
+            {testContextQuery.isLoading ? (
+              <div className="flex items-center justify-center flex-1">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <Textarea
+                value={
+                  testContextEditing
+                    ? testContextEditValue
+                    : (testContextQuery.data?.data?.markdown ?? "")
+                }
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  setTestContextEditValue(e.target.value);
+                  if (!testContextEditing) setTestContextEditing(true);
+                }}
+                readOnly={!testContextEditing}
+                placeholder="No test context configured yet."
+                className={cn(
+                  "flex-1 resize-y font-mono text-xs leading-5 min-h-0",
+                  !testContextEditing && "cursor-default opacity-80",
+                )}
+              />
+            )}
+          </div>
+          <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-3 mt-3">
+            <span>
+              {testContextQuery.data?.data?.markdown
+                ? "Markdown"
+                : "Empty"}
+            </span>
+            <span>
+              {new TextEncoder().encode(
+                testContextEditing
+                  ? testContextEditValue
+                  : (testContextQuery.data?.data?.markdown ?? ""),
+              ).length}{" "}
+              / {testContextQuery.data?.data?.maxBytes ?? 204800} bytes
+            </span>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
