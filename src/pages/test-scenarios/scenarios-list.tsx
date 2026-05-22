@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import React, { useState, useMemo, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, RefreshCw, Terminal, Trash2, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
+import { getProjectTestContext, updateProjectTestContext } from "@/api/project";
 import { useDebounce } from "@/utils/useDebounce";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -13,44 +15,21 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectSelect } from "@/components/project-select";
+import { StyledCheckbox } from "@/components/ui/styled-checkbox";
 import {
-  StyledCheckbox,
-  SelectAllCheckbox,
-} from "@/components/ui/styled-checkbox";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
-import { ScenarioItem } from "./components/scenario-item";
 import { cn } from "@/lib/utils";
 
-const SCENARIOS_PER_PAGE = 20;
-
-const ScenarioSkeleton = () => (
-  <div className="flex flex-col border border-zinc-100 rounded-xl overflow-hidden bg-white h-full">
-    <div className="p-5 space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-        </div>
-        <Skeleton className="h-8 w-8 rounded-full" />
-      </div>
-      <div className="flex items-center gap-3 pt-2">
-        <Skeleton className="h-5 w-20 rounded-full" />
-        <Skeleton className="h-5 w-16 rounded-full" />
-      </div>
-    </div>
-  </div>
-);
-
-const LoadMoreSkeleton = () => (
-  <div className="flex justify-center py-8">
-    <div className="flex items-center gap-3 text-sm text-zinc-400">
-      <Loader2 className="w-4 h-4 animate-spin" />
-      Loading more scenarios...
-    </div>
-  </div>
-);
+const SCENARIOS_PER_PAGE = 10;
 
 export const TestScenariosPage: React.FC<{
   portalContainer?: HTMLElement | null;
@@ -61,6 +40,13 @@ export const TestScenariosPage: React.FC<{
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const [page, setPage] = useState(1);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -125,93 +111,30 @@ export const TestScenariosPage: React.FC<{
     </Button>
   );
 
-  // Infinite scroll queries
+  // Paginated query
   const {
-    data: infiniteData,
+    data,
     refetch,
     isLoading,
-    isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["test-scenarios", activeProjectId, debouncedSearch],
-    queryFn: async ({ pageParam = 1 }) => {
+    isFetching,
+  } = useQuery({
+    queryKey: ["test-scenarios", activeProjectId, debouncedSearch, page],
+    queryFn: async () => {
       const result = await testScenarioApi.listScenarios(
         activeProjectId ?? undefined,
         debouncedSearch || undefined,
-        pageParam,
+        page,
         SCENARIOS_PER_PAGE,
       );
       return result;
     },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
-      const currentPage = Number(lastPage.page) || allPages.length;
-      const pageLimit = Number(lastPage.limit) || SCENARIOS_PER_PAGE;
-      const nextPage = currentPage + 1;
-
-      if (lastPage.scenarios.length === 0) return undefined;
-
-      // If a backend ignores page params and returns the same page repeatedly,
-      // stop after detecting an all-duplicate page.
-      if (allPages.length > 1) {
-        const previousIds = new Set(
-          allPages
-            .slice(0, -1)
-            .flatMap((page) => page.scenarios.map((scenario) => scenario.id)),
-        );
-        if (
-          lastPage.scenarios.length > 0 &&
-          lastPage.scenarios.every((scenario) => previousIds.has(scenario.id))
-        ) {
-          return undefined;
-        }
-      }
-
-      if (typeof lastPage.hasMore === "boolean") {
-        return lastPage.hasMore ? nextPage : undefined;
-      }
-
-      if (typeof lastPage.total === "number" && lastPage.total > 0) {
-        const totalPages = Math.ceil(lastPage.total / pageLimit);
-        return nextPage <= totalPages ? nextPage : undefined;
-      }
-
-      return lastPage.scenarios.length >= pageLimit ? nextPage : undefined;
-    },
     refetchInterval: 5000, // Poll every 5s for generation status updates
+    placeholderData: (prev) => prev, // Keep previous data while fetching next page
   });
 
-  // Flatten and dedupe pages into a single array
-  const scenarios = useMemo(() => {
-    const seen = new Set<string>();
-    return (infiniteData?.pages.flatMap((page) => page.scenarios) ?? []).filter(
-      (scenario) => {
-        if (seen.has(scenario.id)) return false;
-        seen.add(scenario.id);
-        return true;
-      },
-    );
-  }, [infiniteData]);
-
-  // Ref to the scrollable container with overflow-y: auto
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const maybeFetchNextPage = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el || !hasNextPage || isFetchingNextPage) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = el;
-    if (scrollHeight - scrollTop - clientHeight <= 300) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  // Also check after data/layout changes so we load again if the first page
-  // doesn't fill the scroll container enough to create a scroll event.
-  useEffect(() => {
-    maybeFetchNextPage();
-  }, [maybeFetchNextPage, scenarios.length]);
+  const scenarios = data?.scenarios ?? [];
+  const total = data?.total;
+  const totalPages = total ? Math.ceil(total / SCENARIOS_PER_PAGE) : 0;
 
   // Handlers
   const handleDelete = async (id: string) => {
@@ -358,120 +281,178 @@ export const TestScenariosPage: React.FC<{
       </div>
 
       {/* Scrollable content area */}
-      <div
-        ref={scrollRef}
-        onScroll={maybeFetchNextPage}
-        className="flex-1 overflow-y-auto min-h-0"
-      >
+      <div className="flex-1 overflow-y-auto min-h-0">
         {isLoading ? (
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <ScenarioSkeleton key={i} />
-              ))}
-            </div>
+          <div className="px-6 pt-6 min-w-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="pb-3 w-10"></th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Title</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Status</th>
+                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Cases</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="py-3.5 pr-2"><Skeleton className="h-4 w-4 rounded" /></td>
+                    <td className="py-3.5 pr-4"><Skeleton className="h-4 w-64" /></td>
+                    <td className="py-3.5 pr-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                    <td className="py-3.5 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
+                    <td className="py-3.5 pl-4 text-right"><Skeleton className="h-4 w-20 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filteredItems.length > 0 ? (
-          <div className="p-6">
-            <section>
-              {filteredItems.length > 0 && (
-                <div className="mb-4">
-                  <SelectAllCheckbox
-                    checked={allSelected}
-                    indeterminate={someSelected}
-                    onChange={toggleSelectAll}
-                    label="Select all"
-                  />
-                </div>
-              )}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {filteredItems.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    onClick={(e) => e.stopPropagation()}
-                    className="relative"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03, duration: 0.25 }}
-                  >
-                    <AnimatePresence>
-                      {selectedIds.size > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute top-4 right-4 z-20"
-                        >
-                          <StyledCheckbox
-                            checked={selectedIds.has(item.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleSelection(item.id);
-                            }}
-                            size="md"
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <ScenarioItem
-                      scenario={item}
-                      isSelected={false}
+          <div className="px-6 pt-6 min-w-0 relative">
+            {isFetching && (
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gray-100 overflow-hidden rounded-full">
+                <div className="h-full bg-zinc-900 rounded-full animate-pulse" style={{ width: "30%" }} />
+              </div>
+            )}
+            <div className={cn(isFetching && "opacity-60 transition-opacity duration-200")}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="pb-3 w-10">
+                    <StyledCheckbox
+                      checked={allSelected}
+                      onChange={() => toggleSelectAll()}
+                      size="sm"
+                    />
+                  </th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Title</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Status</th>
+                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Cases</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item) => {
+                  const statusPill: Record<string, { label: string; classes: string }> = {
+                    draft: { label: "Draft", classes: "bg-zinc-50 text-zinc-600 border-zinc-200" },
+                    uploaded: { label: "Uploaded", classes: "bg-blue-50 text-blue-700 border-blue-100" },
+                    ready: { label: "Ready", classes: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    generating: { label: "Generating", classes: "bg-amber-50 text-amber-700 border-amber-100" },
+                    failed: { label: "Failed", classes: "bg-red-50 text-red-700 border-red-100" },
+                  };
+                  const pill = statusPill[item.status] ?? statusPill.draft;
+                  const testCaseCount =
+                    item.stats?.totalTestCases ??
+                    item.sections?.reduce((acc, s) => acc + (s.testCases?.length ?? 0), 0) ??
+                    0;
+                  return (
+                    <tr
+                      key={item.id}
                       onClick={() => {
                         projectId
                           ? navigate({
                               to: "/projects/$id/test-scenarios/$scenarioId" as any,
-                              params: {
-                                id: projectId,
-                                scenarioId: item.id,
-                              } as any,
+                              params: { id: projectId, scenarioId: item.id } as any,
                             })
                           : navigate({
                               to: "/test-scenarios/$id",
                               params: { id: item.id },
                             });
                       }}
-                      onGenerate={(e) => {
-                        e.stopPropagation();
-                        projectId
-                          ? navigate({
-                              to: "/projects/$id/test-scenarios/$scenarioId" as any,
-                              params: {
-                                id: projectId,
-                                scenarioId: item.id,
-                              } as any,
-                            })
-                          : navigate({
-                              to: "/test-scenarios/$id",
-                              params: { id: item.id },
-                            });
-                      }}
-                      onDelete={(e) => {
-                        e.stopPropagation();
-                        handleDelete(item.id);
-                      }}
-                      isDeleting={deletingId === item.id}
-                      deleteError={
-                        deletingId === item.id ? deleteError : null
-                      }
-                    />
-                  </motion.div>
-                ))}
-              </div>
+                      className="border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50/60 group"
+                    >
+                      <td className="py-2.5 pr-2" onClick={(e) => e.stopPropagation()}>
+                        <StyledCheckbox
+                          checked={selectedIds.has(item.id)}
+                          onChange={() => toggleSelection(item.id)}
+                          size="sm"
+                        />
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <div className="text-sm font-semibold text-gray-900 group-hover:text-primary-500 transition-colors">
+                          {item.title}
+                        </div>
+                        {item.description && (
+                          <div className="mt-0.5 max-w-lg truncate text-xs text-gray-400">
+                            {item.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", pill.classes)}>
+                          {pill.label}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-center">
+                        <span className="text-xs text-gray-400 tabular-nums">
+                          {testCaseCount}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pl-4 text-right">
+                        <span className="whitespace-nowrap text-xs text-gray-400">
+                          {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-              {/* Infinite scroll sentinel & load more indicator */}
-              <div className="w-full">
-                {isFetchingNextPage && <LoadMoreSkeleton />}
-                {!hasNextPage && !isFetchingNextPage && scenarios.length > SCENARIOS_PER_PAGE && (
-                  <div className="flex justify-center py-8">
-                    <p className="text-sm text-zinc-400">
-                      All {scenarios.length} scenarios loaded
-                    </p>
+            {/* Pagination footer */}
+            {totalPages > 0 && (
+              <div className="flex items-center justify-between px-1 py-4 border-t border-gray-50">
+                <div className="text-xs text-gray-400">
+                  {total ? `${(page - 1) * SCENARIOS_PER_PAGE + 1}–${Math.min(page * SCENARIOS_PER_PAGE, total)} of ${total}` : ""}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1 || isFetching}
+                    className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1 px-2">
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 7) {
+                        pageNum = i + 1;
+                      } else if (page <= 4) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 3) {
+                        pageNum = totalPages - 6 + i;
+                      } else {
+                        pageNum = page - 3 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={cn(
+                            "w-7 h-7 text-xs rounded-md transition-colors",
+                            pageNum === page
+                              ? "bg-zinc-900 text-white font-medium"
+                              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                          )}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages || isFetching}
+                    className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-            </section>
+            )}
           </div>
+        </div>
         ) : (
           <EmptyState
             icon={Terminal}
