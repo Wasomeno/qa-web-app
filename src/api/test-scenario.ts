@@ -65,12 +65,12 @@ export const testScenarioApi = {
     projectId?: string,
     search?: string,
     page?: number,
-    limit?: number,
+    per_page?: number,
   ): Promise<{
     scenarios: TestScenario[];
     total?: number;
     page: number;
-    limit: number;
+    per_page: number;
     hasMore?: boolean;
   }> => {
     let url = projectId
@@ -79,7 +79,7 @@ export const testScenarioApi = {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (page !== undefined) params.set("page", String(page));
-    if (limit !== undefined) params.set("limit", String(limit));
+    if (per_page !== undefined) params.set("per_page", String(per_page));
     const qs = params.toString();
     if (qs) url += `?${qs}`;
 
@@ -88,24 +88,24 @@ export const testScenarioApi = {
 
     const raw = response.data;
     const requestedPage = page ?? 1;
-    const requestedLimit = limit ?? 0;
+    const requestedPerPage = per_page ?? 0;
 
     // Some endpoints return a bare page array instead of pagination metadata.
-    // Treat `array.length === requestedLimit` as "maybe more" so page 2 can be requested.
+    // Treat `array.length === requestedPerPage` as "maybe more" so page 2 can be requested.
     if (Array.isArray(raw)) {
-      const resolvedLimit = requestedLimit || raw.length;
+      const resolvedPerPage = requestedPerPage || raw.length;
       return {
         scenarios: raw,
         page: requestedPage,
-        limit: resolvedLimit,
-        hasMore: resolvedLimit > 0 && raw.length === resolvedLimit,
+        per_page: resolvedPerPage,
+        hasMore: resolvedPerPage > 0 && raw.length === resolvedPerPage,
       };
     }
 
     const pagination = raw?.pagination ?? raw?.meta?.pagination ?? raw?.meta ?? {};
     const scenarios = raw?.scenarios ?? raw?.data ?? raw?.items ?? [];
     const resolvedPage = Number(raw?.page ?? pagination.page ?? pagination.currentPage ?? pagination.current_page ?? requestedPage);
-    const resolvedLimit = Number(raw?.limit ?? pagination.limit ?? pagination.perPage ?? pagination.per_page ?? requestedLimit ?? scenarios.length);
+    const resolvedPerPage = Number(raw?.per_page ?? pagination.per_page ?? pagination.perPage ?? pagination.limit ?? requestedPerPage ?? scenarios.length);
     const total = raw?.total ?? raw?.count ?? pagination.total ?? pagination.totalItems ?? pagination.total_items;
     const totalPages = raw?.totalPages ?? raw?.total_pages ?? pagination.totalPages ?? pagination.total_pages;
     const hasMore = raw?.hasMore ?? raw?.has_more ?? pagination.hasMore ?? pagination.has_more ?? (
@@ -116,7 +116,7 @@ export const testScenarioApi = {
       scenarios,
       total: total !== undefined ? Number(total) : undefined,
       page: resolvedPage,
-      limit: resolvedLimit,
+      per_page: resolvedPerPage,
       hasMore,
     };
   }, 
