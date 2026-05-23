@@ -17,12 +17,12 @@ import { formatDistanceToNow } from 'date-fns';
 
 // Map for pin colors
 const PIN_COLOR_MAP: Record<PinColor, string> = {
-  default: 'bg-gray-400',
+  default: 'bg-muted-foreground/40',
   red: 'bg-red-500',
   orange: 'bg-orange-500',
   yellow: 'bg-yellow-500',
   green: 'bg-green-500',
-  blue: 'bg-zinc-500',
+  blue: 'bg-blue-500',
   purple: 'bg-purple-500',
 };
 
@@ -69,7 +69,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
     <div
       onClick={() => onClick(issue)}
       className={cn(
-        'group relative p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-gray-200 hover:scale-[1.003] transition-all duration-200 cursor-pointer overflow-hidden w-full',
+        'group relative p-4 bg-card border border-border rounded-xl shadow-sm hover:shadow-md hover:border-border/80 hover:scale-[1.003] transition-all duration-200 cursor-pointer overflow-hidden w-full',
         className
       )}
     >
@@ -87,17 +87,17 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
         {/* Left Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] font-mono tabular-nums text-gray-400">
+            <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
               #{issue.iid}
             </span>
-            <h4 className="text-sm font-medium text-gray-900 truncate pr-6 leading-snug">
+            <h4 className="text-sm font-medium text-foreground truncate pr-6 leading-snug">
               {issue.title}
             </h4>
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
             {issue.project_name && (
-              <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md font-medium">
+              <span className="text-[11px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md font-medium">
                 {issue.project_name}
               </span>
             )}
@@ -119,7 +119,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               : issue.labels?.slice(0, 3).map((label, index) => (
                   <span
                     key={index}
-                    className="text-[11px] px-2 py-0.5 rounded-md border bg-gray-50 border-gray-200 text-gray-600 font-medium"
+                    className="text-[11px] px-2 py-0.5 rounded-md border bg-muted/50 border-border text-muted-foreground font-medium"
                   >
                     {label}
                   </span>
@@ -129,7 +129,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               <span
                 className={cn(
                   'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-medium',
-                  'bg-zinc-50 text-zinc-700 border border-zinc-100'
+                  'bg-muted text-muted-foreground border border-border'
                 )}
               >
                 <ClipboardList className="w-3 h-3" />
@@ -157,9 +157,9 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
                 src={author.avatar_url}
                 alt={author.name}
                 title={`Opened by ${author.name}`}
-                className="w-5 h-5 rounded-full border border-gray-100 ring-1 ring-gray-100"
+                className="w-5 h-5 rounded-full border border-border ring-1 ring-border"
               />
-              <span className="text-[11px] text-gray-500 truncate max-w-[150px]">
+              <span className="text-[11px] text-muted-foreground truncate max-w-[150px]">
                 {author.name}
               </span>
             </div>
@@ -173,14 +173,14 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
               src={assignee.avatar_url}
               alt={assignee.name}
               title={`Assigned to ${assignee.name}`}
-              className="w-7 h-7 rounded-full border border-gray-100 ring-1 ring-gray-100 shadow-sm"
+              className="w-7 h-7 rounded-full border border-border ring-1 ring-border shadow-sm"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full border border-dashed border-gray-300 flex items-center justify-center bg-white">
-              <span className="text-[10px] text-gray-400">?</span>
+            <div className="w-7 h-7 rounded-full border border-dashed border-border/60 flex items-center justify-center bg-card">
+              <span className="text-[10px] text-muted-foreground">?</span>
             </div>
           )}
-          <span className="text-[11px] text-gray-400 whitespace-nowrap tabular-nums">
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap tabular-nums">
             {formatDistanceToNow(new Date(issue.updated_at), {
               addSuffix: true,
             })}
@@ -190,9 +190,9 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
 
       {/* Note view */}
       {showPinnedStyles && issue.pinnedMeta?.note && (
-        <div className="mt-3 flex gap-2 items-start bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-          <MessageSquare className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-gray-600 italic line-clamp-2 leading-relaxed">
+        <div className="mt-3 flex gap-2 items-start bg-muted/50 p-2.5 rounded-lg border border-border">
+          <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-foreground/70 italic line-clamp-2 leading-relaxed">
             {issue.pinnedMeta.note}
           </p>
         </div>
@@ -200,7 +200,7 @@ export const BaseIssueCard: React.FC<BaseIssueCardProps> = ({
 
       {/* Action Overlay */}
       {actions && (
-        <div className="absolute right-3 top-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-sm rounded-lg p-1 shadow-md border border-gray-100/80">
+        <div className="absolute right-3 top-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-background/95 backdrop-blur-sm rounded-lg p-1 shadow-md border border-border/80">
           {actions}
         </div>
       )}
@@ -260,7 +260,7 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
                 e.stopPropagation();
                 onSetPinColor?.(issue);
               }}
-              className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
               title="Set Pin Color"
             >
               <Palette className="w-3.5 h-3.5" />
@@ -270,7 +270,7 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
                 e.stopPropagation();
                 onAddNote?.(issue);
               }}
-              className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
               title="Add/Edit Note"
             >
               <MessageSquare className="w-3.5 h-3.5" />

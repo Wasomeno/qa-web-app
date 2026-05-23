@@ -72,11 +72,11 @@ export const IssueList: React.FC<IssueListProps> = ({
   if (issues.length === 0) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center py-16 text-center">
-        <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
-          <FolderOpen className="w-9 h-9 text-gray-300" />
+        <div className="w-20 h-20 bg-muted/50 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+          <FolderOpen className="w-9 h-9 text-muted-foreground/40" />
         </div>
-        <h3 className="text-gray-900 font-semibold text-lg">No issues found</h3>
-        <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
+        <h3 className="text-foreground font-semibold text-lg">No issues found</h3>
+        <p className="text-sm text-muted-foreground mt-2 max-w-xs leading-relaxed">
           Try adjusting your filters or search terms to find what you're looking
           for.
         </p>

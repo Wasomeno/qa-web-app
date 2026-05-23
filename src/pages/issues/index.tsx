@@ -133,18 +133,18 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
   }
 
   return (
-    <div className="flex flex-1 w-full flex-col overflow-hidden bg-[#F9FAFB]">
+    <div className="flex flex-1 w-full flex-col overflow-hidden bg-background">
       {/* Header & Filters */}
       <div
-        className={`flex-none space-y-5 px-4 md:px-8 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10 ${hideHeader ? "pt-4 pb-4" : "pt-6 md:pt-10 pb-6"}`}
+        className={`flex-none space-y-5 px-4 md:px-8 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10 ${hideHeader ? "pt-4 pb-4" : "pt-6 md:pt-10 pb-6"}`}
       >
         {!hideHeader && (
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
                 {title}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">{description}</p>
+              <p className="text-sm text-muted-foreground mt-1">{description}</p>
             </div>
           </div>
         )}

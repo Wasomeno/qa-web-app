@@ -49,7 +49,7 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
       <div className="relative w-full">
         <Search
           aria-hidden="true"
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10"
         />
         <Input
           type="text"
@@ -57,7 +57,7 @@ export const IssueFilterBar: React.FC<IssueFilterBarProps> = ({
           placeholder="Search issues by title, ID, or description…"
           value={filters.search}
           onChange={(e) => onFilterChange("search", e.target.value)}
-          className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-2xl text-base placeholder:text-gray-400 focus:ring-2 focus:ring-zinc-500/15 focus:border-zinc-500 transition-all shadow-sm"
+          className="pl-12 h-12 bg-muted/50 border-border rounded-2xl text-base placeholder:text-muted-foreground focus:ring-2 focus:ring-foreground/15 focus:border-foreground transition-all shadow-sm"
         />
       </div>
 
