@@ -323,9 +323,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="absolute bottom-[calc(100%+12px)] left-0 w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-neutral-200 shadow-xl rounded-xl overflow-hidden z-50"
+              className="absolute bottom-[calc(100%+12px)] left-0 w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border shadow-xl rounded-xl overflow-hidden z-50"
             >
-              <div className="px-3 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider border-b border-neutral-100 bg-neutral-50/50">
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/50">
                 Commands
               </div>
               <div className="p-1.5 max-h-[300px] overflow-y-auto space-y-0.5">
@@ -333,14 +333,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   <button
                     key={cmd.id}
                     onClick={() => applyCommand(cmd.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-colors hover:bg-neutral-50 group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-colors hover:bg-accent group"
                   >
-                    <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-md border transition-colors bg-neutral-50 border-transparent text-neutral-500 group-hover:bg-white group-hover:border-neutral-200 group-hover:shadow-sm">
+                    <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-md border transition-colors bg-muted/50 border-transparent text-muted-foreground group-hover:bg-card group-hover:border-border group-hover:shadow-sm">
                       <cmd.icon className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-sm font-medium text-neutral-900 truncate">/{cmd.id}</span>
-                      <span className="text-xs text-neutral-500 truncate">{cmd.description}</span>
+                      <span className="text-sm font-medium text-foreground truncate">/{cmd.id}</span>
+                      <span className="text-xs text-muted-foreground truncate">{cmd.description}</span>
                     </div>
                   </button>
                 ))}
@@ -354,11 +354,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         className={cn(
           "relative flex flex-col w-full transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] border overflow-hidden",
           isActive
-            ? "bg-white border-neutral-300 shadow-[0_4px_24px_rgba(0,0,0,0.06)] rounded-[24px]"
-            : "bg-white border-neutral-200 shadow-sm rounded-[32px] hover:border-neutral-300 hover:shadow-md"
+            ? "bg-card border-border shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] rounded-[24px]"
+            : "bg-card border-border/70 shadow-sm rounded-[32px] hover:border-border hover:shadow-md"
         )}
       >
-        <div className="flex items-end gap-1.5 px-3 py-2 z-10 relative bg-white">
+        <div className="flex items-end gap-1.5 px-3 py-2 z-10 relative bg-card">
           <div className="flex items-center pb-0.5 shrink-0">
             <TooltipProvider>
               <Tooltip>
@@ -370,7 +370,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     onClick={handlePlusClick}
                     className={cn(
                       "h-9 w-9 rounded-full transition-colors shrink-0",
-                      isActive ? "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100" : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200/50"
+                      isActive ? "text-muted-foreground hover:text-foreground hover:bg-accent" : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-accent/50"
                     )}
                   >
                     <Plus className="h-5 w-5" />
@@ -392,7 +392,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onBlur={handleBlur}
             placeholder={placeholder}
             disabled={disabled || isLoading}
-            className="flex-1 min-h-[36px] max-h-[200px] py-2 px-1 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 shadow-none text-neutral-900 placeholder:text-neutral-500 text-[15px] leading-relaxed scrollbar-thin scrollbar-thumb-neutral-200 hover:scrollbar-thumb-neutral-300"
+            className="flex-1 min-h-[36px] max-h-[200px] py-2 px-1 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 shadow-none text-foreground placeholder:text-muted-foreground text-[15px] leading-relaxed scrollbar-thin scrollbar-thumb-neutral-200 hover:scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700 dark:hover:scrollbar-thumb-neutral-600"
             rows={1}
           />
 
@@ -404,8 +404,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 className={cn(
                   "h-9 w-9 rounded-full transition-all duration-200 shrink-0",
                   hasContent
-                    ? "bg-neutral-900 text-white hover:bg-neutral-800 shadow-sm"
-                    : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                    ? "bg-foreground text-background hover:bg-foreground/90 shadow-sm"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
                 )}
              >
                 {isLoading ? (
@@ -425,13 +425,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               animate={{ height: 32, opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-              className="flex items-center justify-between px-4 text-[11px] font-medium text-neutral-400 overflow-hidden bg-white"
+              className="flex items-center justify-between px-4 text-[11px] font-medium text-muted-foreground overflow-hidden bg-card"
             >
               <div className="flex gap-4 pb-2.5">
-                 <span className="flex items-center cursor-pointer hover:text-neutral-600 transition-colors">
+                 <span className="flex items-center cursor-pointer hover:text-foreground transition-colors">
                     / for commands
                  </span>
-                 <span className="flex items-center cursor-pointer hover:text-neutral-600 transition-colors">
+                 <span className="flex items-center cursor-pointer hover:text-foreground transition-colors">
                     <Paperclip className="h-3 w-3 mr-1" />
                     to attach
                  </span>

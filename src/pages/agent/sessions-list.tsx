@@ -31,7 +31,7 @@ import { toast } from 'sonner';
 
 const SessionSkeleton: React.FC = () => {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-white">
+    <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-card">
       <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -119,10 +119,10 @@ export const SessionsListPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full w-full bg-background relative">
       {/* Header */}
-      <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+      <div className="flex-none space-y-5 px-8 pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Chat Sessions</h1>
-          <p className="text-sm text-gray-500 mt-1.5">Review your chat history</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Chat Sessions</h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Review your chat history</p>
         </div>
       </div>
 
@@ -195,7 +195,7 @@ export const SessionsListPage: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600 text-gray-400"
+                                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
                                 onClick={e => handleDeleteClick(e, session)}
                               >
                                 <Trash2 className="h-4 w-4" />

@@ -399,14 +399,14 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="flex flex-col items-center gap-4 px-6 py-8 bg-white rounded-2xl shadow-xl border border-gray-100"
+          className="flex flex-col items-center gap-4 px-6 py-8 bg-card rounded-2xl shadow-xl border border-border"
         >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
             <Loader2 className="h-10 w-10 animate-spin text-primary relative" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-900">Loading chat session</p>
+            <p className="text-sm font-medium text-foreground">Loading chat session</p>
             <p className="text-xs text-muted-foreground mt-1">Please wait...</p>
           </div>
         </motion.div>
