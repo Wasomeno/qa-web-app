@@ -13,6 +13,7 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,9 +50,52 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
   deleteError = null,
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
-  const isGenerating = scenario.status === 'generating';
-  const isReady = scenario.status === 'ready';
-  const isFailed = scenario.status === 'failed';
+
+  // Derive new status fields with backward-compatible fallbacks
+  const processingStatus = scenario.processingStatus ?? 'idle';
+  const automationStatus = scenario.automationStatus ?? 'not_generated';
+  const stats = scenario.automationStats ?? scenario.stats;
+
+  const isGenerating = processingStatus === 'generating';
+  const hasGenerationFailure = processingStatus === 'generation_failed';
+  const isRunning = automationStatus === 'running';
+  const hasRunFailure = automationStatus === 'failed';
+
+  // Generate badge based on priority order from the guide
+  function getScenarioBadge() {
+    if (processingStatus === 'generating') {
+      return { label: 'Generating', tone: 'neutral' as const };
+    }
+    if (automationStatus === 'running') {
+      return { label: 'Running tests', tone: 'blue' as const };
+    }
+    if (processingStatus === 'generation_failed') {
+      return { label: 'Generation failed', tone: 'red' as const };
+    }
+    if (automationStatus === 'failed') {
+      return { label: 'Run failed', tone: 'red' as const };
+    }
+    if (automationStatus === 'passed') {
+      return { label: 'Passed', tone: 'green' as const };
+    }
+    if (automationStatus === 'partial') {
+      return { label: 'Partially automated', tone: 'amber' as const };
+    }
+    if (automationStatus === 'idle') {
+      return { label: 'Automated', tone: 'zinc' as const };
+    }
+    return { label: 'Not generated', tone: 'zinc' as const };
+  }
+
+  const badge = getScenarioBadge();
+  const badgeClasses: Record<string, string> = {
+    neutral: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
+    blue: 'bg-blue-100 text-blue-700 hover:bg-blue-100',
+    red: 'bg-red-100 text-red-700 hover:bg-red-100',
+    green: 'bg-green-100 text-green-700 hover:bg-green-100',
+    amber: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+    zinc: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
+  };
 
   // Close confirmation dialog when deletion starts
   React.useEffect(() => {
@@ -60,10 +104,12 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
     }
   }, [isDeleting]);
 
-  const totalTestCases = scenario.stats?.totalTestCases || (scenario.sections || []).reduce(
+  const totalTestCases = stats?.totalTestCases ?? scenario.stats?.totalTestCases ?? (scenario.sections || []).reduce(
     (acc, section) => acc + (section.testCases?.length || 0),
     0
   );
+  const generatedCount = stats?.generatedCount ?? stats?.automatedCount ?? 0;
+  const coveragePercent = stats?.coveragePercent ?? 0;
 
   return (
     <div
@@ -234,7 +280,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
         <div className="flex items-center gap-4 text-sm text-zinc-600">
           <div className="flex items-center gap-1.5" title="Total Sections">
             <FileText className="w-4 h-4" />
-            <span>{scenario.stats?.totalSections || (scenario.sections || []).length} sections</span>
+            <span>{stats?.totalSections ?? (scenario.sections || []).length} sections</span>
           </div>
           <div className="flex items-center gap-1.5" title="Total Test Cases">
             <Info className="w-4 h-4" />
@@ -245,9 +291,21 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
             title="Automated Test Cases"
           >
             <Settings className="w-4 h-4" />
-            <span>{scenario.stats?.automatedCount || 0} automated</span>
+            <span>{generatedCount} automated</span>
           </div>
         </div>
+
+        {/* Stats badges row */}
+        {(stats?.generatingCount || stats?.runningCount || stats?.passCount || stats?.failCount || stats?.generationFailedCount) ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {stats?.generatingCount ? <Badge variant="secondary" className="text-[10px] bg-zinc-100 text-zinc-700">{stats.generatingCount} generating</Badge> : null}
+            {stats?.runningCount ? <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700">{stats.runningCount} running</Badge> : null}
+            {stats?.coveragePercent ? <Badge variant="secondary" className="text-[10px] bg-zinc-100 text-zinc-600">{stats.coveragePercent}% coverage</Badge> : null}
+            {stats?.passCount ? <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700">{stats.passCount} passed</Badge> : null}
+            {stats?.failCount ? <Badge variant="destructive" className="text-[10px]">{stats.failCount} failed</Badge> : null}
+            {stats?.generationFailedCount ? <Badge variant="destructive" className="text-[10px]">{stats.generationFailedCount} gen. failed</Badge> : null}
+          </div>
+        ) : null}
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2 border-t mt-auto">
@@ -255,14 +313,12 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
             variant="secondary"
             className={cn(
               'capitalize font-medium text-xs',
-              isGenerating && 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
-              isReady && 'bg-green-100 text-green-700 hover:bg-green-100',
-              isFailed && 'bg-red-100 text-red-700 hover:bg-red-100',
-              scenario.status === 'uploaded' &&
-                'bg-zinc-100 text-zinc-700 hover:bg-zinc-100'
+              badgeClasses[badge.tone]
             )}
           >
-            {scenario.status}
+            {isGenerating && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+            {isRunning && <RefreshCw className="w-3 h-3 mr-1 animate-spin" />}
+            {badge.label}
           </Badge>
 
           <div
@@ -275,7 +331,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           </div>
         </div>
 
-        {isFailed && scenario.error && (
+        {(hasGenerationFailure || hasRunFailure) && scenario.error && (
           <div className="text-xs text-red-500 bg-red-50 p-2 rounded-md">
             {scenario.error}
           </div>

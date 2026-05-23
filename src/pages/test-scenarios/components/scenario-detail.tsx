@@ -75,7 +75,8 @@ import {
   TestCase,
   TestStep,
   Priority,
-  TestCaseStatus,
+  ProcessingStatus,
+  TestCaseAutomationStatus,
   AutomationStatus,
   AutomationCategory,
   ManualTestStatus,
@@ -331,7 +332,7 @@ const PriorityBadge: React.FC<{
   priority: Priority;
   onChange?: (p: Priority) => void;
 }> = ({ priority, onChange }) => {
-  const meta = PRIORITY_META[priority];
+  const meta = PRIORITY_META[priority] ?? { label: priority, classes: 'bg-zinc-50 text-zinc-700 border-zinc-100' };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -389,80 +390,41 @@ const PriorityBadge: React.FC<{
 };
 
 // ─────────────────────────────────────────────
-// Status Badge + Selector
+// Test Case Status Display (processing + automation)
 // ─────────────────────────────────────────────
-const STATUS_META: Record<TestCaseStatus, { label: string; classes: string }> =
-  {
-    draft: {
-      label: "Draft",
-      classes: "bg-slate-50 text-slate-600 border-slate-200",
-    },
-    ready: {
-      label: "Ready",
-      classes: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    },
-    blocked: {
-      label: "Blocked",
-      classes: "bg-red-50 text-red-700 border-red-100",
-    },
-    deprecated: {
-      label: "Deprecated",
-      classes: "bg-zinc-100 text-zinc-500 border-zinc-200 line-through",
-    },
-  };
+function getTestCaseDisplayStatus(testCase: TestCase): string {
+  if (testCase.processingStatus === 'generating') return 'Generating';
+  if (testCase.processingStatus === 'generation_failed') return 'Generation failed';
+  switch (testCase.automationStatus) {
+    case 'running': return 'Running';
+    case 'failed': return 'Failed';
+    case 'passed': return 'Passed';
+    case 'idle': return 'Generated';
+    default: return 'Not generated';
+  }
+}
 
-const StatusBadge: React.FC<{
-  status: TestCaseStatus;
-  onChange?: (s: TestCaseStatus) => void;
-}> = ({ status, onChange }) => {
-  const meta = STATUS_META[status];
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+const TEST_CASE_STATUS_CLASSES: Record<string, string> = {
+  Generating: 'bg-amber-50 text-amber-700 border-amber-100',
+  'Generation failed': 'bg-red-50 text-red-700 border-red-100',
+  Running: 'bg-blue-50 text-blue-700 border-blue-100',
+  Failed: 'bg-red-50 text-red-700 border-red-100',
+  Passed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  Generated: 'bg-zinc-50 text-zinc-500 border-zinc-200',
+  'Not generated': 'bg-zinc-50 text-zinc-400 border-zinc-200',
+};
 
-  React.useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
+const TestCaseStatusBadge: React.FC<{ testCase: TestCase }> = ({ testCase }) => {
+  const label = getTestCaseDisplayStatus(testCase);
+  const classes = TEST_CASE_STATUS_CLASSES[label] ?? 'bg-zinc-50 text-zinc-400 border-zinc-200';
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => onChange && setOpen((v) => !v)}
-        className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider border transition-opacity",
-          meta.classes,
-          onChange ? "cursor-pointer hover:opacity-80" : "cursor-default",
-        )}
-      >
-        {meta.label}
-      </button>
-      {open && onChange && (
-        <div className="absolute z-50 mt-1 w-28 bg-white border border-zinc-200 rounded-lg shadow-lg py-1">
-          {(Object.keys(STATUS_META) as TestCaseStatus[]).map(
-            (s: TestCaseStatus) => (
-              <button
-                key={s}
-                onClick={() => {
-                  onChange(s);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 transition-colors flex items-center justify-between",
-                  s === status && "bg-zinc-50",
-                )}
-              >
-                {STATUS_META[s].label}
-                {s === status && <Check className="w-3 h-3 text-zinc-600" />}
-              </button>
-            ),
-          )}
-        </div>
-      )}
-    </div>
+    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider border", classes)}>
+      {testCase.processingStatus === 'generating' && <Loader2 className="w-3 h-3 animate-spin" />}
+      {testCase.automationStatus === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+      {testCase.automationStatus === 'passed' && <CheckCircle2 className="w-3 h-3" />}
+      {testCase.automationStatus === 'failed' && <XCircle className="w-3 h-3" />}
+      {label}
+    </span>
   );
 };
 
@@ -509,7 +471,7 @@ const AutomationBadge: React.FC<{
     },
   };
 
-  const m = meta[test.status];
+  const m = meta[test.status] ?? { icon: <Clock className="w-3 h-3" />, classes: 'bg-zinc-50 text-zinc-500 border-zinc-200' };
   const timeAgo = test.lastRunAt
     ? `${Math.max(1, Math.round((Date.now() - new Date(test.lastRunAt).getTime()) / 60000))}m`
     : null;
@@ -568,9 +530,9 @@ const CATEGORY_META: Record<
 };
 
 function inferAutomationCategory(testCase: TestCase): AutomationCategory {
-  return (
-    testCase.automationType || testCase.automationTest?.category || "manual"
-  );
+  const cat = testCase.automationType || testCase.automationTest?.category;
+  if (cat === 'api' || cat === 'e2e' || cat === 'manual') return cat;
+  return 'manual';
 }
 
 type AutomationCategoryUpdateResult = Awaited<
@@ -619,10 +581,10 @@ function withAutomationCategory(
 
 function hasPendingAutomationGeneration(scenario: TestScenario): boolean {
   return Boolean(
-    scenario.status === "generating" ||
+    scenario.processingStatus === "generating" ||
     scenario.sections?.some((section) =>
       section.testCases.some(
-        (testCase) => testCase.automationTest?.status === "running",
+        (testCase) => testCase.processingStatus === "generating" || testCase.automationTest?.status === "running",
       ),
     ),
   );
@@ -634,11 +596,11 @@ function getAutomationGenerationPollKey(scenario: TestScenario): string {
       ?.flatMap((section) =>
         section.testCases.map(
           (testCase) =>
-            `${testCase.id}:${testCase.automationTest?.status || "none"}`,
+            `${testCase.id}:${testCase.processingStatus || "idle"}:${testCase.automationTest?.status || "none"}`,
         ),
       )
       .join("|") || "";
-  return `${scenario.status}:${statuses}`;
+  return `${scenario.processingStatus || "idle"}:${statuses}`;
 }
 
 const AutomationCategorySelect: React.FC<{
@@ -646,7 +608,7 @@ const AutomationCategorySelect: React.FC<{
   onChange: (category: AutomationCategory) => void;
   disabled?: boolean;
 }> = ({ value, onChange, disabled = false }) => {
-  const meta = CATEGORY_META[value];
+  const meta = CATEGORY_META[value] ?? { label: value, icon: null, description: '', classes: 'bg-zinc-50 text-zinc-700 border-zinc-200' };
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <Select
@@ -1520,7 +1482,7 @@ const TestCaseDetailModal: React.FC<{
               </span>
             ))}
             <PriorityBadge priority={testCase.priority} />
-            <StatusBadge status={testCase.status} />
+            <TestCaseStatusBadge testCase={testCase} />
             {at && <AutomationBadge test={at} />}
           </div>
 
@@ -2214,7 +2176,7 @@ const SortableTestCase: React.FC<{
             </span>
           ))}
           <PriorityBadge priority={testCase.priority} />
-          <StatusBadge status={testCase.status} />
+          <TestCaseStatusBadge testCase={testCase} />
           <AutomationCategorySelect
             value={selectedCategory}
             onChange={handleCategoryChange}
@@ -2336,10 +2298,7 @@ const SortableTestCase: React.FC<{
                       priority={testCase.priority}
                       onChange={(p) => onUpdate({ ...testCase, priority: p })}
                     />
-                    <StatusBadge
-                      status={testCase.status}
-                      onChange={(s) => onUpdate({ ...testCase, status: s })}
-                    />
+                    <TestCaseStatusBadge testCase={testCase} />
                     <AutomationCategorySelect
                       value={selectedCategory}
                       onChange={handleCategoryChange}
@@ -2538,9 +2497,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<TestCaseStatus | "all">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [runState, setRunState] = useState<TestRunState | null>(null);
@@ -2630,7 +2587,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   const filteredTestCases = useMemo(() => {
     let cases = [...allTestCases];
     if (statusFilter !== "all") {
-      cases = cases.filter((tc) => tc.status === statusFilter);
+      cases = cases.filter((tc) => {
+        const tcStatus = tc.processingStatus !== 'idle' ? tc.processingStatus : tc.automationStatus || 'not_generated';
+        return tcStatus === statusFilter;
+      });
     }
     if (sectionFilter !== "all") {
       cases = cases.filter((tc) => (tc as any)._sectionId === sectionFilter);
@@ -2798,10 +2758,15 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       (a, s) => a + s.testCases.reduce((b, tc) => b + tc.steps.length, 0),
       0,
     ),
-    automatedCount: 0,
+    generatedCount: 0,
+    notGeneratedCount: 0,
+    generatingCount: 0,
+    generationFailedCount: 0,
+    idleCount: 0,
+    runningCount: 0,
     passCount: 0,
     failCount: 0,
-    draftCount: 0,
+    coveragePercent: 0,
   };
 
   return (
@@ -2956,7 +2921,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             <Select
               value={statusFilter}
               onValueChange={(v) => {
-                setStatusFilter(v as TestCaseStatus | "all");
+                setStatusFilter(v);
                 setPage(1);
               }}
             >
@@ -2965,10 +2930,13 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="ready">Ready</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="blocked">Blocked</SelectItem>
-                <SelectItem value="deprecated">Deprecated</SelectItem>
+                <SelectItem value="generating">Generating</SelectItem>
+                <SelectItem value="generation_failed">Generation failed</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="idle">Generated</SelectItem>
+                <SelectItem value="not_generated">Not generated</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -3033,11 +3001,11 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                             "text-zinc-500 bg-zinc-100",
                         )}
                       >
-                        {PRIORITY_META[tc.priority].label}
+                        {(PRIORITY_META[tc.priority]?.label) ?? tc.priority}
                       </span>
                       {(() => {
                         const cat = inferAutomationCategory(tc);
-                        const catMeta = CATEGORY_META[cat];
+                        const catMeta = CATEGORY_META[cat] ?? { label: cat, icon: null, description: '', classes: '' };
                         return (
                           <span
                             className={cn(
@@ -3103,7 +3071,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   <span className="text-[11px] font-mono px-2 py-1 bg-zinc-50 text-zinc-600 rounded border border-zinc-200">
                     {selectedTestCase.code}
                   </span>
-                  <StatusBadge status={selectedTestCase.status} />
+                  <TestCaseStatusBadge testCase={selectedTestCase} />
                   <PriorityBadge priority={selectedTestCase.priority} />
                   <AutomationCategorySelect
                     value={inferAutomationCategory(selectedTestCase)}

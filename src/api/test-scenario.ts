@@ -66,6 +66,7 @@ export const testScenarioApi = {
     search?: string,
     page?: number,
     per_page?: number,
+    extraParams?: Record<string, string>,
   ): Promise<{
     scenarios: TestScenario[];
     total?: number;
@@ -80,6 +81,11 @@ export const testScenarioApi = {
     if (search) params.set("search", search);
     if (page !== undefined) params.set("page", String(page));
     if (per_page !== undefined) params.set("per_page", String(per_page));
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([k, v]) => {
+        if (v) params.set(k, v);
+      });
+    }
     const qs = params.toString();
     if (qs) url += `?${qs}`;
 

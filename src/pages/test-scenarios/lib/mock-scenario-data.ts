@@ -1,9 +1,13 @@
 import { RecordingStep, TestStepResult } from '@/types/recording';
+import type {
+  Priority,
+  ProcessingStatus,
+  TestCaseAutomationStatus,
+  ScenarioAutomationStatus,
+  AutomationStatus,
+} from '@/types/test-scenario';
 
-export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
-export type ScenarioStatus = 'draft' | 'ready' | 'generating' | 'failed';
-export type AutomationStatus = 'idle' | 'running' | 'pass' | 'fail';
+export type { Priority, ProcessingStatus, TestCaseAutomationStatus, ScenarioAutomationStatus, AutomationStatus };
 
 export interface AutomationTest {
   id: string;
@@ -39,7 +43,8 @@ export interface TestCase {
   tags: string[];
   priority: Priority;
   type: string;
-  status: TestCaseStatus;
+  processingStatus?: ProcessingStatus;
+  automationStatus?: TestCaseAutomationStatus;
   automationTest?: AutomationTest;
   note?: string;
   createdAt: string;
@@ -58,10 +63,15 @@ export interface ScenarioStats {
   totalSections: number;
   totalTestCases: number;
   totalSteps: number;
-  automatedCount: number;
+  generatedCount: number;
+  notGeneratedCount: number;
+  generatingCount: number;
+  generationFailedCount: number;
+  idleCount: number;
+  runningCount: number;
   passCount: number;
   failCount: number;
-  draftCount: number;
+  coveragePercent: number;
 }
 
 export interface TestScenarioV2 {
@@ -71,9 +81,11 @@ export interface TestScenarioV2 {
   sections: TestSection[];
   projectId?: string;
   projectName?: string;
-  status: ScenarioStatus;
+  processingStatus?: ProcessingStatus;
+  automationStatus?: ScenarioAutomationStatus;
   error?: string;
   stats?: ScenarioStats;
+  automationStats?: ScenarioStats;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
@@ -83,14 +95,29 @@ function autoStats(sections: TestSection[]): ScenarioStats {
   const allCases = sections.flatMap(s => s.testCases);
   const allSteps = allCases.flatMap(tc => tc.steps);
   const automated = allCases.filter(tc => tc.automationTest);
+  const generated = allCases.filter(tc => tc.automationTest);
+  const notGenerated = allCases.filter(tc => !tc.automationTest);
+  const generating = allCases.filter(tc => tc.processingStatus === 'generating');
+  const generationFailed = allCases.filter(tc => tc.processingStatus === 'generation_failed');
+  const idle = allCases.filter(tc =>
+    tc.automationTest && tc.automationTest.status === 'idle' && !tc.processingStatus
+  );
+  const running = allCases.filter(tc => tc.automationTest?.status === 'running');
+  const pass = allCases.filter(tc => tc.automationTest?.status === 'pass');
+  const fail = allCases.filter(tc => tc.automationTest?.status === 'fail');
   return {
     totalSections: sections.length,
     totalTestCases: allCases.length,
     totalSteps: allSteps.length,
-    automatedCount: automated.length,
-    passCount: automated.filter(tc => tc.automationTest?.status === 'pass').length,
-    failCount: automated.filter(tc => tc.automationTest?.status === 'fail').length,
-    draftCount: allCases.filter(tc => tc.status === 'draft').length,
+    generatedCount: generated.length,
+    notGeneratedCount: notGenerated.length,
+    generatingCount: generating.length,
+    generationFailedCount: generationFailed.length,
+    idleCount: idle.length,
+    runningCount: running.length,
+    passCount: pass.length,
+    failCount: fail.length,
+    coveragePercent: allCases.length > 0 ? Math.floor((generated.length / allCases.length) * 100) : 0,
   };
 }
 
@@ -103,7 +130,8 @@ const scenarioEcommerce: TestScenarioV2 = {
     'Comprehensive QA coverage for the customer-facing e-commerce web application. Covers authentication, catalog browsing, cart management, checkout flows, and post-order operations.',
   projectId: '42',
   projectName: 'E-Commerce Web',
-  status: 'ready',
+  processingStatus: 'idle',
+  automationStatus: 'partial',
   createdAt: '2025-03-15T08:00:00Z',
   updatedAt: now,
   createdBy: 'Kevin Ananda',
@@ -121,7 +149,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           title: 'Login with valid credentials',
           description: 'Verify that registered users can successfully log in using valid username and password.',
           preCondition: 'User account "testuser@example.com" exists and is active.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['smoke', 'login', 'regression'],
@@ -149,7 +178,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           title: 'Login with invalid password',
           description: 'Verify that login fails gracefully when the password is incorrect.',
           preCondition: 'User account exists.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'negative',
           tags: ['smoke', 'login', 'security'],
@@ -175,7 +205,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-003',
           title: 'Password reset flow',
           description: 'Verify users can request a password reset and receive an email.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'failed',
           priority: 'medium',
           type: 'positive',
           tags: ['login', 'email'],
@@ -204,7 +235,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-004',
           title: 'Session expiry after 30 minutes',
           description: 'Verify inactive sessions are terminated after the configured timeout.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['security', 'session'],
@@ -222,7 +254,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-005',
           title: 'Concurrent login from two devices',
           description: 'Verify session handling when the same user logs in from two browsers.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'low',
           type: 'positive',
           tags: ['security', 'session'],
@@ -247,7 +280,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-006',
           title: 'Registration with existing email',
           description: 'Verify duplicate email registration is rejected.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'high',
           type: 'negative',
           tags: ['registration', 'validation'],
@@ -265,7 +299,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-007',
           title: 'Registration password strength validation',
           description: 'Verify weak passwords are rejected during registration.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'negative',
           tags: ['registration', 'security'],
@@ -283,7 +318,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-008',
           title: 'Logout functionality',
           description: 'Verify logout clears session and redirects to login.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['smoke', 'login'],
@@ -317,7 +353,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-009',
           title: 'Browse product category listing',
           description: 'Verify category pages load products with correct pagination.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['catalog', 'smoke'],
@@ -342,7 +379,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-010',
           title: 'Search for product by keyword',
           description: 'Verify search returns relevant results.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['catalog', 'search'],
@@ -368,7 +406,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-011',
           title: 'Apply multiple filters simultaneously',
           description: 'Verify combining brand, price, and rating filters works correctly.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['catalog', 'filter'],
@@ -388,7 +427,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-012',
           title: 'Product detail page loads all variants',
           description: 'Verify color and size variants are displayed correctly.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['catalog', 'product'],
@@ -407,7 +447,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-013',
           title: 'Out of stock product behavior',
           description: 'Verify out-of-stock products show correct messaging.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'medium',
           type: 'negative',
           tags: ['catalog', 'inventory'],
@@ -433,7 +474,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-014',
           title: 'Sort products by price low to high',
           description: 'Verify sorting functionality works correctly.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'low',
           type: 'positive',
           tags: ['catalog', 'sorting'],
@@ -451,7 +493,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-015',
           title: 'Quick view modal',
           description: 'Verify quick view opens a modal with product summary.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'low',
           type: 'positive',
           tags: ['catalog', 'ui'],
@@ -469,7 +512,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-016',
           title: 'Compare products feature',
           description: 'Verify product comparison table works.',
-          status: 'blocked',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'low',
           type: 'positive',
           tags: ['catalog', 'feature'],
@@ -495,7 +539,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-017',
           title: 'Add single item to cart',
           description: 'Verify a product can be added to the cart.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'critical',
           type: 'positive',
           tags: ['cart', 'smoke', 'checkout'],
@@ -521,7 +566,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-018',
           title: 'Update item quantity in cart',
           description: 'Verify quantity can be changed and totals update.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['cart'],
@@ -547,7 +593,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-019',
           title: 'Remove item from cart',
           description: 'Verify items can be removed and cart updates correctly.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['cart'],
@@ -573,7 +620,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-020',
           title: 'Add out-of-stock item to cart',
           description: 'Verify out-of-stock items cannot be added.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'negative',
           tags: ['cart', 'inventory'],
@@ -591,7 +639,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-021',
           title: 'Cart persists across sessions',
           description: 'Verify cart items survive page refresh and re-login.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['cart', 'session'],
@@ -609,7 +658,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-022',
           title: 'Apply coupon code',
           description: 'Verify valid coupon codes apply discounts correctly.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'failed',
           priority: 'high',
           type: 'positive',
           tags: ['cart', 'promo'],
@@ -638,7 +688,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-023',
           title: 'Invalid coupon code rejection',
           description: 'Verify expired/invalid coupons are rejected.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'negative',
           tags: ['cart', 'promo'],
@@ -657,7 +708,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-024',
           title: 'Cart minimum order validation',
           description: 'Verify checkout is blocked below minimum order value.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'low',
           type: 'negative',
           tags: ['cart', 'validation'],
@@ -683,7 +735,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-025',
           title: 'Complete checkout with credit card',
           description: 'Verify full checkout flow using Stripe test card.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'critical',
           type: 'positive',
           tags: ['checkout', 'smoke', 'payment'],
@@ -710,7 +763,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-026',
           title: 'Checkout with saved address',
           description: 'Verify saved addresses populate the form automatically.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'high',
           type: 'positive',
           tags: ['checkout', 'address'],
@@ -729,7 +783,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-027',
           title: 'Declined card handling',
           description: 'Verify declined payment shows appropriate error.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'negative',
           tags: ['checkout', 'payment'],
@@ -755,7 +810,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-028',
           title: 'Guest checkout flow',
           description: 'Verify checkout works without creating an account.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'high',
           type: 'positive',
           tags: ['checkout', 'guest'],
@@ -775,7 +831,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-029',
           title: 'Shipping cost calculation',
           description: 'Verify shipping costs are calculated based on address and weight.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['checkout', 'shipping'],
@@ -794,7 +851,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-030',
           title: 'Order confirmation email',
           description: 'Verify order confirmation email contains correct details.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'medium',
           type: 'positive',
           tags: ['checkout', 'email'],
@@ -828,7 +886,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-031',
           title: 'View order history',
           description: 'Verify past orders are listed in account page.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['orders', 'account'],
@@ -846,7 +905,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-032',
           title: 'Cancel unshipped order',
           description: 'Verify orders can be cancelled before shipping.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'passed',
           priority: 'high',
           type: 'positive',
           tags: ['orders', 'cancellation'],
@@ -872,7 +932,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-033',
           title: 'Track shipped order',
           description: 'Verify tracking number links to carrier website.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['orders', 'tracking'],
@@ -890,7 +951,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-034',
           title: 'Request return for delivered item',
           description: 'Verify return request flow works.',
-          status: 'ready',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'medium',
           type: 'positive',
           tags: ['orders', 'returns'],
@@ -909,7 +971,8 @@ const scenarioEcommerce: TestScenarioV2 = {
           code: 'TC-035',
           title: 'Reorder previous order',
           description: 'Verify reorder button adds all items to cart.',
-          status: 'draft',
+          processingStatus: 'idle',
+          automationStatus: 'not_generated',
           priority: 'low',
           type: 'positive',
           tags: ['orders', 'ux'],

@@ -9,11 +9,36 @@ export interface AuthConfig {
 }
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
-export type ScenarioStatus = 'draft' | 'uploaded' | 'ready' | 'generating' | 'failed';
+
+// --- New status types ---
+export type ProcessingStatus = 'idle' | 'generating' | 'generation_failed';
+
+export type ScenarioAutomationStatus =
+  | 'not_generated'
+  | 'idle'
+  | 'running'
+  | 'passed'
+  | 'failed'
+  | 'partial';
+
+export type TestCaseAutomationStatus =
+  | 'not_generated'
+  | 'idle'
+  | 'running'
+  | 'passed'
+  | 'failed';
+
+// Old AutomationStatus kept for backward compat (used on AutomationTest.status)
 export type AutomationStatus = 'idle' | 'running' | 'pass' | 'fail';
+
 export type AutomationCategory = 'api' | 'e2e' | 'manual';
 export type ManualTestStatus = 'passed' | 'failed';
+
+// --- Deprecated old status types ---
+/** @deprecated Use ProcessingStatus / ScenarioAutomationStatus instead */
+export type TestCaseStatus = 'draft' | 'ready' | 'blocked' | 'deprecated';
+/** @deprecated Use ProcessingStatus / ScenarioAutomationStatus instead */
+export type ScenarioStatus = 'draft' | 'uploaded' | 'ready' | 'generating' | 'failed';
 
 export interface AutomationTest {
   id: string;
@@ -53,7 +78,10 @@ export interface TestCase {
   tags: string[];
   priority: Priority;
   type: string;
+  /** @deprecated Use processingStatus / automationStatus instead */
   status: TestCaseStatus;
+  processingStatus?: ProcessingStatus;
+  automationStatus?: TestCaseAutomationStatus;
   automationType?: AutomationCategory;
   automationTest?: AutomationTest;
   note?: string;
@@ -95,10 +123,33 @@ export interface ScenarioStats {
   totalSections: number;
   totalTestCases: number;
   totalSteps: number;
-  automatedCount: number;
+  generatedCount: number;
+  notGeneratedCount: number;
+  generatingCount: number;
+  generationFailedCount: number;
+  idleCount: number;
+  runningCount: number;
   passCount: number;
   failCount: number;
-  draftCount: number;
+  coveragePercent: number;
+  /** @deprecated Use generatedCount */
+  automatedCount?: number;
+  /** @deprecated Not used in new model */
+  draftCount?: number;
+}
+
+export interface TestCaseSummary {
+  id: string;
+  code: string;
+  title: string;
+  errorMessage?: string;
+}
+
+export interface ActiveTestCases {
+  generating: TestCaseSummary[];
+  running: TestCaseSummary[];
+  failedGeneration: TestCaseSummary[];
+  failedRun: TestCaseSummary[];
 }
 
 export interface TestScenario {
@@ -113,9 +164,14 @@ export interface TestScenario {
   sourceType?: string;
   sourcePath?: string;
   sourceSha?: string;
+  /** @deprecated Use processingStatus / automationStatus instead */
   status: ScenarioStatus;
+  processingStatus?: ProcessingStatus;
+  automationStatus?: ScenarioAutomationStatus;
   error?: string;
   stats?: ScenarioStats;
+  automationStats?: ScenarioStats;
+  activeTestCases?: ActiveTestCases;
   authConfig?: AuthConfig;
   createdAt: string;
   updatedAt: string;

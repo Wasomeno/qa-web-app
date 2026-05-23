@@ -379,16 +379,40 @@ export const TestScenariosPage: React.FC<{
               </thead>
               <tbody>
                 {filteredItems.map((item) => {
-                  const statusPill: Record<string, { label: string; classes: string }> = {
-                    draft: { label: "Draft", classes: "bg-zinc-50 text-zinc-600 border-zinc-200" },
-                    uploaded: { label: "Uploaded", classes: "bg-blue-50 text-blue-700 border-blue-100" },
-                    ready: { label: "Ready", classes: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    generating: { label: "Generating", classes: "bg-amber-50 text-amber-700 border-amber-100" },
-                    failed: { label: "Failed", classes: "bg-red-50 text-red-700 border-red-100" },
-                  };
-                  const pill = statusPill[item.status] ?? statusPill.draft;
+                  const procStatus = item.processingStatus ?? 'idle';
+                  const autoStatus = item.automationStatus ?? 'not_generated';
+
+                  let pillLabel: string;
+                  let pillClasses: string;
+
+                  if (procStatus === 'generating') {
+                    pillLabel = 'Generating';
+                    pillClasses = 'bg-amber-50 text-amber-700 border-amber-100';
+                  } else if (autoStatus === 'running') {
+                    pillLabel = 'Running tests';
+                    pillClasses = 'bg-blue-50 text-blue-700 border-blue-100';
+                  } else if (procStatus === 'generation_failed') {
+                    pillLabel = 'Generation failed';
+                    pillClasses = 'bg-red-50 text-red-700 border-red-100';
+                  } else if (autoStatus === 'failed') {
+                    pillLabel = 'Run failed';
+                    pillClasses = 'bg-red-50 text-red-700 border-red-100';
+                  } else if (autoStatus === 'passed') {
+                    pillLabel = 'Passed';
+                    pillClasses = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                  } else if (autoStatus === 'partial') {
+                    pillLabel = 'Partially automated';
+                    pillClasses = 'bg-amber-50 text-amber-700 border-amber-100';
+                  } else if (autoStatus === 'idle') {
+                    pillLabel = 'Automated';
+                    pillClasses = 'bg-zinc-50 text-zinc-600 border-zinc-200';
+                  } else {
+                    pillLabel = 'Not generated';
+                    pillClasses = 'bg-zinc-50 text-zinc-600 border-zinc-200';
+                  }
+
                   const testCaseCount =
-                    item.stats?.totalTestCases ??
+                    (item.automationStats ?? item.stats)?.totalTestCases ??
                     item.sections?.reduce((acc, s) => acc + (s.testCases?.length ?? 0), 0) ??
                     0;
                   return (
@@ -425,8 +449,8 @@ export const TestScenariosPage: React.FC<{
                         )}
                       </td>
                       <td className="py-2.5 pr-4">
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", pill.classes)}>
-                          {pill.label}
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", pillClasses)}>
+                          {pillLabel}
                         </span>
                       </td>
                       <td className="py-2.5 text-center">
