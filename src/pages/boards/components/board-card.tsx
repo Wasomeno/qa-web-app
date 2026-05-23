@@ -31,8 +31,8 @@ export const BoardCard: React.FC<BoardCardProps> = ({
     <div
       onClick={() => onClick?.(issue)}
       className={cn(
-        'bg-white rounded-xl border border-gray-100 shadow-sm',
-        'hover:shadow-md hover:border-gray-200',
+        'bg-card rounded-xl border border-border shadow-sm',
+        'hover:shadow-md hover:border-border',
         'transition-all duration-200 cursor-pointer group relative overflow-hidden',
         isCompact ? 'p-2.5' : 'p-3.5'
       )}
@@ -48,7 +48,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
       <div className="flex items-start justify-between gap-2">
         <h4
           className={cn(
-            'text-sm font-medium text-gray-900 transition-colors line-clamp-2 leading-tight',
+            'text-sm font-medium text-foreground transition-colors line-clamp-2 leading-tight',
             isCompact && 'text-xs'
           )}
         >
@@ -63,7 +63,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
         )}
       >
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-gray-400 font-mono tabular-nums">
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
             #{issue.iid}
           </span>
           {issue.labels.slice(0, isCompact ? 2 : 3).map((label) => (
@@ -80,7 +80,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
             </span>
           ))}
           {!isCompact && issue.weight !== undefined && issue.weight > 0 && (
-            <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+            <span className="text-[10px] text-muted-foreground font-medium bg-muted px-1.5 py-0.5 rounded-md border border-border">
               {issue.weight}pt
             </span>
           )}
@@ -91,33 +91,33 @@ export const BoardCard: React.FC<BoardCardProps> = ({
             <img
               src={issue.assignee.avatarUrl}
               alt={issue.assignee.username}
-              className="w-5 h-5 rounded-full border border-gray-100 ring-1 ring-gray-100"
+              className="w-5 h-5 rounded-full border border-border ring-1 ring-border"
             />
           </div>
         )}
       </div>
 
       {/* Action Overlay */}
-      <div className="absolute right-2 top-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-sm rounded-lg p-1 shadow-md border border-gray-100/80">
+      <div className="absolute right-2 top-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-card/95 backdrop-blur-sm rounded-lg p-1 shadow-md border border-border/80">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onPin?.(issue);
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
+          className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80 transition-colors"
           title="Pin Issue"
         >
           <Pin className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-3 bg-gray-200 mx-0.5" />
+        <div className="w-px h-3 bg-border mx-0.5" />
 
         <button
           onClick={(e) => {
             e.stopPropagation();
             window.open(issue.webUrl, '_blank');
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
+          className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80 transition-colors"
           title="Open in GitLab"
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
             e.stopPropagation();
             navigator.clipboard.writeText(issue.webUrl);
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
+          className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80 transition-colors"
           title="Copy Link"
         >
           <Link2 className="w-3.5 h-3.5" />

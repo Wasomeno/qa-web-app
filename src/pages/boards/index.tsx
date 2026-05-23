@@ -152,31 +152,31 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
       {/* Header & Filters */}
       <div
         className={cn(
-          "flex-none px-4 md:px-8 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          "flex-none px-4 md:px-8 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10",
           hideHeader ? "pt-4 pb-4" : "pt-6 md:pt-10 pb-6",
         )}
       >
         {!hideHeader && (
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
                 {title}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">{description}</p>
+              <p className="text-sm text-muted-foreground mt-1">{description}</p>
             </div>
           </div>
         )}
 
         <div className="flex items-center gap-3 overflow-x-auto pb-1 md:pb-0">
             {/* Density Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-100 shrink-0">
+            <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border shrink-0">
               <button
                 onClick={() => setDensity("comfortable")}
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all",
                   density === "comfortable"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700",
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 title="Comfortable view"
               >
@@ -188,8 +188,8 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all",
                   density === "compact"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700",
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 title="Compact view"
               >
@@ -198,7 +198,7 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
               </button>
             </div>
 
-            {!projectId && <div className="h-6 w-px bg-gray-200" />}
+            {!projectId && <div className="h-6 w-px bg-border" />}
 
             {!projectId &&
               (isBoardLoading ? (
@@ -277,16 +277,16 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
-                <KanbanSquare className="w-8 h-8 text-gray-300" />
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mb-4">
+                <KanbanSquare className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-medium text-foreground/70">
                 {activeProjectId
                   ? "No boards found for this project."
                   : "Select a project to view boards."}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground/60 mt-1">
                 {activeProjectId
                   ? "Try selecting a different project."
                   : "Choose a project from the filter above."}

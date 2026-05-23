@@ -19,7 +19,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
 
   return (
     <div
-      className="w-[280px] flex flex-col flex-1 max-h-full rounded-xl border border-gray-100 overflow-hidden relative transition-colors duration-200"
+      className="w-[280px] flex flex-col flex-1 max-h-full rounded-xl border border-border overflow-hidden relative transition-colors duration-200"
       style={{
         backgroundColor: isDropTarget ? `${color}08` : '#FAFAFA',
         borderColor: isDropTarget ? `${color}40` : undefined,
@@ -35,7 +35,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
       {/* Column Header */}
       <div className="px-3.5 py-3 flex items-center justify-between overflow-hidden relative">
         <div className="flex items-center gap-2 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-800 truncate">
+          <h3 className="text-sm font-semibold text-foreground truncate">
             {column.title}
           </h3>
           {color && (
@@ -45,7 +45,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
             />
           )}
         </div>
-        <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-white border border-gray-100 text-gray-600 shadow-sm tabular-nums flex-shrink-0">
+        <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-card border border-border text-muted-foreground shadow-sm tabular-nums flex-shrink-0">
           {count}
         </span>
       </div>
