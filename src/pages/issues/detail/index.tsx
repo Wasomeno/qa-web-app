@@ -60,8 +60,8 @@ const statusConfig: Record<
   string,
   { color: string; bg: string; label: string }
 > = {
-  opened: { color: "text-green-700", bg: "bg-green-100", label: "Open" },
-  closed: { color: "text-gray-700", bg: "bg-gray-100", label: "Closed" },
+  opened: { color: "text-success", bg: "bg-success/15", label: "Open" },
+  closed: { color: "text-muted-foreground", bg: "bg-muted", label: "Closed" },
 };
 
 const formatDate = (dateStr: string): string => {
@@ -97,10 +97,10 @@ const StreamItem: React.FC<StreamItemProps> = ({
     <div className={cn("flex gap-4 relative", className)}>
       {/* Avatar + thread line */}
       <div className="flex flex-col items-center flex-shrink-0">
-        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex items-center justify-center">
           {avatar}
         </div>
-        {!isLast && <div className="w-px flex-1 bg-gray-200 mt-2" />}
+        {!isLast && <div className="w-px flex-1 bg-border mt-2" />}
       </div>
 
       {/* Content */}
@@ -140,15 +140,15 @@ const MetadataRow: React.FC<MetadataRowProps> = ({
   return (
     <div className="group">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
           {label}
         </span>
         {!isEditing && (
           <button
             onClick={onEdit}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-opacity"
           >
-            <Pencil className="w-3 h-3 text-gray-400" />
+            <Pencil className="w-3 h-3 text-muted-foreground" />
           </button>
         )}
       </div>
@@ -399,11 +399,11 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
         exit={{ opacity: 0 }}
         className="flex-1 flex flex-col relative h-full overflow-hidden"
       >
-        <div className="flex-none sticky top-0 z-10 bg-white/80 backdrop-blur-sm px-6 py-5 border-b border-gray-100">
+        <div className="flex-none sticky top-0 z-10 bg-background/80 backdrop-blur-sm px-6 py-5 border-b border-border">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+              className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -439,7 +439,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
               </StreamItem>
             </div>
           </div>
-          <div className="w-64 flex-shrink-0 border-l border-gray-100 bg-gray-50/30 p-5 space-y-6">
+          <div className="w-64 flex-shrink-0 border-l border-border bg-muted/30 p-5 space-y-6">
             <Skeleton className="h-20 w-full rounded-lg" />
             <Skeleton className="h-16 w-full rounded-lg" />
             <Skeleton className="h-16 w-full rounded-lg" />
@@ -451,8 +451,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
 
   if (!currentIssue) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white gap-4 p-8">
-        <div className="text-gray-400">Issue not found</div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-background gap-4 p-8">
+        <div className="text-muted-foreground">Issue not found</div>
         <Button onClick={onBack} variant="outline" size="sm">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Go Back
@@ -481,20 +481,20 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
       className="flex-1 flex flex-col relative h-full overflow-hidden"
     >
       {/* Header */}
-      <div className="flex-none sticky top-0 z-10 bg-white/80 backdrop-blur-sm px-6 py-5 border-b border-gray-100">
+      <div className="flex-none sticky top-0 z-10 bg-background/80 backdrop-blur-sm px-6 py-5 border-b border-border">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <button
               onClick={onBack}
-              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-colors mt-1"
+              className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors mt-1"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold text-gray-900 leading-snug">
+              <h1 className="text-xl font-semibold text-foreground leading-snug">
                 {currentIssue.title}
               </h1>
-              <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-gray-500 mt-1.5">
+              <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-muted-foreground mt-1.5">
                 <span
                   className={cn(
                     "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -509,19 +509,19 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       .label
                   }
                 </span>
-                <span className="text-gray-300">•</span>
-                <span className="font-medium text-gray-600">
+                <span className="text-border">•</span>
+                <span className="font-medium text-muted-foreground">
                   {currentIssue.project_name || (
                     <Skeleton className="h-3.5 w-20 inline-block" />
                   )}
                 </span>
-                <span className="text-gray-300">•</span>
+                <span className="text-border">•</span>
                 <span>
                   {currentIssue.author?.name || (
                     <Skeleton className="h-3.5 w-24 inline-block" />
                   )}
                 </span>
-                <span className="text-gray-300">•</span>
+                <span className="text-border">•</span>
                 <span>
                   {currentIssue.created_at ? (
                     formatDate(currentIssue.created_at)
@@ -549,24 +549,24 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
                     {(currentIssue.author?.name || "?").charAt(0).toUpperCase()}
                   </div>
                 )
               }
               header={
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span className="font-semibold text-gray-900">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">
                     {currentIssue.author?.name || "Unknown"}
                   </span>
                   <span>opened this issue</span>
-                  <span className="text-gray-300">•</span>
+                  <span className="text-border">•</span>
                   <span>{formatDate(currentIssue.created_at)}</span>
                 </div>
               }
             >
               {editingField === "description" ? (
-                <div className="space-y-3 bg-white p-3 rounded-lg border border-zinc-100 shadow-sm ring-2 ring-zinc-50">
+                <div className="space-y-3 bg-card p-3 rounded-lg border border-border shadow-sm ring-2 ring-border">
                   <DescriptionEditor
                     content={description}
                     onChange={setDescription}
@@ -617,9 +617,9 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       setDescription(currentIssue.description || "");
                       setEditingField("description");
                     }}
-                    className="absolute -right-2 -top-2 opacity-0 group-hover/description:opacity-100 p-1.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-full transition-all z-10"
+                    className="absolute -right-2 -top-2 opacity-0 group-hover/description:opacity-100 p-1.5 bg-card shadow-sm border border-border hover:bg-muted/50 rounded-full transition-all z-10"
                   >
-                    <Pencil className="w-3 h-3 text-gray-400" />
+                    <Pencil className="w-3 h-3 text-muted-foreground" />
                   </button>
                 </div>
               )}
@@ -628,13 +628,13 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
             {/* Child Tasks */}
             {hasChildIssues && (
               <StreamItem
-                avatar={<ClipboardList className="w-4 h-4 text-gray-500" />}
+                avatar={<ClipboardList className="w-4 h-4 text-muted-foreground" />}
                 header={
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="font-semibold text-gray-900">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="font-semibold text-foreground">
                       Child Tasks
                     </span>
-                    <span className="text-gray-300">•</span>
+                    <span className="text-border">•</span>
                     <span className="text-xs">
                       {currentIssue.child!.amount} linked
                     </span>
@@ -664,21 +664,21 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     }
                     header={
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span className="font-semibold text-gray-900">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">
                             {comment.author.name}
                           </span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground/70">
                             @{comment.author.username}
                           </span>
-                          <span className="text-gray-300">•</span>
+                          <span className="text-border">•</span>
                           <span>{formatDate(comment.created_at)}</span>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600">
+                          <button className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80">
                             <Smile className="w-3.5 h-3.5" />
                           </button>
-                          <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600">
+                          <button className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80">
                             <Reply className="w-3.5 h-3.5" />
                           </button>
                           {editingCommentId !== comment.id && (
@@ -688,13 +688,13 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                                   setEditingCommentId(comment.id);
                                   setEditCommentBody(comment.body);
                                 }}
-                                className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground/80"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteComment(comment.id)}
-                                className="p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-600"
+                                className="p-1 hover:bg-destructive/10 rounded text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -754,7 +754,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-500">
+                    <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
                       {(user.name || user.username || "U")
                         .charAt(0)
                         .toUpperCase()}
@@ -786,10 +786,10 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
         </div>
 
         {/* -------- Sidebar -------- */}
-        <div className="w-full lg:w-64 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-100 bg-gray-50/30 p-5 space-y-6 overflow-y-auto">
+        <div className="w-full lg:w-64 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-muted/30 p-5 space-y-6 overflow-y-auto">
           {/* Actions */}
           <div className="space-y-2">
-            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
               Actions
             </span>
             <div className="flex items-center gap-1">
@@ -823,8 +823,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       className={cn(
                         "p-2 rounded-lg transition-colors",
                         copied
-                          ? "text-green-600"
-                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-700",
+                          ? "text-success"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground/80",
                       )}
                     >
                       {copied ? (
@@ -848,7 +848,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                         currentIssue.web_url &&
                         window.open(currentIssue.web_url, "_blank")
                       }
-                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-zinc-600 transition-colors"
+                      className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </motion.button>
@@ -867,8 +867,8 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                       className={cn(
                         "p-2 rounded-lg transition-colors",
                         isPinned(currentIssue.iid, currentIssue.project_id)
-                          ? "bg-amber-100 text-amber-500 hover:bg-amber-200 hover:text-amber-600"
-                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-900",
+                          ? "bg-warning/15 text-warning hover:bg-warning/25 hover:text-warning"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
                       <Pin
@@ -972,12 +972,12 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     className="w-5 h-5 rounded-full"
                     alt=""
                   />
-                  <span className="text-xs font-medium text-gray-900">
+                  <span className="text-xs font-medium text-foreground">
                     {currentIssue.assignees[0].name}
                   </span>
                 </>
               ) : (
-                <span className="text-xs text-gray-400 italic">Unassigned</span>
+                <span className="text-xs text-muted-foreground italic">Unassigned</span>
               )}
             </div>
           </MetadataRow>
@@ -1073,13 +1073,13 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                 currentIssue.labels.map((label, i) => (
                   <div
                     key={i}
-                    className="text-[10px] px-2 py-0.5 rounded border font-medium bg-gray-100 text-gray-700"
+                    className="text-[10px] px-2 py-0.5 rounded border font-medium bg-muted text-muted-foreground"
                   >
                     {String(label)}
                   </div>
                 ))
               ) : (
-                <span className="text-xs text-gray-400 italic">No labels</span>
+                <span className="text-xs text-muted-foreground italic">No labels</span>
               )}
             </div>
           </MetadataRow>
@@ -1087,10 +1087,10 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           {/* Due Date */}
           {currentIssue.due_date && (
             <div className="space-y-1.5">
-              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide flex items-center gap-1">
                 <Calendar className="w-3 h-3" /> Due Date
               </span>
-              <div className="text-xs font-medium text-gray-900">
+              <div className="text-xs font-medium text-foreground">
                 {formatDate(currentIssue.due_date)}
               </div>
             </div>
@@ -1099,11 +1099,11 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           {/* Merge Requests */}
           {(currentIssue.merge_requests_count ?? 0) > 0 && (
             <div className="space-y-1.5">
-              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                 Merge Requests
               </span>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-success/15 text-success font-medium">
                   <GitPullRequest className="w-3.5 h-3.5" />
                   {currentIssue.merge_requests_count} Open
                 </span>

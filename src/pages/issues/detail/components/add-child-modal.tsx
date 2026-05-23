@@ -134,30 +134,30 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="relative w-full flex flex-col min-h-[60%] max-h-[85vh] max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full flex flex-col min-h-[60%] max-h-[85vh] max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-base font-semibold text-gray-900">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h2 className="text-base font-semibold text-foreground">
                 Add Child Task
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-muted rounded-full transition-colors"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex px-6 pt-2 border-b border-gray-100">
+            <div className="flex px-6 pt-2 border-b border-border">
               <button
                 onClick={() => setActiveTab('link')}
                 className={cn(
                   'px-4 py-3 text-xs font-medium border-b-2 transition-all relative',
                   activeTab === 'link'
-                    ? 'text-gray-900 border-gray-900'
-                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                    ? 'text-foreground border-foreground'
+                    : 'text-muted-foreground border-transparent hover:text-foreground/80'
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -170,8 +170,8 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
                 className={cn(
                   'px-4 py-3 text-xs font-medium border-b-2 transition-all relative',
                   activeTab === 'create'
-                    ? 'text-gray-900 border-gray-900'
-                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                    ? 'text-foreground border-foreground'
+                    : 'text-muted-foreground border-transparent hover:text-foreground/80'
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -186,13 +186,13 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
               {activeTab === 'link' ? (
                 <div className="flex flex-1 flex-col space-y-4">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="text"
                       placeholder="Search by title..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-foreground/10 focus:border-foreground transition-all"
                       autoFocus
                     />
                   </div>
@@ -203,28 +203,28 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
                           <button
                             key={issue.id}
                             onClick={() => handleLink(issue)}
-                            className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group text-left"
+                            className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border transition-all group text-left"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <span className="text-xs font-mono text-gray-400 flex-shrink-0">
+                              <span className="text-xs font-mono text-muted-foreground flex-shrink-0">
                                 #{issue.iid}
                               </span>
-                              <span className="text-sm text-gray-700 truncate font-medium">
+                              <span className="text-sm text-foreground/80 truncate font-medium">
                                 {issue.title}
                               </span>
                             </div>
-                            <Plus className="w-4 h-4 text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Plus className="w-4 h-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <div className="flex flex-col flex-1 items-center justify-center py-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                      <div className="flex flex-col flex-1 items-center justify-center py-8 text-center bg-muted/50 rounded-2xl border border-dashed border-border">
                         {isSearching ? (
-                          <Loader2 className="w-8 h-8 text-gray-300 mx-auto animate-spin" />
+                          <Loader2 className="w-8 h-8 text-muted-foreground/30 mx-auto animate-spin" />
                         ) : (
                           <>
-                            <AlertCircle className="size-6 text-gray-300 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">
+                            <AlertCircle className="size-6 text-muted-foreground/30 mx-auto mb-2" />
+                            <p className="text-xs text-muted-foreground">
                               No issues found
                             </p>
                           </>
@@ -246,9 +246,9 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
                     />
 
                     {status === 'error' && (
-                      <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex gap-3">
-                        <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-xs text-red-700 leading-relaxed">
+                      <div className="p-3 bg-destructive/10 rounded-xl border border-destructive/20 flex gap-3">
+                        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-destructive leading-relaxed">
                           {errorMessage}
                         </p>
                       </div>
@@ -259,7 +259,7 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t gap-4 border-gray-100 flex justify-end">
+            <div className="px-6 py-4 bg-muted/30 border-t gap-4 border-border flex justify-end">
               <AnimatePresence>
                 {isCreateTab && (
                   <Button
@@ -270,10 +270,10 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
                     className={cn(
                       'flex text-xs items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all',
                       status === 'success'
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-success text-white'
                         : status === 'error'
-                          ? 'bg-red-500 text-white'
-                          : 'bg-gray-900 hover:bg-black disabled:bg-neutral-200 disabled:cursor-not-allowed text-neutral-400/80'
+                          ? 'bg-destructive text-white'
+                          : 'bg-foreground hover:bg-foreground/90 disabled:bg-muted disabled:cursor-not-allowed text-muted-foreground/80'
                     )}
                   >
                     {status === 'submitting' ? (
@@ -299,7 +299,7 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
               <Button
                 variant="destructive"
                 onClick={onClose}
-                className="px-4 py-2 text-xs text-red-500 font-medium bg-transparent hover:bg-red-100 hover:text-red-500 duration-200 rounded-xl transition-all"
+                className="px-4 py-2 text-xs text-destructive font-medium bg-transparent hover:bg-destructive/10 hover:text-destructive duration-200 rounded-xl transition-all"
               >
                 Cancel
               </Button>

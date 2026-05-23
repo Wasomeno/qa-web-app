@@ -137,9 +137,9 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
     <div className="space-y-4">
       {!hideHeader && (
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+          <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
             Child Tasks
-            <span className="text-xs text-gray-400 font-normal">
+            <span className="text-xs text-muted-foreground font-normal">
               {childIssues?.length || 0}
             </span>
           </h2>
@@ -155,21 +155,21 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         {childIssues && childIssues.length > 0 ? (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border">
             {childIssues.map((issue: Issue) => (
               <div
                 key={issue.id}
-                className="group flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
+                className="group flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className={cn(
                       'flex-shrink-0',
                       issue.state === 'opened'
-                        ? 'text-green-500'
-                        : 'text-zinc-500'
+                        ? 'text-success'
+                        : 'text-muted-foreground'
                     )}
                   >
                     {issue.state === 'opened' ? (
@@ -180,10 +180,10 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900 font-medium truncate">
+                      <span className="text-sm text-foreground font-medium truncate">
                         {issue.title}
                       </span>
-                      <span className="text-xs text-gray-400 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
                         #{issue.iid}
                       </span>
                     </div>
@@ -194,7 +194,7 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-gray-400 hover:text-zinc-600"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground/80"
                     onClick={() => window.open(issue.web_url, '_blank')}
                     title="Open in new tab"
                   >
@@ -203,7 +203,7 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-gray-400 hover:text-red-600"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                     onClick={() => handleUnlink(issue.iid)}
                     disabled={unlinkMutation.isPending}
                     title="Unlink child task"
@@ -216,13 +216,13 @@ export const ChildIssuesList: React.FC<ChildIssuesListProps> = ({
           </div>
         ) : (
           <div className="p-8 text-center flex flex-col w-full items-center justify-center">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 mb-3">
-              <LinkIcon className="w-5 h-5 text-neutral-400" />
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted mb-3">
+              <LinkIcon className="w-5 h-5 text-muted-foreground" />
             </div>
-            <h3 className="text-sm font-medium text-neutral-500">
+            <h3 className="text-sm font-medium text-muted-foreground">
               No child tasks
             </h3>
-            <p className="text-xs text-neutral-400 mt-1 mb-4">
+            <p className="text-xs text-muted-foreground mt-1 mb-4">
               Break down this issue into smaller tasks
             </p>
           </div>
