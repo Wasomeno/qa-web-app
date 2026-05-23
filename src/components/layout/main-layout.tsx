@@ -21,6 +21,7 @@ import { useProjectSidebar } from "@/contexts/project-sidebar-context";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import {
   SidebarProvider,
@@ -126,7 +127,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   const projectBase = project ? `/projects/${project.projectId}` : "";
 
   return (
-    <div ref={setContainer} className="fixed inset-0 flex flex-col bg-white">
+    <div ref={setContainer} className="fixed inset-0 flex flex-col bg-background">
       <div className="flex flex-1 overflow-hidden">
         <SidebarProvider
           style={{ minHeight: "100%" }}
@@ -143,8 +144,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                       to="/projects"
                       className="flex items-center gap-2 overflow-hidden group-data-[collapsible=icon]:hidden"
                     >
-                      <ArrowLeft className="h-4 w-4 shrink-0 text-zinc-400" />
-                      <span className="text-sm font-medium text-zinc-500 truncate">
+                      <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground truncate">
                         Projects
                       </span>
                     </Link>
@@ -152,7 +153,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   </div>
                   {/* Project name — visible when expanded */}
                   <div className="mt-3 group-data-[collapsible=icon]:hidden">
-                    <h2 className="truncate text-sm font-semibold text-zinc-900">
+                    <h2 className="truncate text-sm font-semibold text-foreground">
                       {project.projectName}
                     </h2>
                   </div>
@@ -160,7 +161,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   <div className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mt-1">
                     <Link
                       to="/projects"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                       title="Back to projects"
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -171,7 +172,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 <SidebarContent className="gap-0">
                   <SidebarGroup className="py-1.5">
                     <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         {project.projectName}
                       </span>
                     </div>
@@ -190,7 +191,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                                 className={cn(
                                   "relative h-9 transition-colors",
                                   isActive &&
-                                    "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700",
+                                    "bg-accent/50 text-accent-foreground hover:bg-accent/70",
                                 )}
                               >
                                 <button
@@ -212,15 +213,15 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                                     className={cn(
                                       "shrink-0",
                                       isActive
-                                        ? "text-zinc-500"
-                                        : "text-gray-500",
+                                        ? "text-accent-foreground"
+                                        : "text-muted-foreground",
                                     )}
                                   />
                                   <span
                                     className={cn(
                                       isActive
-                                        ? "font-semibold text-zinc-700"
-                                        : "font-medium text-gray-700",
+                                        ? "font-semibold text-accent-foreground"
+                                        : "font-medium text-foreground",
                                     )}
                                   >
                                     {item.label}
@@ -244,8 +245,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                       to="/"
                       className="flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden"
                     >
-                      <FlowGLogo className="h-6 w-6 shrink-0 text-zinc-500" />
-                      <span className="text-lg font-bold tracking-tight text-gray-900">
+                      <FlowGLogo className="h-6 w-6 shrink-0 text-muted-foreground" />
+                      <span className="text-lg font-bold tracking-tight text-foreground">
                         FlowG
                       </span>
                     </Link>
@@ -257,7 +258,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   {NAV_GROUPS.map((group) => (
                     <SidebarGroup key={group.label} className="py-1.5">
                       <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                           {group.label}
                         </span>
                       </div>
@@ -276,7 +277,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                                   className={cn(
                                     "relative h-9 transition-colors",
                                     isActive &&
-                                      "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700",
+                                      "bg-accent/50 text-accent-foreground hover:bg-accent/70",
                                   )}
                                 >
                                   <Link to={item.path}>
@@ -284,15 +285,15 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                                       className={cn(
                                         "shrink-0",
                                         isActive
-                                          ? "text-zinc-500"
-                                          : "text-gray-500",
+                                          ? "text-accent-foreground"
+                                          : "text-muted-foreground",
                                       )}
                                     />
                                     <span
                                       className={cn(
                                         isActive
-                                          ? "font-semibold text-zinc-700"
-                                          : "font-medium text-gray-700",
+                                          ? "font-semibold text-accent-foreground"
+                                          : "font-medium text-foreground",
                                       )}
                                     >
                                       {item.label}
@@ -309,16 +310,16 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 </SidebarContent>
 
                 {/* Download Extension CTA — Workspace only */}
-                <div className="px-4 py-2 mt-auto border-t border-gray-100 group-data-[collapsible=icon]:hidden">
-                  <div className="rounded-xl bg-zinc-50 p-4 relative overflow-hidden">
+                <div className="px-4 py-2 mt-auto border-t border-border group-data-[collapsible=icon]:hidden">
+                  <div className="rounded-xl bg-muted/30 p-4 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-2 opacity-10">
                       <FlowGLogo className="w-16 h-16" />
                     </div>
                     <div className="relative z-10">
-                      <h4 className="text-sm font-semibold text-zinc-900 mb-1">
+                      <h4 className="text-sm font-semibold text-foreground mb-1">
                         Get the Extension
                       </h4>
-                      <p className="text-xs text-zinc-700 mb-3 leading-relaxed">
+                      <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
                         Download FlowG extension to capture your QA sessions
                         effortlessly.
                       </p>
@@ -327,7 +328,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         download
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                       >
                         Download FlowG
                       </a>
@@ -336,14 +337,14 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 </div>
 
                 {/* Collapsed state Download Extension CTA */}
-                <div className="hidden border-t border-gray-100 py-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+                <div className="hidden border-t border-border py-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
                   <a
                     href={import.meta.env.VITE_EXTENSION_DOWNLOAD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     download
                     title="Download FlowG Extension"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-600 transition-colors hover:bg-zinc-100"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/30 text-muted-foreground transition-colors hover:bg-accent"
                   >
                     <FlowGLogo className="h-4 w-4" />
                   </a>
@@ -351,18 +352,19 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
               </>
             )}
 
-            {/* Footer — User & Logout (shared across contexts) */}
-            <SidebarFooter className="border-t border-gray-100 p-3">
+            {/* Footer — Theme Toggle, User & Logout (shared across contexts) */}
+            <SidebarFooter className="border-t border-border p-3">
+              {/* Expanded state */}
               <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                 <Link to="/profile" className="relative shrink-0">
                   {user?.avatar_url ? (
                     <img
                       src={user.avatar_url}
                       alt={user.name || user.username}
-                      className="h-8 w-8 rounded-lg object-cover ring-1 ring-black/5"
+                      className="h-8 w-8 rounded-lg object-cover ring-1 ring-black/5 dark:ring-white/10"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900 text-white ring-1 ring-black/5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground/10 text-foreground ring-1 ring-black/5 dark:ring-white/10">
                       <span className="text-xs font-semibold">
                         {(user?.name || user?.username || "U")
                           .charAt(0)
@@ -373,18 +375,19 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <Link to="/profile" className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-gray-900">
+                    <span className="block truncate text-sm font-semibold text-foreground">
                       {user?.name || user?.username || "Guest"}
                     </span>
-                    <span className="block truncate text-xs text-gray-500">
+                    <span className="block truncate text-xs text-muted-foreground">
                       {user ? `@${user.username}` : "Not logged in"}
                     </span>
                   </Link>
                 </div>
+                <ThemeToggle />
                 <button
                   onClick={() => logoutMutation.mutate()}
                   disabled={logoutMutation.isPending}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                   title="Logout"
                 >
                   {logoutMutation.isPending ? (
@@ -395,17 +398,18 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 </button>
               </div>
 
-              {/* Collapsed state: just avatar + logout */}
+              {/* Collapsed state: theme toggle, avatar + logout */}
               <div className="hidden flex-col items-center gap-2 group-data-[collapsible=icon]:flex">
+                <ThemeToggle />
                 <Link to="/profile">
                   {user?.avatar_url ? (
                     <img
                       src={user.avatar_url}
                       alt={user.name || user.username}
-                      className="h-8 w-8 rounded-lg object-cover ring-1 ring-black/5"
+                      className="h-8 w-8 rounded-lg object-cover ring-1 ring-black/5 dark:ring-white/10"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900 text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground/10 text-foreground">
                       <span className="text-xs font-semibold">
                         {(user?.name || user?.username || "U")
                           .charAt(0)
@@ -417,7 +421,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 <button
                   onClick={() => logoutMutation.mutate()}
                   disabled={logoutMutation.isPending}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                   title="Logout"
                 >
                   {logoutMutation.isPending ? (
@@ -436,7 +440,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
             {/* Mobile Floating Trigger */}
             <div className="absolute left-3 top-3 z-50 md:hidden">
-              <SidebarTrigger className="h-9 w-9 rounded-full border bg-white/90 shadow-sm backdrop-blur-sm hover:bg-white" />
+              <SidebarTrigger className="h-9 w-9 rounded-full border bg-background/90 shadow-sm backdrop-blur-sm hover:bg-background" />
             </div>
             {children}
           </div>
