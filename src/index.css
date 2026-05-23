@@ -589,3 +589,115 @@
     @apply p-4 pb-safe;
   }
 }
+
+/* ─── Dark mode overrides ─── */
+/* Triggered by next-themes adding class="dark" on <html> */
+
+.dark .extension-popup {
+  background: #16181d;
+  color: #e5e7eb;
+}
+
+.dark .extension-options {
+  background: #0f1115;
+}
+
+.dark .extension-floating-popup {
+  background: #16181d;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgba(229, 231, 235, 0.65);
+  opacity: 1;
+}
+
+.dark .glass {
+  background: #16181d;
+  border-color: rgba(229, 231, 235, 0.12);
+  color: #e5e7eb;
+}
+
+.dark .glass-panel {
+  background: #16181d;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  color: #e5e7eb;
+}
+
+.dark .glass-card {
+  background: #16181d;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  color: #e5e7eb;
+}
+
+.dark .glass-button {
+  background: #16181d;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  color: #e5e7eb;
+}
+
+.dark .glass-button:hover {
+  background: #1c1f26;
+  border-color: rgba(229, 231, 235, 0.2);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dark .glass-input {
+  background: #0f1115;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  color: #e5e7eb;
+}
+
+.dark .glass-input:focus {
+  background: #0f1115;
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark .glass-modal {
+  background: #16181d;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.dark .glass-nav {
+  background: #16181d;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.12);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dark .glass-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Sync qa-theme-dark TipTap overrides with .dark */
+.dark .tiptap pre {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .tiptap code {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .tiptap details {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dark .tiptap table th {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Custom scrollbar - dark variant */
+.dark .custom-scrollbar {
+  scrollbar-color: #262a33 #16181d;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-zinc-800;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-zinc-600 rounded hover:bg-zinc-500;
+}

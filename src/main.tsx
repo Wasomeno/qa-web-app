@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/contexts/session-context';
 
 // Check if we just got redirected back from OAuth with a session_id
@@ -33,10 +34,12 @@ declare module '@tanstack/react-router' {
 const rootElement = document.getElementById('root')!;
 ReactDOM.createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <RouterProvider router={router} />
-      </SessionProvider>
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider>
+          <RouterProvider router={router} />
+        </SessionProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>
 );
