@@ -141,7 +141,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         onClick={e => e.stopPropagation()}
       >
         <DropdownMenuItem className="gap-2" onClick={onRunInAgent}>
-          <Bot className="w-4 h-4 text-zinc-900" /> Run in Agent
+          <Bot className="w-4 h-4 text-foreground" /> Run in Agent
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2" onClick={handleStartEdit}>
@@ -178,7 +178,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         <DropdownMenuItem
           className={cn(
             "gap-2",
-            isDeleting ? "text-zinc-400 cursor-not-allowed" : "text-red-600 focus:text-red-600"
+            isDeleting ? "text-muted-foreground cursor-not-allowed" : "text-red-600 focus:text-red-600"
           )}
           onClick={e => {
             e.stopPropagation();
@@ -205,13 +205,13 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
       recording.status === 'ready' && 'bg-emerald-400',
       recording.status === 'processing' && 'bg-amber-400',
       recording.status === 'failed' && 'bg-red-400',
-      !recording.status && 'bg-zinc-300'
+      !recording.status && 'bg-muted/80'
     );
 
     return (
       <div
         role="button"
-        className="flex items-center gap-3 py-3 px-4 border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors group cursor-pointer relative"
+        className="flex items-center gap-3 py-3 px-4 border-b border-border hover:bg-muted/50 transition-colors group cursor-pointer relative"
         onClick={onClick}
       >
         {/* Delete confirmation / error overlay */}
@@ -242,7 +242,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-3 text-xs text-zinc-600 hover:bg-white/80"
+                    className="h-7 px-3 text-xs text-muted-foreground hover:bg-card/80"
                     onClick={e => {
                       e.stopPropagation();
                       setIsConfirmingDelete(false);
@@ -265,7 +265,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         </AnimatePresence>
 
         {/* Left: Thumbnail + Checkbox + Status */}
-        <div className="relative w-16 h-10 shrink-0 flex items-center justify-center bg-zinc-900 rounded-lg border border-zinc-100 overflow-hidden">
+        <div className="relative w-16 h-10 shrink-0 flex items-center justify-center bg-zinc-900 rounded-lg border border-border overflow-hidden">
           {videoUrl ? (
             <video
               src={videoUrl}
@@ -275,7 +275,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
               playsInline
             />
           ) : (
-            <Video className="w-5 h-5 text-zinc-700" />
+            <Video className="w-5 h-5 text-foreground/80" />
           )}
 
           {/* Selection overlay */}
@@ -322,14 +322,14 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                 className="h-7 text-sm py-0 w-full max-w-md"
               />
             ) : (
-              <span className="text-sm font-semibold text-zinc-900 truncate">
+              <span className="text-sm font-semibold text-foreground truncate">
                 {recording.name}
               </span>
             )}
           </div>
           <div className="flex items-center gap-3 mt-1">
             {recording.description && (
-              <span className="text-xs text-zinc-500 truncate max-w-[400px]">
+              <span className="text-xs text-muted-foreground truncate max-w-[400px]">
                 {recording.description}
               </span>
             )}
@@ -356,7 +356,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         {/* Right: Date + Actions */}
         <div className="flex items-center gap-4 shrink-0 ml-4">
           {recording.created_at && (
-            <span className="text-[11px] text-zinc-400 tabular-nums">
+            <span className="text-[11px] text-muted-foreground tabular-nums">
               {new Date(recording.created_at).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -376,14 +376,14 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
     <div
       role="button"
       className={cn(
-        'flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all bg-white group relative h-full',
-        'border border-zinc-100 hover:border-zinc-200 hover:shadow-sm',
+        'flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all bg-card group relative h-full',
+        'border border-border hover:border-border hover:shadow-sm',
       )}
       onClick={onClick}
     >
       {/* Top-right date */}
       {recording.created_at && (
-        <span className="absolute top-3 right-3 text-[10px] text-zinc-400 font-medium tabular-nums z-20">
+        <span className="absolute top-3 right-3 text-[10px] text-muted-foreground font-medium tabular-nums z-20">
           {new Date(recording.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -420,7 +420,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 text-[11px] text-zinc-600 hover:bg-white/80"
+                    className="h-6 px-2 text-[11px] text-muted-foreground hover:bg-card/80"
                     onClick={e => {
                       e.stopPropagation();
                       setIsConfirmingDelete(false);
@@ -444,7 +444,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
       </AnimatePresence>
 
       {/* Video Thumbnail */}
-      <div className="w-full h-[240px] bg-zinc-900 relative overflow-hidden border-b border-zinc-100 flex items-center justify-center">
+      <div className="w-full h-[240px] bg-zinc-900 relative overflow-hidden border-b border-border flex items-center justify-center">
         {videoUrl ? (
           <video
             src={videoUrl}
@@ -454,7 +454,7 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
             playsInline
           />
         ) : (
-          <div className="flex flex-col items-center gap-2 text-zinc-700">
+          <div className="flex flex-col items-center gap-2 text-foreground/80">
             <Video className="w-8 h-8" />
           </div>
         )}
@@ -492,11 +492,11 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
                 className="h-7 text-sm py-0"
               />
             ) : (
-              <h3 className="text-sm font-semibold text-zinc-900 truncate leading-snug group-hover:text-primary transition-colors">
+              <h3 className="text-sm font-semibold text-foreground truncate leading-snug group-hover:text-primary transition-colors">
                 {recording.name}
               </h3>
             )}
-            <p className="text-[11px] text-zinc-500 mt-1 line-clamp-1">
+            <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
               {recording.description || 'No description'}
             </p>
           </div>
@@ -507,10 +507,10 @@ export const RecordingItem: React.FC<RecordingItemProps> = ({
         </div>
 
         {/* Footer: Project Picker */}
-        <div className="mt-3 pt-2 flex items-center justify-between border-t border-zinc-50">
+        <div className="mt-3 pt-2 flex items-center justify-between border-t border-border">
           <div className="flex-1 min-w-0">
             {recording.project_name && (
-              <span className="text-[10px] text-zinc-400 truncate block">
+              <span className="text-[10px] text-muted-foreground truncate block">
                 {recording.project_name}
               </span>
             )}

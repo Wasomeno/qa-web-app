@@ -42,7 +42,7 @@ interface CompactRecordingsListProps {
 }
 
 const CompactRecordingSkeleton = () => (
-  <div className="px-4 py-3 space-y-2 border-b border-gray-50">
+  <div className="px-4 py-3 space-y-2 border-b border-border">
     <div className="flex items-center gap-2">
       <Skeleton className="h-4 flex-1" />
       <div className="flex gap-1">
@@ -244,7 +244,7 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
   return (
     <div
       ref={containerRef}
-      className="flex flex-col h-[380px] w-full bg-white"
+      className="flex flex-col h-[380px] w-full bg-card"
       onMouseDown={e => e.stopPropagation()}
       onMouseUp={e => e.stopPropagation()}
       onClick={e => e.stopPropagation()}
@@ -252,10 +252,10 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
       onPointerUp={e => e.stopPropagation()}
     >
       {/* Header with Project Selector */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-gray-900">Test Recordings</h3>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+          <h3 className="text-sm font-semibold text-foreground">Test Recordings</h3>
+          <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
             {filteredRecordings.length}
           </span>
         </div>
@@ -274,20 +274,20 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {isLoading ? (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-border">
             {[1, 2, 3].map(i => (
               <CompactRecordingSkeleton key={i} />
             ))}
           </div>
         ) : filteredRecordings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <FileText className="w-8 h-8 text-gray-300 mb-2" />
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <FileText className="w-8 h-8 text-muted-foreground/30 mb-2" />
             <p className="text-sm">No recordings yet</p>
-            <p className="text-xs text-gray-400 mt-1">Start recording to create tests</p>
+            <p className="text-xs text-muted-foreground mt-1">Start recording to create tests</p>
           </div>
         ) : (
           <ScrollArea className="h-full">
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {filteredRecordings.map((rec: any) => {
                 const isEditing = editingId === rec.id;
                 const isConfirming = confirmDeleteId === rec.id;
@@ -302,7 +302,7 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
                     animate={{ opacity: isDeleted ? 0 : 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className={cn(
-                      'px-4 py-3 hover:bg-gray-50 transition-colors',
+                      'px-4 py-3 hover:bg-muted/50 transition-colors',
                       isDeleted && 'bg-green-50',
                       isConfirming && 'bg-red-50'
                     )}
@@ -367,22 +367,22 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
                                 className="h-7 w-7 p-0"
                                 onClick={() => setEditingId(null)}
                               >
-                                <X className="w-3 h-3 text-gray-400" />
+                                <X className="w-3 h-3 text-muted-foreground" />
                               </Button>
                             </div>
                           ) : (
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {rec.name}
                             </p>
                           )}
                           <div className="flex items-center gap-3 mt-1.5">
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {rec.created_at
                                 ? new Date(rec.created_at).toLocaleDateString()
                                 : 'Unknown'}
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               {rec.steps?.length || 0} steps
                             </span>
                           </div>
@@ -392,29 +392,29 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 hover:bg-gray-100"
+                            className="h-7 w-7 p-0 hover:bg-muted/50"
                             onClick={() => handleRunTest(rec)}
                             title="Run test"
                           >
-                            <Play className="w-3.5 h-3.5 text-gray-600" />
+                            <Play className="w-3.5 h-3.5 text-foreground/70" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 hover:bg-gray-100"
+                            className="h-7 w-7 p-0 hover:bg-muted/50"
                             onClick={e => handleStartRename(e, rec)}
                             title="Rename"
                           >
-                            <Pencil className="w-3.5 h-3.5 text-gray-600" />
+                            <Pencil className="w-3.5 h-3.5 text-foreground/70" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 hover:bg-gray-100"
+                            className="h-7 w-7 p-0 hover:bg-muted/50"
                             onClick={() => setConfirmDeleteId(rec.id)}
                             title="Delete"
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-gray-600" />
+                            <Trash2 className="w-3.5 h-3.5 text-foreground/70" />
                           </Button>
                         </div>
                       </div>
@@ -428,11 +428,11 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
         <Button
           size="sm"
           variant="ghost"
-          className="text-xs text-gray-600 hover:text-gray-900"
+          className="text-xs text-foreground/70 hover:text-foreground"
           onClick={onViewAll}
         >
           <ExternalLink className="w-3 h-3 mr-1" />
@@ -440,7 +440,7 @@ export const CompactRecordingsList: React.FC<CompactRecordingsListProps> = ({
         </Button>
         <Button
           size="sm"
-          className="text-xs bg-zinc-600 hover:bg-zinc-700 text-white"
+          className="text-xs bg-muted-foreground hover:bg-foreground/80 text-white"
           onClick={handleStartRecording}
         >
           <Plus className="w-3 h-3 mr-1" />

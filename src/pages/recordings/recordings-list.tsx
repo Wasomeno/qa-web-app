@@ -278,21 +278,21 @@ export const RecordingsPage: React.FC<{
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden relative">
+    <div className="flex flex-col h-full bg-background overflow-hidden relative">
       {/* Header & Filters */}
       <div
         className={cn(
-          "flex-none border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          "flex-none border-b border-border/80 bg-background/80 backdrop-blur-xl z-10",
           hideHeader ? "px-4 py-4 md:px-8" : "px-8 pt-10 pb-6",
         )}
       >
         {!hideHeader && (
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 Recordings
               </h1>
-              <p className="text-sm text-gray-500 mt-1.5">
+              <p className="text-sm text-muted-foreground mt-1.5">
                 {projectName
                   ? `Manage captured test flows for ${projectName}`
                   : "Manage and run your captured test flows"}
@@ -304,10 +304,10 @@ export const RecordingsPage: React.FC<{
         <div className={`flex items-center justify-between gap-2 ${hideHeader ? "" : "mt-5"}`}>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search recordings..."
-                className="pl-9 w-64 h-10 bg-white border-theme-border rounded-xl focus-visible:ring-2 focus-visible:ring-zinc-900"
+                className="pl-9 w-64 h-10 bg-background border-border rounded-xl focus-visible:ring-2 focus-visible:ring-foreground"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -335,22 +335,22 @@ export const RecordingsPage: React.FC<{
               <div className="p-6">
                 {/* Processing Section */}
                 {lastBlueprint && (
-                  <section className="mb-8 p-4 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between">
+                  <section className="mb-8 p-4 bg-muted/50 border border-border rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
                         {lastBlueprint.status === "processing" ? (
-                          <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
                         ) : (
-                          <Terminal className="w-5 h-5 text-zinc-600" />
+                          <Terminal className="w-5 h-5 text-muted-foreground" />
                         )}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-zinc-900">
+                        <h3 className="font-semibold text-foreground">
                           {lastBlueprint.status === "processing"
                             ? "Processing Test Script..."
                             : "New Test Script Ready"}
                         </h3>
-                        <p className="text-sm text-zinc-600">
+                        <p className="text-sm text-muted-foreground">
                           {lastBlueprint.status === "processing"
                             ? "We are generating your test steps using AI..."
                             : "You have a recently captured flow. Save it to your library."}
@@ -363,14 +363,14 @@ export const RecordingsPage: React.FC<{
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-white"
+                            className="bg-card"
                             onClick={() => handleRunTest(lastBlueprint)}
                           >
                             Preview
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-zinc-900 hover:bg-black text-white border-none"
+                            className="bg-foreground hover:bg-foreground/90 text-background border-none"
                             onClick={handleSaveLastBlueprint}
                           >
                             Save
@@ -394,22 +394,22 @@ export const RecordingsPage: React.FC<{
               <div className="p-6">
                 {/* Processing Section */}
                 {lastBlueprint && (
-                  <section className="mb-8 p-4 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between">
+                  <section className="mb-8 p-4 bg-muted/50 border border-border rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
                         {lastBlueprint.status === "processing" ? (
-                          <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
                         ) : (
-                          <Terminal className="w-5 h-5 text-zinc-600" />
+                          <Terminal className="w-5 h-5 text-muted-foreground" />
                         )}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-zinc-900">
+                        <h3 className="font-semibold text-foreground">
                           {lastBlueprint.status === "processing"
                             ? "Processing Test Script..."
                             : "New Test Script Ready"}
                         </h3>
-                        <p className="text-sm text-zinc-600">
+                        <p className="text-sm text-muted-foreground">
                           {lastBlueprint.status === "processing"
                             ? "We are generating your test steps using AI..."
                             : "You have a recently captured flow. Save it to your library."}
@@ -422,14 +422,14 @@ export const RecordingsPage: React.FC<{
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-white"
+                            className="bg-card"
                             onClick={() => handleRunTest(lastBlueprint)}
                           >
                             Preview
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-zinc-900 hover:bg-black text-white border-none"
+                            className="bg-foreground hover:bg-foreground/90 text-background border-none"
                             onClick={handleSaveLastBlueprint}
                           >
                             Save
@@ -548,15 +548,15 @@ export const RecordingsPage: React.FC<{
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="absolute bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
           >
-            <div className="flex items-center gap-3 px-5 py-3 bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] pointer-events-auto">
-              <span className="text-sm font-medium text-zinc-900 bg-zinc-100 px-3 py-1.5 rounded-full tabular-nums">
+            <div className="flex items-center gap-3 px-5 py-3 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] pointer-events-auto">
+              <span className="text-sm font-medium text-foreground bg-muted px-3 py-1.5 rounded-full tabular-nums">
                 {selectedIds.size} selected
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedIds(new Set())}
-                className="h-9 px-4 border-zinc-300 hover:bg-zinc-50 rounded-full text-xs"
+                className="h-9 px-4 border-border hover:bg-accent rounded-full text-xs"
               >
                 Clear
               </Button>
