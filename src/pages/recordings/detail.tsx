@@ -76,7 +76,7 @@ function getStepIcon(action: string) {
 /* ─────────────────────── StatusDot ─────────────────────────── */
 
 const StatusDot: React.FC<{ status?: number }> = ({ status }) => {
-  if (!status) return <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 shrink-0" />;
+  if (!status) return <span className="w-1.5 h-1.5 rounded-full bg-muted shrink-0" />;
   if (status >= 400) return <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />;
   if (status >= 300) return <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />;
   return <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />;
@@ -108,14 +108,14 @@ const PlayheadStep: React.FC<PlayheadStepProps> = ({
       onClick={onClick}
       className={`group relative flex items-start gap-3 w-full text-left py-3.5 px-4 transition-colors rounded-r-lg ${
         isActive
-          ? 'bg-zinc-50 border-l-2 border-zinc-900'
-          : 'border-l-2 border-transparent hover:border-zinc-300 hover:bg-zinc-50/50'
+          ? 'bg-muted border-l-2 border-foreground'
+          : 'border-l-2 border-transparent hover:border-border hover:bg-accent/50'
       }`}
     >
       {/* Step number */}
       <span
         className={`mt-0.5 text-xs font-mono font-medium w-5 text-right shrink-0 ${
-          isActive ? 'text-zinc-900' : 'text-zinc-400 group-hover:text-zinc-600'
+          isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground/80'
         }`}
       >
         {index + 1}
@@ -124,7 +124,7 @@ const PlayheadStep: React.FC<PlayheadStepProps> = ({
       {/* Icon */}
       <span
         className={`mt-0.5 shrink-0 ${
-          isActive ? 'text-zinc-700' : 'text-zinc-400 group-hover:text-zinc-600'
+          isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground/80'
         }`}
       >
         {getStepIcon(step.action)}
@@ -133,16 +133,16 @@ const PlayheadStep: React.FC<PlayheadStepProps> = ({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium capitalize ${isActive ? 'text-zinc-900' : 'text-zinc-700'}`}>
+          <span className={`text-sm font-medium capitalize ${isActive ? 'text-foreground' : 'text-foreground'}`}>
             {step.action}
           </span>
           {step.value && (
-            <span className="text-xs text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded font-mono truncate max-w-[160px]">
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded font-mono truncate max-w-[160px]">
               {step.value}
             </span>
           )}
         </div>
-        <p className={`text-sm truncate ${isActive ? 'text-zinc-600' : 'text-zinc-500'}`}>
+        <p className={`text-sm truncate ${isActive ? 'text-foreground/80' : 'text-muted-foreground'}`}>
           {step.description}
         </p>
       </div>
@@ -188,30 +188,30 @@ const ExpandableNetworkRow: React.FC<{
     <div className="group">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2.5 w-full text-left py-2.5 px-2 hover:bg-zinc-50/50 transition-colors"
+        className="flex items-center gap-2.5 w-full text-left py-2.5 px-2 hover:bg-accent/50 transition-colors"
       >
         <StatusDot status={req.status} />
         <span className="shrink-0">
           {expanded ? (
-            <ChevronDown className="w-3 h-3 text-zinc-400" />
+            <ChevronDown className="w-3 h-3 text-muted-foreground" />
           ) : (
-            <ChevronRight className="w-3 h-3 text-zinc-400" />
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
           )}
         </span>
         <span
           className={`font-semibold text-xs w-10 shrink-0 ${
             req.method === 'GET'
-              ? 'text-zinc-600'
+              ? 'text-foreground/80'
               : req.method === 'POST'
                 ? 'text-emerald-600'
                 : req.method === 'DELETE'
                   ? 'text-red-600'
-                  : 'text-zinc-500'
+                  : 'text-muted-foreground'
           }`}
         >
           {req.method}
         </span>
-        <span className="flex-1 truncate text-sm text-zinc-700 font-mono">{req.url}</span>
+        <span className="flex-1 truncate text-sm text-foreground font-mono">{req.url}</span>
         {req.status && (
           <span
             className={`text-xs font-medium w-10 text-right shrink-0 ${
@@ -222,7 +222,7 @@ const ExpandableNetworkRow: React.FC<{
           </span>
         )}
         {req.durationMs && (
-          <span className="text-xs text-zinc-400 w-14 text-right shrink-0">{req.durationMs}ms</span>
+          <span className="text-xs text-muted-foreground w-14 text-right shrink-0">{req.durationMs}ms</span>
         )}
       </button>
 
@@ -329,28 +329,28 @@ const MobileStepCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-white border border-zinc-100 rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-start gap-3 w-full text-left p-4"
       >
-        <span className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-100 text-[10px] font-mono font-bold text-zinc-500 shrink-0">
+        <span className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full bg-muted text-[10px] font-mono font-bold text-muted-foreground shrink-0">
           {index + 1}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="p-1 bg-zinc-100 rounded-md text-zinc-500">{getStepIcon(step.action)}</span>
-            <span className="text-sm font-semibold text-zinc-900 capitalize">{step.action}</span>
+            <span className="p-1 bg-muted rounded-md text-muted-foreground">{getStepIcon(step.action)}</span>
+            <span className="text-sm font-semibold text-foreground capitalize">{step.action}</span>
             {step.value && (
-              <Badge variant="secondary" className="text-[11px] py-0 font-normal bg-zinc-100 text-zinc-600 border-zinc-200">
+              <Badge variant="secondary" className="text-[11px] py-0 font-normal bg-muted text-muted-foreground border-border">
                 {step.value}
               </Badge>
             )}
           </div>
-          <p className="text-sm text-zinc-600">{step.description}</p>
+          <p className="text-sm text-foreground/80">{step.description}</p>
         </div>
         <ChevronRight
-          className={`w-4 h-4 text-zinc-300 shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`}
+          className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`}
         />
       </button>
 
@@ -363,14 +363,14 @@ const MobileStepCard: React.FC<{
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-0 space-y-3 border-t border-zinc-50">
+            <div className="px-4 pb-4 pt-0 space-y-3 border-t border-border">
               <div className="space-y-1.5 pt-3">
-                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Selector</span>
-                <code className="text-xs bg-zinc-50 text-zinc-600 px-2 py-1 rounded border border-zinc-100 block font-mono">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Selector</span>
+                <code className="text-xs bg-muted text-foreground/80 px-2 py-1 rounded border border-border block font-mono">
                   {step.selector}
                 </code>
                 {step.xpath && (
-                  <code className="text-xs bg-zinc-50 text-zinc-600 px-2 py-1 rounded border border-zinc-100 block font-mono">
+                  <code className="text-xs bg-muted text-foreground/80 px-2 py-1 rounded border border-border block font-mono">
                     {step.xpath}
                   </code>
                 )}
@@ -389,7 +389,7 @@ const MobileStepCard: React.FC<{
                     </span>
                   )}
                   {ctx.domMutationCount > 0 && (
-                    <span className="text-xs font-medium text-zinc-600 bg-zinc-50 px-2 py-0.5 rounded">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
                       {ctx.domMutationCount} mutations
                     </span>
                   )}
@@ -407,9 +407,9 @@ const MobileStepCard: React.FC<{
 
 export const RecordingDetailSkeleton: React.FC = () => {
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header Skeleton */}
-      <header className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+      <header className="flex-none px-8 pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <Skeleton className="h-9 w-9 shrink-0 mt-0.5 rounded-md" />
@@ -427,7 +427,7 @@ export const RecordingDetailSkeleton: React.FC = () => {
 
       {/* Desktop Skeleton */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/30">
+        <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
           <ScrollArea className="flex-1">
             <div className="p-8 space-y-6 max-w-3xl">
               <div className="flex flex-wrap items-center gap-3">
@@ -458,15 +458,15 @@ export const RecordingDetailSkeleton: React.FC = () => {
             </div>
           </ScrollArea>
         </div>
-        <div className="w-px bg-zinc-200 shrink-0" />
-        <div className="w-[480px] flex shrink-0 bg-white">
-          <div className="w-14 border-r border-zinc-200 flex flex-col items-center py-3 gap-1 shrink-0 bg-zinc-50/50">
+        <div className="w-px bg-border shrink-0" />
+        <div className="w-[480px] flex shrink-0 bg-card">
+          <div className="w-14 border-r border-border flex flex-col items-center py-3 gap-1 shrink-0 bg-muted/50">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-10 w-10 rounded-md" />
             ))}
           </div>
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between shrink-0">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between shrink-0">
               <Skeleton className="h-5 w-24 rounded-md" />
             </div>
             <div className="flex-1 p-5 space-y-4">
@@ -480,7 +480,7 @@ export const RecordingDetailSkeleton: React.FC = () => {
 
       {/* Mobile Skeleton */}
       <div className="flex lg:hidden flex-1 overflow-hidden flex-col">
-        <div className="shrink-0 border-b border-zinc-200 bg-white px-4 py-2 overflow-x-auto">
+        <div className="shrink-0 border-b border-border bg-background px-4 py-2 overflow-x-auto">
           <div className="flex gap-1.5">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-8 w-20 rounded-full shrink-0" />
@@ -498,7 +498,7 @@ export const RecordingDetailSkeleton: React.FC = () => {
       </div>
 
       {/* Status Bar Skeleton */}
-      <div className="shrink-0 border-t border-zinc-200 bg-zinc-50 px-6 py-2.5 flex items-center justify-between">
+      <div className="shrink-0 border-t border-border bg-muted px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Skeleton className="h-4 w-28 rounded-md" />
           <Skeleton className="h-4 w-20 rounded-md" />
@@ -573,9 +573,9 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* ─── Mobile Header ─── */}
-      <header className="flex-none px-4 pt-4 pb-3 border-b border-zinc-100 bg-white z-10">
+      <header className="flex-none px-4 pt-4 pb-3 border-b border-border bg-background z-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <Button
@@ -587,8 +587,8 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               <ChevronLeft className="w-5 h-5" />
             </Button>
             <div className="min-w-0">
-              <h1 className="text-base font-semibold text-zinc-900 truncate">{blueprint.name}</h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <h1 className="text-base font-semibold text-foreground truncate">{blueprint.name}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {blueprint.steps.length} steps · {telemetry?.endTime ? formatDuration(telemetry.endTime - telemetry.startTime) : 'Manual'}
               </p>
             </div>
@@ -597,7 +597,7 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-zinc-500"
+              className="h-8 w-8 text-muted-foreground"
               onClick={handleCopyVideoLink}
               disabled={!blueprint.video_url}
               title="Copy Video Link"
@@ -606,7 +606,7 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
             </Button>
             <Button
               size="sm"
-              className="h-8 gap-1.5 text-xs rounded-md bg-zinc-900 hover:bg-black text-white px-3"
+              className="h-8 gap-1.5 text-xs rounded-md bg-foreground hover:bg-foreground/90 text-background px-3"
               onClick={handleRunTest}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -617,7 +617,7 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
       </header>
 
       {/* ─── Horizontal Scrollable Tabs ─── */}
-      <div className="shrink-0 border-b border-zinc-100 bg-white px-4 py-2 overflow-x-auto">
+      <div className="shrink-0 border-b border-border bg-background px-4 py-2 overflow-x-auto">
         <div className="flex gap-1.5">
           {tabs.map((tab) => (
             <button
@@ -625,8 +625,8 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               onClick={() => setActiveTab(tab.id)}
               className={`relative shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-zinc-900 text-white shadow-sm'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  ? 'bg-foreground text-background shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               {tab.label}
@@ -636,8 +636,8 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
                     tab.error
                       ? 'bg-red-500 text-white'
                       : activeTab === tab.id
-                        ? 'bg-zinc-700 text-white'
-                        : 'bg-zinc-300 text-white'
+                        ? 'bg-foreground/80 text-background'
+                        : 'bg-muted text-foreground'
                   }`}
                 >
                   {tab.count > 99 ? '99+' : tab.count}
@@ -649,7 +649,7 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
       </div>
 
       {/* ─── Tab Content ─── */}
-      <div className="flex-1 overflow-hidden bg-zinc-50/30">
+      <div className="flex-1 overflow-hidden bg-muted/30">
         <ScrollArea className="h-full">
           <AnimatePresence mode="wait">
             <motion.div
@@ -664,11 +664,11 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               {activeTab === 'steps' && blueprint.video_url && (
                 <section className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Playback</h2>
+                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Playback</h2>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-[11px] gap-1 text-zinc-400 hover:text-zinc-700 px-2"
+                      className="h-6 text-[11px] gap-1 text-muted-foreground hover:text-foreground px-2"
                       onClick={() => setShowVideo(!showVideo)}
                     >
                       {showVideo ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -676,14 +676,14 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
                     </Button>
                   </div>
                   {showVideo ? (
-                    <div className="aspect-video w-full overflow-hidden rounded-xl border border-zinc-200 bg-black">
+                    <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
                       <video src={blueprint.video_url} controls className="h-full w-full object-contain">
                         Your browser does not support the video tag.
                       </video>
                     </div>
                   ) : (
                     <button
-                      className="flex aspect-video w-full flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-white text-zinc-400 cursor-pointer active:bg-zinc-50 transition-colors"
+                      className="flex aspect-video w-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card text-muted-foreground cursor-pointer active:bg-accent transition-colors"
                       onClick={() => setShowVideo(true)}
                     >
                       <Video className="mb-1 h-5 w-5 opacity-30" />
@@ -697,7 +697,7 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               {activeTab === 'steps' && (
                 <div className="space-y-3">
                   {blueprint.description && (
-                    <p className="text-sm text-zinc-500 leading-relaxed">{blueprint.description}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{blueprint.description}</p>
                   )}
                   {blueprint.steps.map((step, index) => (
                     <MobileStepCard
@@ -735,9 +735,9 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               {activeTab === 'network' && telemetry && (
                 <div className="space-y-0">
                   {(telemetry.networkRequests || []).length === 0 ? (
-                    <p className="text-sm text-zinc-400 italic py-8 text-center">No network requests captured.</p>
+                    <p className="text-sm text-muted-foreground italic py-8 text-center">No network requests captured.</p>
                   ) : (
-                    <div className="divide-y divide-zinc-100 bg-white rounded-xl border border-zinc-100 overflow-hidden">
+                    <div className="divide-y divide-border bg-card rounded-xl border border-border overflow-hidden">
                       {(telemetry.networkRequests || []).map((req, i) => (
                         <ExpandableNetworkRow key={i} req={req} />
                       ))}
@@ -782,12 +782,12 @@ const MobileRecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint }
               {/* Export Tab */}
               {activeTab === 'export' && telemetry && (
                 <div className="space-y-3">
-                  <p className="text-xs text-zinc-500 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     Markdown transcript optimized for ChatGPT, Claude, or other LLMs.
                   </p>
                   <Button
                     size="sm"
-                    className="w-full h-9 text-xs gap-1.5 rounded-md bg-zinc-900 hover:bg-black text-white"
+                    className="w-full h-9 text-xs gap-1.5 rounded-md bg-foreground hover:bg-foreground/90 text-background"
                     onClick={handleExportLLM}
                     disabled={!hasTelemetry}
                   >
@@ -907,17 +907,17 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
       </div>
 
       {/* ─── Desktop Layout (>= 1024px) ─── */}
-      <div className="hidden lg:flex flex-col h-full bg-white overflow-hidden">
+      <div className="hidden lg:flex flex-col h-full bg-background overflow-hidden">
         {/* Header */}
-        <header className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <header className="flex-none px-8 pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0">
               <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/recordings' })} className="h-9 w-9 shrink-0 mt-0.5">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <div className="min-w-0">
-                <h1 className="text-3xl font-semibold tracking-tight text-gray-900 truncate">{blueprint.name}</h1>
-                <p className="text-sm text-gray-500 mt-1.5">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground truncate">{blueprint.name}</h1>
+                <p className="text-sm text-muted-foreground mt-1.5">
                   {blueprint.steps.length} steps · Manual Recording
                 </p>
               </div>
@@ -926,7 +926,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 h-9 text-sm rounded-md border-zinc-200"
+                className="gap-2 h-9 text-sm rounded-md border-border"
                 onClick={handleCopyVideoLink}
                 disabled={!blueprint.video_url}
               >
@@ -935,7 +935,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
               </Button>
               <Button
                 size="sm"
-                className="gap-2 h-9 text-sm rounded-md bg-zinc-900 hover:bg-black text-white"
+                className="gap-2 h-9 text-sm rounded-md bg-foreground hover:bg-foreground/90 text-background"
                 onClick={handleRunTest}
               >
                 <Play className="w-4 h-4 fill-current" />
@@ -948,18 +948,18 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
         {/* Main Split Pane */}
         <div className="flex flex-1 overflow-hidden">
           {/* ───── Left Pane: Video + Playhead Steps ───── */}
-          <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/30">
+          <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
             <ScrollArea className="flex-1">
               <div className="p-8 space-y-6 max-w-3xl">
                 {/* Metadata */}
                 <section className="flex flex-wrap items-center gap-3">
-                  <span className="text-sm text-zinc-500 flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     {telemetry?.endTime
                       ? formatDuration(telemetry.endTime - telemetry.startTime)
                       : `${blueprint.steps.length} steps`}
                   </span>
-                  <span className="text-sm text-zinc-500 flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                     <Database className="w-3.5 h-3.5" />
                     {blueprint.projectDetails?.nameWithNamespace ||
                       blueprint.project_name ||
@@ -972,14 +972,14 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                 {blueprint.video_url && (
                   <section className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-sm font-semibold text-zinc-700 flex items-center gap-1.5">
-                        <Video className="w-4 h-4 text-zinc-500" />
+                      <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                        <Video className="w-4 h-4 text-muted-foreground" />
                         Playback
                       </h2>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1.5 text-zinc-500 hover:text-zinc-700 rounded-md"
+                        className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-md"
                         onClick={() => setShowVideo(!showVideo)}
                       >
                         {showVideo ? (
@@ -1003,7 +1003,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="aspect-video w-full overflow-hidden rounded-lg border border-zinc-200 bg-black"
+                          className="aspect-video w-full overflow-hidden rounded-lg border border-border bg-black"
                         >
                           <video src={blueprint.video_url} controls className="h-full w-full object-contain">
                             Your browser does not support the video tag.
@@ -1015,7 +1015,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="flex aspect-video w-full flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400 cursor-pointer hover:bg-zinc-100 transition-colors"
+                          className="flex aspect-video w-full flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted text-muted-foreground cursor-pointer hover:bg-accent transition-colors"
                           onClick={() => setShowVideo(true)}
                         >
                           <Video className="mb-1.5 h-6 w-6 opacity-30" />
@@ -1028,12 +1028,12 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
 
                 {/* Description */}
                 {blueprint.description && (
-                  <p className="text-base text-zinc-600 leading-relaxed">{blueprint.description}</p>
+                  <p className="text-base text-foreground/80 leading-relaxed">{blueprint.description}</p>
                 )}
 
                 {/* Playhead Steps */}
                 <section>
-                  <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-3 px-4">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-4">
                     Test Steps
                   </h2>
                   <div className="space-y-0">
@@ -1055,12 +1055,12 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
           </div>
 
           {/* Divider */}
-          <div className="w-px bg-zinc-200 shrink-0" />
+          <div className="w-px bg-border shrink-0" />
 
           {/* ───── Right Pane: Sidebar with Vertical Tabs ───── */}
-          <div className="w-[480px] flex shrink-0 bg-white">
+          <div className="w-[480px] flex shrink-0 bg-card">
             {/* Vertical Tab Strip */}
-            <div className="w-14 border-r border-zinc-200 flex flex-col items-center py-3 gap-1 shrink-0 bg-zinc-50/50">
+            <div className="w-14 border-r border-border flex flex-col items-center py-3 gap-1 shrink-0 bg-muted/50">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -1068,8 +1068,8 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                   title={tab.label}
                   className={`relative w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-white text-zinc-900 shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground/80 hover:bg-accent'
                   }`}
                 >
                   {tab.icon}
@@ -1079,8 +1079,8 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                         tab.id === 'errors' && tab.count > 0
                           ? 'bg-red-500 text-white'
                           : activeTab === tab.id
-                            ? 'bg-zinc-900 text-white'
-                            : 'bg-zinc-300 text-white'
+                            ? 'bg-foreground text-background'
+                            : 'bg-muted text-foreground'
                       }`}
                     >
                       {tab.count > 99 ? '99+' : tab.count}
@@ -1093,14 +1093,14 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
             {/* Tab Content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
               {/* Tab header */}
-              <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between shrink-0">
-                <span className="text-sm font-semibold text-zinc-700">
+              <div className="px-5 py-3 border-b border-border flex items-center justify-between shrink-0">
+                <span className="text-sm font-semibold text-foreground">
                   {tabs.find((t) => t.id === activeTab)?.label}
                 </span>
                 {activeTab === 'export' && (
                   <Button
                     size="sm"
-                    className="h-7 text-xs gap-1.5 rounded-md bg-zinc-900 hover:bg-black text-white"
+                    className="h-7 text-xs gap-1.5 rounded-md bg-foreground hover:bg-foreground/90 text-background"
                     onClick={handleExportLLM}
                     disabled={!hasTelemetry}
                   >
@@ -1130,31 +1130,31 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                               key={index}
                               className={`p-4 rounded-lg border transition-colors ${
                                 activeStepIndex === index
-                                  ? 'bg-zinc-50 border-zinc-300'
-                                  : 'bg-white border-zinc-100 hover:border-zinc-200'
+                                  ? 'bg-muted border-border'
+                                  : 'bg-card border-border hover:border-border'
                               }`}
                               onClick={() => setActiveStepIndex(index)}
                             >
                               <div className="flex items-center gap-2 mb-1.5">
-                                <span className="text-sm font-mono text-zinc-400 w-5">{index + 1}</span>
-                                <span className="p-1 bg-zinc-100 rounded text-zinc-500">{getStepIcon(step.action)}</span>
-                                <span className="text-sm font-semibold text-zinc-900 capitalize">{step.action}</span>
+                                <span className="text-sm font-mono text-muted-foreground w-5">{index + 1}</span>
+                                <span className="p-1 bg-muted rounded text-muted-foreground">{getStepIcon(step.action)}</span>
+                                <span className="text-sm font-semibold text-foreground capitalize">{step.action}</span>
                                 {step.value && (
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs py-0 font-normal bg-zinc-100 text-zinc-600 border-zinc-200"
+                                    className="text-xs py-0 font-normal bg-muted text-muted-foreground border-border"
                                   >
                                     {step.value}
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-zinc-600 mb-2 pl-7">{step.description}</p>
+                              <p className="text-sm text-foreground/80 mb-2 pl-7">{step.description}</p>
                               <div className="pl-7 space-y-1">
-                                <code className="text-xs bg-zinc-50 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-100 block truncate font-mono">
+                                <code className="text-xs bg-muted text-foreground/80 px-1.5 py-0.5 rounded border border-border block truncate font-mono">
                                   {step.selector}
                                 </code>
                                 {step.xpath && (
-                                  <code className="text-xs bg-zinc-50 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-100 block truncate font-mono">
+                                  <code className="text-xs bg-muted text-foreground/80 px-1.5 py-0.5 rounded border border-border block truncate font-mono">
                                     {step.xpath}
                                   </code>
                                 )}
@@ -1173,7 +1173,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                                     </span>
                                   )}
                                   {ctx.domMutationCount > 0 && (
-                                    <span className="text-xs font-medium text-zinc-600 bg-zinc-50 px-2 py-0.5 rounded">
+                                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
                                       {ctx.domMutationCount} mutations
                                     </span>
                                   )}
@@ -1212,9 +1212,9 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                     {activeTab === 'network' && telemetry && (
                       <div className="space-y-0">
                         {(telemetry.networkRequests || []).length === 0 ? (
-                          <p className="text-base text-zinc-400 italic py-4">No network requests captured.</p>
+                          <p className="text-base text-muted-foreground italic py-4">No network requests captured.</p>
                         ) : (
-                          <div className="divide-y divide-zinc-100">
+                          <div className="divide-y divide-border">
                             {(telemetry.networkRequests || []).map((req, i) => (
                               <ExpandableNetworkRow key={i} req={req} />
                             ))}
@@ -1259,7 +1259,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                     {/* Export Tab — Dark */}
                     {activeTab === 'export' && telemetry && (
                       <div className="space-y-3">
-                        <p className="text-sm text-zinc-500 leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                           Markdown transcript optimized for ChatGPT, Claude, or other LLMs. Includes step-by-step
                           context with console logs, network requests, and errors.
                         </p>
@@ -1268,7 +1268,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
                             <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
                               Preview
                             </span>
-                            <span className="text-sm text-zinc-600">{generateLLMTranscript.length} chars</span>
+                            <span className="text-sm text-muted-foreground">{generateLLMTranscript.length} chars</span>
                           </div>
                           <pre className="p-4 text-xs text-zinc-300 whitespace-pre-wrap font-mono max-h-[500px] overflow-y-auto leading-relaxed">
                             {generateLLMTranscript(
@@ -1292,25 +1292,25 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
         </div>
 
         {/* Status Bar */}
-        <div className="shrink-0 border-t border-zinc-200 bg-zinc-50 px-6 py-2.5 flex items-center justify-between">
+        <div className="shrink-0 border-t border-border bg-muted px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-muted-foreground">
               Step {activeStepIndex + 1} of {blueprint.steps.length}
             </span>
             {hasTelemetry && (
               <>
-                <span className="text-sm text-zinc-400">·</span>
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-muted-foreground">·</span>
+                <span className="text-sm text-muted-foreground">
                   {telemetry?.consoleLogs?.length || 0} logs
                 </span>
-                <span className="text-sm text-zinc-400">·</span>
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-muted-foreground">·</span>
+                <span className="text-sm text-muted-foreground">
                   {telemetry?.networkRequests?.length || 0} requests
                 </span>
                 {(telemetry?.jsErrors?.length || 0) > 0 && (
                   <>
-                    <span className="text-sm text-zinc-400">·</span>
-                    <span className="text-sm text-red-600 font-medium">
+                    <span className="text-sm text-muted-foreground">·</span>
+                    <span className="text-sm text-destructive font-medium">
                       {telemetry?.jsErrors?.length} errors
                     </span>
                   </>
@@ -1321,7 +1321,7 @@ export const RecordingDetailPage: React.FC<RecordingDetailProps> = ({ blueprint 
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-sm gap-1.5 text-zinc-500 hover:text-zinc-900 rounded-md"
+            className="h-7 text-sm gap-1.5 text-muted-foreground hover:text-foreground rounded-md"
             onClick={handleExportLLM}
             disabled={!hasTelemetry}
           >

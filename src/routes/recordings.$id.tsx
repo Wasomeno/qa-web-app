@@ -18,7 +18,7 @@ function RecordingsDetailRoute() {
   if (!blueprint) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-sm text-gray-500">Recording not found</div>
+        <div className="text-sm text-muted-foreground">Recording not found</div>
       </div>
     );
   }
