@@ -16,10 +16,10 @@ export const CreateIssuePage: React.FC<CreateIssuePageProps> = ({
   return (
     <ScrollArea className="h-full">
       <div className="pb-32">
-        <div className="flex-none space-y-5 px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex-none space-y-5 px-4 md:px-8 pt-6 md:pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
           <div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">Create Issue</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">Create Issue</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Report a new bug or quality issue
             </p>
           </div>

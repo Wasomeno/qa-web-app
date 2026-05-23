@@ -38,12 +38,12 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-auto py-2 px-3 w-full justify-start text-left font-normal bg-white border-theme-border rounded-xl focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 relative min-h-[42px] transition-all"
+          className="h-auto py-2 px-3 w-full justify-start text-left font-normal bg-background border-theme-border rounded-xl focus:ring-ring focus:border-ring hover:bg-accent relative min-h-[42px] transition-all"
           disabled={disabled}
         >
           <div className="flex flex-wrap gap-2 items-center pr-6">
             {selectedLabels.length === 0 && (
-              <span className="text-gray-500">Select Labels...</span>
+              <span className="text-muted-foreground">Select Labels...</span>
             )}
             {selectedLabels.map(label => (
               <div
@@ -70,7 +70,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
             ))}
           </div>
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Plus className="w-4 h-4 text-gray-400" />
+            <Plus className="w-4 h-4 text-muted-foreground" />
           </div>
         </Button>
       </PopoverTrigger>
@@ -79,9 +79,9 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
         align="start"
         container={portalContainer}
       >
-        <div className="p-2 border-b border-gray-100">
+        <div className="p-2 border-b border-border">
           <input
-            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-zinc-500"
+            className="w-full bg-transparent border border-border rounded-md px-2 py-1 text-sm focus:outline-none focus:border-ring"
             placeholder="Search labels..."
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -90,10 +90,10 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
         <ScrollArea className="h-[200px]">
           {isLoading ? (
             <div className="flex items-center justify-center p-4">
-              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           ) : filteredLabels.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-500">
+            <div className="p-4 text-center text-sm text-muted-foreground">
               No labels found.
             </div>
           ) : (
@@ -103,7 +103,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
                 return (
                   <div
                     key={label.id}
-                    className="flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-100"
+                    className="flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-accent"
                     onClick={() => onToggle(label)}
                   >
                     <span
@@ -112,7 +112,7 @@ export const LabelPicker: React.FC<LabelPickerProps> = ({
                     />
                     <span className="flex-1 truncate">{label.name}</span>
                     {isSelected && (
-                      <Check className="w-4 h-4 ml-2 text-zinc-600" />
+                      <Check className="w-4 h-4 ml-2 text-muted-foreground" />
                     )}
                   </div>
                 );

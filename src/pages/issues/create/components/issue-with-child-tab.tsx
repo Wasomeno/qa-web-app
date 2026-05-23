@@ -122,7 +122,7 @@ export const IssueWithChildTab: React.FC<IssueWithChildTabProps> = ({
       {/* Child Issues */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Child Issues</h2>
+          <h2 className="text-lg font-semibold text-foreground">Child Issues</h2>
           <Button onClick={addChildIssue} variant="outline" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -138,11 +138,11 @@ export const IssueWithChildTab: React.FC<IssueWithChildTabProps> = ({
             <AccordionItem
               key={child.id}
               value={child.id}
-              className="border rounded-lg px-4 bg-white"
+              className="border rounded-lg px-4 bg-card"
             >
               <div className="flex items-center w-full">
                 <AccordionTrigger className="flex-1 hover:no-underline py-4">
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-foreground">
                     {child.title || `Child Issue #${index + 1}`}
                   </span>
                 </AccordionTrigger>
@@ -150,7 +150,7 @@ export const IssueWithChildTab: React.FC<IssueWithChildTabProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="ml-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    className="ml-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     onClick={e => {
                       e.stopPropagation();
                       removeChildIssue(child.id);

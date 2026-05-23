@@ -411,7 +411,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
             <button
               type="button"
               onClick={onGoToMain}
-              className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent px-2 py-1 rounded transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
               Open full page
@@ -442,14 +442,14 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
         <div className="space-y-1">
           <Label
             htmlFor="description"
-            className="text-xs font-medium text-gray-700"
+            className="text-xs font-medium text-foreground"
           >
             Description
           </Label>
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-zinc-500 focus-within:border-transparent transition-shadow">
+          <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent transition-shadow">
             {/* Toolbar */}
-            <div className="flex items-center justify-between gap-1 border-b border-gray-100 bg-gray-50/50 px-2 py-1">
+            <div className="flex items-center justify-between gap-1 border-b border-border bg-muted/50 px-2 py-1">
               <div className="flex items-center gap-0.5">
                 <Button
                   type="button"
@@ -464,7 +464,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
                   <Eye className="w-3 h-3" />
                 </Button>
 
-                <span className="mx-1 h-3 w-px bg-gray-200" />
+                <span className="mx-1 h-3 w-px bg-border" />
 
                 <Button
                   type="button"
@@ -594,7 +594,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
 
             {/* Editor/Preview area */}
             {mdTab === 'preview' ? (
-              <div className="px-3 py-2 min-h-[100px] max-h-[140px] overflow-y-auto bg-white">
+              <div className="px-3 py-2 min-h-[100px] max-h-[140px] overflow-y-auto bg-card">
                 {description.trim() ? (
                   <div
                     className="prose prose-sm max-w-none text-sm"
@@ -603,7 +603,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
                     }}
                   />
                 ) : (
-                  <p className="text-sm text-gray-400 italic">
+                  <p className="text-sm text-muted-foreground italic">
                     Nothing to preview
                   </p>
                 )}

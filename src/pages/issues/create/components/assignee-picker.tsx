@@ -41,7 +41,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-between text-left font-normal bg-white border-theme-border rounded-xl focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 transition-all"
+          className="w-full justify-between text-left font-normal bg-background border-theme-border rounded-xl focus:ring-ring focus:border-ring hover:bg-accent transition-all"
           disabled={disabled}
         >
           <div className="flex items-center truncate">
@@ -55,16 +55,16 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
                 <span className="truncate">{selectedAssignee.name}</span>
               </>
             ) : (
-              <span className="text-gray-500">Unassigned</span>
+              <span className="text-muted-foreground">Unassigned</span>
             )}
           </div>
           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start" container={portalContainer}>
-        <div className="p-2 border-b border-gray-100">
+        <div className="p-2 border-b border-border">
           <input
-            className="w-full bg-transparent border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-zinc-500"
+            className="w-full bg-transparent border border-border rounded-md px-2 py-1 text-sm focus:outline-none focus:border-ring"
             placeholder="Search users..."
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -73,33 +73,33 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
         <ScrollArea className="h-[200px]">
           {isLoading ? (
             <div className="flex items-center justify-center p-4">
-              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <div className="p-1">
               <div
                 className={cn(
-                  'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-100',
-                  !selectedAssignee && 'bg-zinc-50 text-zinc-700'
+                  'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-accent',
+                  !selectedAssignee && 'bg-muted text-foreground'
                 )}
                 onClick={() => {
                   onSelect(null);
                   setOpen(false);
                 }}
               >
-                <UserIcon className="w-4 h-4 mr-2 text-gray-500" />
+                <UserIcon className="w-4 h-4 mr-2 text-muted-foreground" />
                 Unassigned
                 {!selectedAssignee && (
-                  <Check className="w-4 h-4 ml-auto text-zinc-600" />
+                  <Check className="w-4 h-4 ml-auto text-muted-foreground" />
                 )}
               </div>
               {filteredMembers.map(member => (
                 <div
                   key={member.id}
                   className={cn(
-                    'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-100',
+                    'flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-accent',
                     selectedAssignee?.id === member.id &&
-                      'bg-zinc-50 text-zinc-700'
+                      'bg-muted text-foreground'
                   )}
                   onClick={() => {
                     onSelect(member);
@@ -115,12 +115,12 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
                     <span className="truncate font-medium">
                       {member.name}
                     </span>
-                    <span className="truncate text-xs text-gray-500">
+                    <span className="truncate text-xs text-muted-foreground">
                       @{member.username}
                     </span>
                   </div>
                   {selectedAssignee?.id === member.id && (
-                    <Check className="w-4 h-4 ml-auto text-zinc-600" />
+                    <Check className="w-4 h-4 ml-auto text-muted-foreground" />
                   )}
                 </div>
               ))}
