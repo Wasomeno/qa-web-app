@@ -47,7 +47,7 @@ interface FixSessionsListPageProps {
 // Skeleton component for loading state
 const FixSessionSkeleton: React.FC = () => {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-white">
+    <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-card">
       <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -154,7 +154,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
         };
       default:
         return {
-          color: "bg-gray-50 text-gray-700 border-gray-100",
+          color: "bg-muted text-foreground border-border",
           icon: <Clock className="h-3 w-3" />,
           label: status,
         };
@@ -168,11 +168,11 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden relative">
+    <div className="flex flex-col h-full bg-background overflow-hidden relative">
       {!hideHeader && (
-        <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-white z-20">
-          <h1 className="text-2xl font-bold text-gray-900">Fix Sessions</h1>
-          <p className="text-sm text-gray-500 mt-1">
+        <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-background z-20">
+          <h1 className="text-2xl font-bold text-foreground">Fix Sessions</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Monitor and manage your automated fix sessions
           </p>
         </div>
@@ -215,12 +215,12 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                             setSelectedSessionId(session.sessionId)
                           }
                           className={cn(
-                            "group relative flex items-start gap-4 p-4 rounded-xl border cursor-pointer bg-white",
-                            "hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                            "group relative flex items-start gap-4 p-4 rounded-xl border cursor-pointer bg-card",
+                            "hover:bg-accent/30 hover:border-border hover:shadow-sm",
                             "transition-all duration-200",
                             isSelected
-                              ? "border-gray-900 bg-gray-50"
-                              : "border-gray-200",
+                              ? "border-foreground bg-accent/30"
+                              : "border-border/70",
                           )}
                         >
                           {/* Icon */}
@@ -231,7 +231,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                                 ? "bg-emerald-50"
                                 : session.status === "error"
                                   ? "bg-red-50"
-                                  : "bg-gray-100",
+                                  : "bg-muted",
                             )}
                           >
                             {session.status === "done" ? (
@@ -239,7 +239,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                             ) : session.status === "error" ? (
                               <XCircle className="h-5 w-5 text-red-500" />
                             ) : (
-                              <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+                              <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
                             )}
                           </div>
 
@@ -247,11 +247,11 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                           <div className="flex-1 min-w-0 space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-medium text-gray-900 truncate">
+                                <h3 className="text-sm font-medium text-foreground truncate">
                                   {session.issueTitle ||
                                     `Issue #${session.issueIid}`}
                                 </h3>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-muted-foreground/70 mt-0.5">
                                   {session.projectName ||
                                     `Project ${session.projectId}`}
                                 </p>
@@ -275,7 +275,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                       onClick={(e) =>
                                         handleDeleteClick(e, session)
                                       }
@@ -293,7 +293,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
 
                             {/* Status Message - only show if no error */}
                             {session.status !== "error" && session.message && (
-                              <p className="text-xs text-gray-500 line-clamp-2">
+                              <p className="text-xs text-muted-foreground/70 line-clamp-2">
                                 {session.message}
                               </p>
                             )}
@@ -324,7 +324,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                             )}
 
                             {/* Metadata */}
-                            <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground/60 mt-1">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 <span>
@@ -363,7 +363,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 436, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 bottom-0 w-full md:w-[436px] z-50 border-l border-gray-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+              className="absolute right-0 top-0 bottom-0 w-full md:w-[436px] z-50 border-l border-border bg-background overflow-hidden flex flex-col shadow-2xl"
             >
               <FixSessionDetailPanel
                 session={getSelectedSession()}

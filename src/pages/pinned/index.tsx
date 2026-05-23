@@ -37,10 +37,10 @@ export const PinnedPage: React.FC<PinnedPageProps> = ({ portalContainer }) => {
     return (
       <ScrollArea className="h-full">
         <div className="flex flex-col h-full gap-8">
-          <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+          <div className="flex-none px-8 pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Pinned Issues</h1>
-              <p className="text-sm text-gray-500 mt-1.5">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">Pinned Issues</h1>
+              <p className="text-sm text-muted-foreground mt-1.5">
                 Quick access to your important issues
               </p>
             </div>
@@ -60,11 +60,11 @@ export const PinnedPage: React.FC<PinnedPageProps> = ({ portalContainer }) => {
   return (
     <ScrollArea className="h-full [&>div>div[style]]:!block [&>div>div[style]]:h-full">
       <div className="flex flex-col h-full gap-8">
-        <div className="flex-none px-8 pt-10 pb-6 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+        <div className="flex-none px-8 pt-10 pb-6 border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Pinned Issues</h1>
-              <p className="text-sm text-gray-500 mt-1.5">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">Pinned Issues</h1>
+              <p className="text-sm text-muted-foreground mt-1.5">
                 Quick access to your important issues
               </p>
             </div>
