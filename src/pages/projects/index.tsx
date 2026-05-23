@@ -178,7 +178,7 @@ function CreateProjectDialog({
                 onSelect={(project) => setIssueRepo(project)}
                 placeholder="Select GitLab repo"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 GitLab issues and issue boards will come from this repository.
               </p>
             </div>
@@ -190,7 +190,7 @@ function CreateProjectDialog({
                 onSelect={(project) => setSpecsRepo(project)}
                 placeholder="Select GitLab repo"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Specs, code context, and generated automation use this
                 repository.
               </p>
@@ -198,32 +198,32 @@ function CreateProjectDialog({
           </div>
 
           {/* Test Context (collapsible) */}
-          <div className="rounded-xl border border-gray-200">
+          <div className="rounded-xl border border-border">
             <button
               type="button"
               onClick={() => setShowTestContext(!showTestContext)}
-              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors rounded-xl"
+              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-foreground/80 hover:bg-accent transition-colors rounded-xl"
             >
               {showTestContext ? (
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
-              <Info className="h-4 w-4 text-gray-400" />
+              <Info className="h-4 w-4 text-muted-foreground" />
               Test Context
               {testContextMarkdown.trim() ? (
                 <span className="ml-auto text-xs text-emerald-600 font-normal">
                   Configured
                 </span>
               ) : (
-                <span className="ml-auto text-xs text-gray-400 font-normal">
+                <span className="ml-auto text-xs text-muted-foreground font-normal">
                   Optional
                 </span>
               )}
             </button>
             {showTestContext && (
-              <div className="border-t border-gray-100 px-4 pb-4 pt-3">
-                <p className="mb-2 text-xs leading-5 text-gray-500">
+              <div className="border-t border-border px-4 pb-4 pt-3">
+                <p className="mb-2 text-xs leading-5 text-muted-foreground">
                   Provide project-level context for AI test scenario generation:
                   test users, auth, fixtures, business rules, API details, UI
                   selectors, and known edge cases. If left empty, a default
@@ -235,7 +235,7 @@ function CreateProjectDialog({
                   placeholder={DEFAULT_TEST_CONTEXT_TEMPLATE}
                   className="min-h-48 resize-y font-mono text-xs leading-5"
                 />
-                <div className="mt-1 text-right text-xs text-gray-400">
+                <div className="mt-1 text-right text-xs text-muted-foreground">
                   {new TextEncoder().encode(testContextMarkdown).length} / 204800 bytes
                 </div>
               </div>
@@ -254,7 +254,7 @@ function CreateProjectDialog({
           <Button
             onClick={() => createMutation.mutate()}
             disabled={!canSubmit}
-            className="bg-zinc-900 text-white hover:bg-zinc-800"
+            className="bg-foreground text-background hover:bg-foreground/90"
           >
             {createMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -279,24 +279,24 @@ export function ProjectsPage() {
   const projects = data?.data?.projects ?? [];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
-      <div className="border-b border-gray-100/80 bg-white/85 px-4 pb-6 pt-6 backdrop-blur-xl md:px-8 md:pt-10">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
+      <div className="border-b border-border/80 bg-background/85 px-4 pb-6 pt-6 backdrop-blur-xl md:px-8 md:pt-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Workspace
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
               Projects
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               Shared QA workspaces for GitLab issues, specs, scenarios,
               recordings, and fix sessions.
             </p>
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="gap-2 self-start md:self-auto bg-zinc-900 text-white hover:bg-zinc-800"
+            className="gap-2 self-start md:self-auto bg-foreground text-background hover:bg-foreground/90"
           >
             <Plus className="h-4 w-4" />
             Create project
@@ -309,16 +309,16 @@ export function ProjectsPage() {
           <div className="min-w-0">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Name</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Issues Repo</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Specs Repo</th>
-                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                <tr className="border-b border-border">
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Issues Repo</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Specs Repo</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <tr key={index} className="border-b border-gray-50">
+                  <tr key={index} className="border-b border-border/50">
                     <td className="py-4 pr-4"><Skeleton className="h-4 w-48" /></td>
                     <td className="py-4 pr-4"><Skeleton className="h-4 w-32" /></td>
                     <td className="py-4 pr-4"><Skeleton className="h-4 w-32" /></td>
@@ -337,7 +337,7 @@ export function ProjectsPage() {
               action={
                 <Button
                   onClick={() => setCreateOpen(true)}
-                  className="bg-zinc-900 text-white hover:bg-zinc-800"
+                  className="bg-foreground text-background hover:bg-foreground/90"
                 >
                   Create project
                 </Button>
@@ -348,11 +348,11 @@ export function ProjectsPage() {
           <div className="min-w-0">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Name</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Issues Repo</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Specs Repo</th>
-                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                <tr className="border-b border-border">
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Issues Repo</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Specs Repo</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
                 </tr>
               </thead>
               <tbody>
@@ -365,24 +365,24 @@ export function ProjectsPage() {
                         params: { id: project.id } as any,
                       })
                     }
-                    className="border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50/60 group"
+                    className="border-b border-border/50 cursor-pointer transition-colors hover:bg-accent/50 group"
                   >
                     <td className="py-4 pr-4">
-                      <div className="text-sm font-medium text-gray-900 group-hover:text-primary-500 transition-colors">
+                      <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                         {project.name}
                       </div>
-                      <div className="mt-0.5 max-w-md truncate text-sm text-gray-500">
+                      <div className="mt-0.5 max-w-md truncate text-sm text-muted-foreground">
                         {project.description || "No description yet."}
                       </div>
                     </td>
                     <td className="py-4 pr-4">
-                      <span className="text-sm text-gray-500">{project.issueRepoName}</span>
+                      <span className="text-sm text-muted-foreground">{project.issueRepoName}</span>
                     </td>
                     <td className="py-4 pr-4">
-                      <span className="text-sm text-gray-500">{project.specsRepoName}</span>
+                      <span className="text-sm text-muted-foreground">{project.specsRepoName}</span>
                     </td>
                     <td className="py-4 pl-4 text-right">
-                      <span className="whitespace-nowrap text-sm text-gray-400">
+                      <span className="whitespace-nowrap text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
                       </span>
                     </td>
@@ -440,26 +440,26 @@ export function ProjectOverview({ project }: { project: AppProject }) {
       value: "—",
       icon: Wrench,
       href: "fix-sessions",
-      color: "text-zinc-700",
-      bg: "bg-zinc-100",
+      color: "text-muted-foreground",
+      bg: "bg-muted",
     },
   ];
 
   return (
     <div className="space-y-8 p-4 md:p-8">
       {/* Project card */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-zinc-900 p-1.5 text-white">
+              <div className="rounded-lg bg-foreground p-1.5 text-background">
                 <FolderKanban className="h-4 w-4" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-foreground">
                 {project.name}
               </h2>
             </div>
-            <p className="mt-3 text-sm leading-6 text-gray-500">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               {project.description ||
                 "Shared QA workspace for tracking issues, test scenarios, and recordings."}
             </p>
@@ -477,7 +477,7 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                       search: { tab: "settings" } as any,
                     })
                   }
-                  className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-400 ring-1 ring-inset ring-gray-200 hover:text-gray-600 hover:ring-gray-300 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground ring-1 ring-inset ring-border hover:text-foreground hover:ring-border transition-colors"
                 >
                   No test context — add in Settings
                 </button>
@@ -485,15 +485,15 @@ export function ProjectOverview({ project }: { project: AppProject }) {
             </div>
           </div>
           <div className="grid min-w-64 gap-1.5 text-xs">
-            <div className="flex justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2">
-              <span className="text-gray-500">Issues repo</span>
-              <span className="font-mono text-gray-800">
+            <div className="flex justify-between gap-4 rounded-lg bg-muted/50 px-3 py-2">
+              <span className="text-muted-foreground">Issues repo</span>
+              <span className="font-mono text-foreground/80">
                 {project.issueRepoName}
               </span>
             </div>
-            <div className="flex justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2">
-              <span className="text-gray-500">Specs repo</span>
-              <span className="font-mono text-gray-800">
+            <div className="flex justify-between gap-4 rounded-lg bg-muted/50 px-3 py-2">
+              <span className="text-muted-foreground">Specs repo</span>
+              <span className="font-mono text-foreground/80">
                 {project.specsRepoName}
               </span>
             </div>
@@ -515,17 +515,17 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                   search: { tab: metric.href } as any,
                 })
               }
-              className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm text-left transition-all hover:border-gray-300 hover:shadow-md cursor-pointer group"
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm text-left transition-all hover:border-border hover:shadow-md cursor-pointer group"
             >
               <div className="flex items-center justify-between">
                 <div className={cn("rounded-xl p-2.5", metric.bg)}>
                   <Icon className={cn("h-4 w-4", metric.color)} />
                 </div>
               </div>
-              <p className="mt-4 text-2xl font-semibold tracking-tight text-gray-900">
+              <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
                 {metric.value}
               </p>
-              <p className="mt-1 text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+              <p className="mt-1 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                 {metric.label}
               </p>
             </button>
@@ -535,8 +535,8 @@ export function ProjectOverview({ project }: { project: AppProject }) {
 
       {/* Quick links / activity placeholder */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-900">Quick actions</h3>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-foreground">Quick actions</h3>
           <div className="mt-4 space-y-2">
             <button
               onClick={() =>
@@ -546,9 +546,9 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                   search: { tab: "issues" } as any,
                 })
               }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <GitPullRequest className="h-4 w-4 text-gray-400" />
+              <GitPullRequest className="h-4 w-4 text-muted-foreground" />
               Browse open issues
             </button>
             <button
@@ -559,9 +559,9 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                   search: { tab: "recordings" } as any,
                 })
               }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <Video className="h-4 w-4 text-gray-400" />
+              <Video className="h-4 w-4 text-muted-foreground" />
               Review recent recordings
             </button>
             <button
@@ -572,9 +572,9 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                   search: { tab: "test-scenarios" } as any,
                 })
               }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <ClipboardList className="h-4 w-4 text-gray-400" />
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
               View test scenarios
             </button>
             <button
@@ -585,22 +585,22 @@ export function ProjectOverview({ project }: { project: AppProject }) {
                   search: { tab: "fix-sessions" } as any,
                 })
               }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <Wrench className="h-4 w-4 text-gray-400" />
+              <Wrench className="h-4 w-4 text-muted-foreground" />
               Check fix sessions
             </button>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-900">Recent activity</h3>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
           <div className="mt-4 space-y-0">
-            <div className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0">
-              <div className="h-2 w-2 rounded-full bg-gray-300 shrink-0" />
-              <p className="text-sm text-gray-500">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+              <div className="h-2 w-2 rounded-full bg-muted shrink-0" />
+              <p className="text-sm text-muted-foreground">
                 Project created{" "}
-                <span className="text-gray-400">
+                <span className="text-muted-foreground">
                   {formatDate(project.createdAt)}
                 </span>
               </p>
@@ -630,36 +630,36 @@ export function ProjectSettings({ project }: { project: AppProject }) {
 
   return (
     <div className="max-w-3xl space-y-6 p-4 md:p-8">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">Project details</h2>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">Project details</h2>
         <dl className="mt-5 grid gap-4 text-sm md:grid-cols-2">
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Name
             </dt>
-            <dd className="mt-1 text-gray-900">{project.name}</dd>
+            <dd className="mt-1 text-foreground">{project.name}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Created
             </dt>
-            <dd className="mt-1 text-gray-900">
+            <dd className="mt-1 text-foreground">
               {formatDate(project.createdAt)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Issues repo
             </dt>
-            <dd className="mt-1 font-mono text-gray-900">
+            <dd className="mt-1 font-mono text-foreground">
               {project.issueRepoName}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Specs repo
             </dt>
-            <dd className="mt-1 font-mono text-gray-900">
+            <dd className="mt-1 font-mono text-foreground">
               {project.specsRepoName}
             </dd>
           </div>
@@ -688,7 +688,7 @@ export function ProjectSettings({ project }: { project: AppProject }) {
                 id="delete-confirm"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="max-w-md border-red-200 bg-white"
+                className="max-w-md border-red-200 bg-card"
               />
             </div>
             <Button

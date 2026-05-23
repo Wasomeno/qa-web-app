@@ -53,25 +53,25 @@ function ProjectHeader() {
   const showProjectLabel = sectionKey !== "overview";
 
   return (
-    <div className="flex-none border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10">
+    <div className="flex-none border-b border-border/80 bg-background/80 backdrop-blur-xl z-10">
       <div className="px-4 md:px-8 pt-6 md:pt-10 pb-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             {showProjectLabel && (
-              <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-400">
+              <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 {sidebarProject?.projectName || "Project"}
               </div>
             )}
             <h1
               className={cn(
-                "font-semibold tracking-tight text-gray-900",
+                "font-semibold tracking-tight text-foreground",
                 showProjectLabel ? "mt-1 text-2xl md:text-3xl" : "text-2xl md:text-3xl",
               )}
             >
               {displayTitle}
             </h1>
             {displayDescription && (
-              <p className="text-sm text-gray-500 mt-1">{displayDescription}</p>
+              <p className="text-sm text-muted-foreground mt-1">{displayDescription}</p>
             )}
           </div>
           {header.actions && (
@@ -109,7 +109,7 @@ function ProjectLayoutInner() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col bg-white">
+      <div className="flex h-full flex-col bg-background">
         <div className="p-8">
           <Skeleton className="h-10 w-72" />
         </div>
@@ -122,7 +122,7 @@ function ProjectLayoutInner() {
 
   if (!project) {
     return (
-      <div className="flex h-full items-center justify-center bg-white p-8">
+      <div className="flex h-full items-center justify-center bg-background p-8">
         <EmptyState
           icon={FolderKanban}
           title="Project not found"
@@ -133,7 +133,7 @@ function ProjectLayoutInner() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
       <ProjectHeader />
       <div className="min-h-0 flex-1 overflow-hidden">
         <Outlet />
