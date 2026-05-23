@@ -88,9 +88,9 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
   nested = false,
 }) => {
   return (
-    <div className="flex flex-col h-full bg-[#F9FAFB]">
+    <div className="flex flex-col h-full bg-background">
       {/* TopAppBar Skeleton */}
-      <header className="h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6">
+      <header className="h-14 shrink-0 border-b border-border bg-background flex items-center justify-between px-4 lg:px-6">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4" />
           <Skeleton className="h-4 w-16 rounded" />
@@ -100,7 +100,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
         </div>
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-28 rounded-lg" />
-          <div className="flex items-center gap-1 border-l border-zinc-200 pl-2 ml-1">
+          <div className="flex items-center gap-1 border-l border-border pl-2 ml-1">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-8 w-8 rounded-lg" />
@@ -111,28 +111,28 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
       {/* Split View Skeleton */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Skeleton */}
-        <aside className="w-[300px] shrink-0 border-r border-zinc-200 bg-[#F9FAFB] flex flex-col">
-          <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between">
+        <aside className="w-[300px] shrink-0 border-r border-border bg-background flex flex-col">
+          <div className="p-4 border-b border-border bg-card flex items-center justify-between">
             <Skeleton className="h-4 w-24 rounded" />
             <Skeleton className="h-4 w-8 rounded" />
           </div>
-          <div className="p-3 border-b border-zinc-200 bg-white">
+          <div className="p-3 border-b border-border bg-card">
             <Skeleton className="h-8 w-full rounded-lg" />
           </div>
-          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+          <div className="px-3 py-2 border-b border-border bg-card">
             <Skeleton className="h-7 w-full rounded-md" />
           </div>
-          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+          <div className="px-3 py-2 border-b border-border bg-card">
             <Skeleton className="h-7 w-full rounded-md" />
           </div>
-          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+          <div className="px-3 py-2 border-b border-border bg-card">
             <Skeleton className="h-7 w-full rounded-md" />
           </div>
           <div className="flex-1 overflow-y-auto">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
                 key={i}
-                className="px-4 py-2.5 border-b border-zinc-100"
+                className="px-4 py-2.5 border-b border-border"
               >
                 <div className="flex items-center justify-between mb-1">
                   <Skeleton className="h-3 w-16 rounded" />
@@ -147,7 +147,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
               </div>
             ))}
           </div>
-          <div className="px-3 py-2 border-t border-zinc-200 bg-white flex items-center justify-between">
+          <div className="px-3 py-2 border-t border-border bg-card flex items-center justify-between">
             <Skeleton className="h-3 w-8 rounded" />
             <div className="flex items-center gap-1">
               <Skeleton className="h-6 w-6 rounded" />
@@ -157,7 +157,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
         </aside>
 
         {/* Content Skeleton */}
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main className="flex-1 overflow-y-auto bg-background">
           <div className="max-w-3xl mx-auto p-6 pb-6">
             {/* Header Data */}
             <div className="mb-6">
@@ -179,7 +179,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
             {/* Environment Grid */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-3 border border-zinc-200 rounded-lg">
+                <div key={i} className="p-3 border border-border rounded-lg">
                   <Skeleton className="h-3 w-20 rounded mb-2" />
                   <Skeleton className="h-4 w-24 rounded" />
                 </div>
@@ -189,8 +189,8 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
             {/* Steps Table */}
             <div className="mb-6">
               <Skeleton className="h-5 w-32 rounded mb-3" />
-              <div className="border border-zinc-200 rounded-lg overflow-hidden">
-                <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-[#F9FAFB] border-b border-zinc-200">
+              <div className="border border-border rounded-lg overflow-hidden">
+                <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-muted/50 border-b border-border">
                   <Skeleton className="h-3 w-4 rounded" />
                   <Skeleton className="h-3 w-12 rounded" />
                   <Skeleton className="h-3 w-20 rounded" />
@@ -198,7 +198,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-zinc-100"
+                    className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-border"
                   >
                     <Skeleton className="h-3 w-4 rounded mx-auto" />
                     <Skeleton className="h-4 w-full rounded" />
@@ -276,15 +276,15 @@ const InlineField: React.FC<InlineFieldProps> = ({
       <div
         onClick={startEdit}
         className={cn(
-          "cursor-text group relative rounded-md -mx-1 px-1 py-0.5 transition-colors hover:bg-zinc-50",
-          isEmpty && "italic text-zinc-400",
+          "cursor-text group relative rounded-md -mx-1 px-1 py-0.5 transition-colors hover:bg-muted",
+          isEmpty && "italic text-muted-foreground",
           className,
         )}
       >
         <span className={isEmpty ? "" : ""}>
           {isEmpty ? placeholder : value}
         </span>
-        <Pencil className="w-3 h-3 text-zinc-300 opacity-0 group-hover:opacity-100 absolute right-1 top-1/2 -translate-y-1/2 transition-opacity" />
+        <Pencil className="w-3 h-3 text-muted-foreground/60 opacity-0 group-hover:opacity-100 absolute right-1 top-1/2 -translate-y-1/2 transition-opacity" />
       </div>
     );
   }
@@ -296,7 +296,7 @@ const InlineField: React.FC<InlineFieldProps> = ({
     onBlur: save,
     onKeyDown: handleKeyDown,
     className: cn(
-      "w-full bg-white border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300 rounded-md text-inherit",
+      "w-full bg-background border-border focus:border-border focus:ring-1 focus:ring-ring/50 rounded-md text-inherit",
       multiline
         ? "min-h-[60px] resize-y py-1.5 px-2 text-sm leading-relaxed"
         : "h-7 py-0.5 px-2 text-sm",
@@ -311,7 +311,7 @@ const InlineField: React.FC<InlineFieldProps> = ({
 // Priority Badge + Selector
 // ─────────────────────────────────────────────
 const PRIORITY_META: Record<Priority, { label: string; classes: string }> = {
-  low: { label: "Low", classes: "bg-zinc-50 text-zinc-700 border-zinc-100" },
+  low: { label: "Low", classes: "bg-muted text-foreground border-border" },
   medium: {
     label: "Medium",
     classes: "bg-amber-50 text-amber-700 border-amber-100",
@@ -330,7 +330,7 @@ const PriorityBadge: React.FC<{
   priority: Priority;
   onChange?: (p: Priority) => void;
 }> = ({ priority, onChange }) => {
-  const meta = PRIORITY_META[priority] ?? { label: priority, classes: 'bg-zinc-50 text-zinc-700 border-zinc-100' };
+  const meta = PRIORITY_META[priority] ?? { label: priority, classes: 'bg-muted text-foreground border-border' };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -356,7 +356,7 @@ const PriorityBadge: React.FC<{
         {meta.label}
       </button>
       {open && onChange && (
-        <div className="absolute z-50 mt-1 w-28 bg-white border border-zinc-200 rounded-lg shadow-lg py-1">
+        <div className="absolute z-50 mt-1 w-28 bg-card border border-border rounded-lg shadow-lg py-1">
           {(Object.keys(PRIORITY_META) as Priority[]).map((p: Priority) => (
             <button
               key={p}
@@ -365,8 +365,8 @@ const PriorityBadge: React.FC<{
                 setOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 transition-colors flex items-center justify-between",
-                p === priority && "bg-zinc-50",
+                "w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors flex items-center justify-between",
+                p === priority && "bg-muted",
               )}
             >
               <span
@@ -378,7 +378,7 @@ const PriorityBadge: React.FC<{
                 )}
               />
               {PRIORITY_META[p].label}
-              {p === priority && <Check className="w-3 h-3 text-zinc-600" />}
+              {p === priority && <Check className="w-3 h-3 text-muted-foreground" />}
             </button>
           ))}
         </div>
@@ -408,13 +408,13 @@ const TEST_CASE_STATUS_CLASSES: Record<string, string> = {
   Running: 'bg-blue-50 text-blue-700 border-blue-100',
   Failed: 'bg-red-50 text-red-700 border-red-100',
   Passed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  Generated: 'bg-zinc-50 text-zinc-500 border-zinc-200',
-  'Not generated': 'bg-zinc-50 text-zinc-400 border-zinc-200',
+  Generated: 'bg-muted text-muted-foreground border-border',
+  'Not generated': 'bg-muted text-muted-foreground border-border',
 };
 
 const TestCaseStatusBadge: React.FC<{ testCase: TestCase }> = ({ testCase }) => {
   const label = getTestCaseDisplayStatus(testCase);
-  const classes = TEST_CASE_STATUS_CLASSES[label] ?? 'bg-zinc-50 text-zinc-400 border-zinc-200';
+  const classes = TEST_CASE_STATUS_CLASSES[label] ?? 'bg-muted text-muted-foreground border-border';
   return (
     <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider border", classes)}>
       {testCase.processingStatus === 'generating' && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -440,7 +440,7 @@ const AutomationBadge: React.FC<{
 }> = ({ test, onClick }) => {
   if (!test) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-50 text-zinc-400 border border-zinc-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-muted text-muted-foreground border border-border">
         <Clock className="w-3 h-3" />
         No automation
       </span>
@@ -453,7 +453,7 @@ const AutomationBadge: React.FC<{
   > = {
     idle: {
       icon: <Clock className="w-3 h-3" />,
-      classes: "bg-zinc-50 text-zinc-500 border-zinc-200",
+      classes: "bg-muted text-muted-foreground border-border",
     },
     running: {
       icon: <Loader2 className="w-3 h-3 animate-spin" />,
@@ -469,7 +469,7 @@ const AutomationBadge: React.FC<{
     },
   };
 
-  const m = meta[test.status] ?? { icon: <Clock className="w-3 h-3" />, classes: 'bg-zinc-50 text-zinc-500 border-zinc-200' };
+  const m = meta[test.status] ?? { icon: <Clock className="w-3 h-3" />, classes: 'bg-muted text-muted-foreground border-border' };
   const timeAgo = test.lastRunAt
     ? `${Math.max(1, Math.round((Date.now() - new Date(test.lastRunAt).getTime()) / 60000))}m`
     : null;
@@ -523,7 +523,7 @@ const CATEGORY_META: Record<
     label: "Manual",
     icon: <ClipboardCheck className="w-3.5 h-3.5" />,
     description: "Record pass or fail evidence without automation generation.",
-    classes: "bg-zinc-50 text-zinc-700 border-zinc-200",
+    classes: "bg-muted text-foreground border-border",
   },
 };
 
@@ -606,7 +606,7 @@ const AutomationCategorySelect: React.FC<{
   onChange: (category: AutomationCategory) => void;
   disabled?: boolean;
 }> = ({ value, onChange, disabled = false }) => {
-  const meta = CATEGORY_META[value] ?? { label: value, icon: null, description: '', classes: 'bg-zinc-50 text-zinc-700 border-zinc-200' };
+  const meta = CATEGORY_META[value] ?? { label: value, icon: null, description: '', classes: 'bg-muted text-foreground border-border' };
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <Select
@@ -646,17 +646,17 @@ const GeneratedAutomationSteps: React.FC<{
   if (!steps || steps.length === 0) return null;
 
   return (
-    <div className="px-4 py-3 border-b border-zinc-100">
-      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+    <div className="px-4 py-3 border-b border-border">
+      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
         Generated Steps
       </p>
       <div className="space-y-1.5">
         {steps.map((step, idx) => (
           <div
             key={idx}
-            className="flex items-start gap-2 text-xs bg-white rounded-md px-2.5 py-2 border border-zinc-100"
+            className="flex items-start gap-2 text-xs bg-card rounded-md px-2.5 py-2 border border-border"
           >
-            <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-4 mt-0.5">
+            <span className="shrink-0 font-mono text-[10px] text-muted-foreground w-4 mt-0.5">
               {idx + 1}
             </span>
             <div className="flex-1 min-w-0">
@@ -692,34 +692,34 @@ const GeneratedAutomationSteps: React.FC<{
                         {step.apiMethod}
                       </span>
                     )}
-                    <span className="font-mono text-[11px] text-zinc-700 break-all">
+                    <span className="font-mono text-[11px] text-foreground break-all">
                       {step.apiEndpoint || step.value}
                     </span>
                     {step.assertionType && (
-                      <span className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-[10px] text-zinc-500">
+                      <span className="rounded bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
                         {step.assertionType}
                       </span>
                     )}
                   </div>
                   {step.description && (
-                    <p className="text-zinc-500">{step.description}</p>
+                    <p className="text-muted-foreground">{step.description}</p>
                   )}
                   {step.apiPayload && step.apiPayload !== "{}" && (
                     <div className="mt-1">
-                      <span className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">
+                      <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Payload
                       </span>
-                      <code className="block text-[10px] text-zinc-600 bg-zinc-50 border border-zinc-100 p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
+                      <code className="block text-[10px] text-muted-foreground bg-muted border border-border p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
                         {step.apiPayload}
                       </code>
                     </div>
                   )}
                   {step.apiHeaders && step.apiHeaders !== "{}" && (
                     <div className="mt-1">
-                      <span className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">
+                      <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Headers
                       </span>
-                      <code className="block text-[10px] text-zinc-600 bg-zinc-50 border border-zinc-100 p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
+                      <code className="block text-[10px] text-muted-foreground bg-muted border border-border p-1.5 rounded mt-0.5 whitespace-pre-wrap break-words">
                         {step.apiHeaders}
                       </code>
                     </div>
@@ -727,16 +727,16 @@ const GeneratedAutomationSteps: React.FC<{
                 </div>
               ) : (
                 <>
-                  <span className="font-medium text-zinc-700">
+                  <span className="font-medium text-foreground">
                     {step.action}
                   </span>
                   {step.description && (
-                    <span className="text-zinc-500 ml-1">
+                    <span className="text-muted-foreground ml-1">
                       — {step.description}
                     </span>
                   )}
                   {step.selector && (
-                    <code className="block text-[10px] text-zinc-400 mt-0.5 truncate">
+                    <code className="block text-[10px] text-muted-foreground mt-0.5 truncate">
                       {step.selector}
                     </code>
                   )}
@@ -789,7 +789,7 @@ const LastRunPanel: React.FC<{
           ? "bg-emerald-50/40 border-emerald-100"
           : isFail
             ? "bg-red-50/40 border-red-100"
-            : "bg-zinc-50 border-zinc-100",
+            : "bg-muted border-border",
       )}
     >
       {/* Header */}
@@ -798,7 +798,7 @@ const LastRunPanel: React.FC<{
           "px-4 py-3 flex items-center justify-between",
           isPass && "border-b border-emerald-100/60",
           isFail && "border-b border-red-100/60",
-          !isPass && !isFail && "border-b border-zinc-100",
+          !isPass && !isFail && "border-b border-border",
         )}
       >
         <div className="flex items-center gap-2.5">
@@ -807,7 +807,7 @@ const LastRunPanel: React.FC<{
               "w-7 h-7 rounded-full flex items-center justify-center",
               isPass && "bg-emerald-100 text-emerald-700",
               isFail && "bg-red-100 text-red-700",
-              !isPass && !isFail && "bg-zinc-100 text-zinc-500",
+              !isPass && !isFail && "bg-muted text-muted-foreground",
             )}
           >
             {isPass ? (
@@ -826,7 +826,7 @@ const LastRunPanel: React.FC<{
                 "text-sm font-semibold",
                 isPass && "text-emerald-800",
                 isFail && "text-red-800",
-                !isPass && !isFail && "text-zinc-700",
+                !isPass && !isFail && "text-foreground",
               )}
             >
               {isPass
@@ -837,11 +837,11 @@ const LastRunPanel: React.FC<{
                     ? "Running"
                     : "Not Run"}
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-zinc-500 mt-0.5">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
               {timeAgo && <span>{timeAgo}</span>}
               {test.runDurationMs && (
                 <>
-                  <span className="text-zinc-300">·</span>
+                  <span className="text-muted-foreground/60">·</span>
                   <span>{(test.runDurationMs / 1000).toFixed(1)}s</span>
                 </>
               )}
@@ -852,8 +852,8 @@ const LastRunPanel: React.FC<{
 
       {/* Video */}
       {test.videoUrl && (
-        <div className="px-4 py-3 border-b border-zinc-100">
-          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3 border-b border-border">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Recording
           </p>
           <video
@@ -868,8 +868,8 @@ const LastRunPanel: React.FC<{
 
       {/* Step Results */}
       {test.stepResults && test.stepResults.length > 0 && (
-        <div className="px-4 py-3 border-b border-zinc-100">
-          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3 border-b border-border">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Step Results
           </p>
           <div className="space-y-1.5">
@@ -902,11 +902,11 @@ const LastRunPanel: React.FC<{
 
       {/* Log */}
       {test.log && (
-        <div className="px-4 py-3 border-b border-zinc-100">
-          <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3 border-b border-border">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Log
           </p>
-          <pre className="text-[11px] text-zinc-600 bg-zinc-100 rounded-md p-2.5 overflow-auto max-h-[120px] whitespace-pre-wrap">
+          <pre className="text-[11px] text-muted-foreground bg-muted rounded-md p-2.5 overflow-auto max-h-[120px] whitespace-pre-wrap">
             {test.log}
           </pre>
         </div>
@@ -955,7 +955,7 @@ const AutomationCategoryPanel: React.FC<{
 
   if (!projectId) {
     return (
-      <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm text-zinc-500">
+      <div className="rounded-xl border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
         Project context is required before automation can be configured.
       </div>
     );
@@ -1016,8 +1016,8 @@ const PipelineSteps: React.FC<{
                 className={cn(
                   "h-px flex-1 mx-1.5",
                   state === "done" || state === "active"
-                    ? "bg-zinc-300"
-                    : "bg-zinc-100",
+                    ? "bg-muted"
+                    : "bg-muted",
                 )}
               />
             )}
@@ -1026,8 +1026,8 @@ const PipelineSteps: React.FC<{
                 className={cn(
                   "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-colors",
                   state === "done" && "bg-zinc-900 text-white",
-                  state === "active" && "bg-zinc-900 text-white ring-2 ring-zinc-900/20",
-                  state === "pending" && "bg-zinc-100 text-zinc-400",
+                  state === "active" && "bg-zinc-900 text-white ring-2 ring-foreground/20",
+                  state === "pending" && "bg-muted text-muted-foreground",
                 )}
               >
                 {state === "done" ? (
@@ -1039,9 +1039,9 @@ const PipelineSteps: React.FC<{
               <span
                 className={cn(
                   "text-[11px] font-medium whitespace-nowrap transition-colors",
-                  state === "done" && "text-zinc-700",
-                  state === "active" && "text-zinc-900 font-semibold",
-                  state === "pending" && "text-zinc-400",
+                  state === "done" && "text-foreground",
+                  state === "active" && "text-foreground font-semibold",
+                  state === "pending" && "text-muted-foreground",
                 )}
               >
                 {step.label}
@@ -1115,7 +1115,7 @@ const APIAutomationPanel: React.FC<{
       : "configure";
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+    <div className="rounded-xl border border-border bg-card p-5 space-y-5">
       {/* Pipeline Header */}
       <PipelineSteps
         steps={[
@@ -1138,17 +1138,17 @@ const APIAutomationPanel: React.FC<{
             className="space-y-4"
           >
             <div>
-              <p className="text-sm font-semibold text-zinc-900">
+              <p className="text-sm font-semibold text-foreground">
                 Backend prompt
               </p>
-              <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
                 Select the backend repo. The result is a compact prompt for a
                 developer's local coding agent.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Backend repository
               </label>
               <ProjectSelect
@@ -1185,13 +1185,13 @@ const APIAutomationPanel: React.FC<{
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center justify-center py-8 text-center"
           >
-            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
-              <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" />
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
             </div>
-            <p className="text-sm font-semibold text-zinc-900">
+            <p className="text-sm font-semibold text-foreground">
               Generating prompt
             </p>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Analyzing backend repo structure…
             </p>
           </motion.div>
@@ -1209,17 +1209,17 @@ const APIAutomationPanel: React.FC<{
           >
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold text-zinc-900">
+                <p className="text-sm font-semibold text-foreground">
                   Generated prompt
                 </p>
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Copy this prompt into your development environment.
                 </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 rounded-lg text-xs border-zinc-200 text-zinc-600 hover:bg-zinc-50 shrink-0"
+                className="h-8 rounded-lg text-xs border-border text-muted-foreground hover:bg-muted shrink-0"
                 onClick={() => {
                   navigator.clipboard?.writeText(prompt);
                   toast.success("Prompt copied to clipboard");
@@ -1229,7 +1229,7 @@ const APIAutomationPanel: React.FC<{
                 Copy
               </Button>
             </div>
-            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-950 p-4 text-xs leading-relaxed text-zinc-100 font-mono">
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-foreground p-4 text-xs leading-relaxed text-background font-mono">
               {prompt}
             </pre>
           </motion.div>
@@ -1297,7 +1297,7 @@ const E2EAutomationPanel: React.FC<{
         : "configure";
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+    <div className="rounded-xl border border-border bg-card p-5 space-y-5">
       {/* Pipeline Header */}
       <PipelineSteps
         steps={[
@@ -1320,17 +1320,17 @@ const E2EAutomationPanel: React.FC<{
             className="space-y-4"
           >
             <div>
-              <p className="text-sm font-semibold text-zinc-900">
+              <p className="text-sm font-semibold text-foreground">
                 Browser automation
               </p>
-              <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
                 Select the frontend repo. Generation runs in the background and
                 saves executable steps.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Frontend repository
               </label>
               <ProjectSelect
@@ -1370,12 +1370,12 @@ const E2EAutomationPanel: React.FC<{
             <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center mb-3">
               <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
             </div>
-            <p className="text-sm font-semibold text-zinc-900">
+            <p className="text-sm font-semibold text-foreground">
               {mutation.isPending
                 ? "Starting generation…"
                 : "Generating E2E tests"}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {mutation.isPending
                 ? "Preparing the generation pipeline."
                 : "Analyzing frontend repo and generating Playwright steps."}
@@ -1447,11 +1447,11 @@ const ManualAutomationPanel: React.FC<{
   };
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+    <div className="rounded-xl border border-border bg-card p-5 space-y-5">
       {/* Header */}
       <div>
-        <p className="text-sm font-semibold text-zinc-900">Manual execution</p>
-        <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+        <p className="text-sm font-semibold text-foreground">Manual execution</p>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
           Upload evidence, mark the outcome, and keep a concise note for audit
           history.
         </p>
@@ -1461,13 +1461,13 @@ const ManualAutomationPanel: React.FC<{
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Result */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Result
           </label>
           <Select value={status} onValueChange={(v) => setStatus(v as ManualTestStatus)}>
             <SelectTrigger
               className={cn(
-                "h-10 w-full rounded-lg border bg-white px-3 text-sm outline-none transition-colors",
+                "h-10 w-full rounded-lg border bg-background px-3 text-sm outline-none transition-colors",
                 status === "passed"
                   ? "border-emerald-200 text-emerald-700 focus:ring-emerald-300"
                   : "border-red-200 text-red-700 focus:ring-red-300",
@@ -1494,7 +1494,7 @@ const ManualAutomationPanel: React.FC<{
 
         {/* Evidence upload */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Evidence files
           </label>
           <div
@@ -1505,8 +1505,8 @@ const ManualAutomationPanel: React.FC<{
             className={cn(
               "relative flex h-10 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed px-3 text-sm transition-colors",
               dragOver
-                ? "border-zinc-400 bg-zinc-50"
-                : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
+                ? "border-border bg-muted"
+                : "border-border bg-background hover:border-border hover:bg-muted/50",
             )}
           >
             <input
@@ -1516,10 +1516,10 @@ const ManualAutomationPanel: React.FC<{
               className="hidden"
               onChange={(e) => setFiles(Array.from(e.target.files || []))}
             />
-            <div className="flex items-center gap-2 text-zinc-500">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Upload className="h-4 w-4 shrink-0" />
               {files.length > 0 ? (
-                <span className="truncate text-zinc-700 font-medium">
+                <span className="truncate text-foreground font-medium">
                   {files.length} file{files.length > 1 ? "s" : ""} selected
                 </span>
               ) : (
@@ -1532,12 +1532,12 @@ const ManualAutomationPanel: React.FC<{
               {files.map((file, i) => (
                 <span
                   key={`${file.name}-${i}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600"
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
                 >
                   {file.name}
                   <button
                     onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                    className="text-zinc-400 hover:text-red-500 transition-colors"
+                    className="text-muted-foreground hover:text-red-500 transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1550,20 +1550,20 @@ const ManualAutomationPanel: React.FC<{
 
       {/* Description */}
       <div className="space-y-1.5">
-        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           Description
         </label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What was verified? Mention blockers or evidence context."
-          className="min-h-[72px] rounded-lg border-zinc-200 bg-white text-sm placeholder:text-zinc-400 resize-y"
+          className="min-h-[72px] rounded-lg border-border bg-background text-sm placeholder:text-muted-foreground resize-y"
         />
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           Evidence is stored in Cloudflare R2.
         </p>
         <Button
@@ -1585,8 +1585,8 @@ const ManualAutomationPanel: React.FC<{
 
       {/* Recent Results — Compact Timeline */}
       {results.length > 0 && (
-        <div className="border-t border-zinc-100 pt-4">
-          <p className="mb-3 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+        <div className="border-t border-border pt-4">
+          <p className="mb-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Recent results
           </p>
           <div className="space-y-0">
@@ -1604,7 +1604,7 @@ const ManualAutomationPanel: React.FC<{
                       )}
                     />
                     {idx < Math.min(results.length, 3) - 1 && (
-                      <div className="w-px flex-1 bg-zinc-100 mt-1" />
+                      <div className="w-px flex-1 bg-muted mt-1" />
                     )}
                   </div>
                   {/* Content */}
@@ -1620,11 +1620,11 @@ const ManualAutomationPanel: React.FC<{
                       >
                         {result.status === "passed" ? "Passed" : "Failed"}
                       </span>
-                      <span className="text-[10px] text-zinc-400 shrink-0">
+                      <span className="text-[10px] text-muted-foreground shrink-0">
                         {new Date(result.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-sm text-zinc-700 mt-0.5 leading-snug">
+                    <p className="text-sm text-foreground mt-0.5 leading-snug">
                       {result.description}
                     </p>
                     {result.evidence.length > 0 && (
@@ -1635,7 +1635,7 @@ const ManualAutomationPanel: React.FC<{
                             href={file.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md bg-zinc-50 border border-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-md bg-muted border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                           >
                             <ExternalLink className="h-3 w-3 shrink-0" />
                             <span className="truncate max-w-[140px]">
@@ -1648,7 +1648,7 @@ const ManualAutomationPanel: React.FC<{
                   </div>
                 </div>
                 {idx < Math.min(results.length, 3) - 1 && (
-                  <div className="ml-[14px] border-b border-zinc-50" />
+                  <div className="ml-[14px] border-b border-border/50" />
                 )}
               </React.Fragment>
             ))}
@@ -1674,7 +1674,7 @@ const TestCaseDetailModal: React.FC<{
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded">
+            <span className="font-mono text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
               {testCase.code}
             </span>
             <DialogTitle className="text-base">{testCase.title}</DialogTitle>
@@ -1690,7 +1690,7 @@ const TestCaseDetailModal: React.FC<{
             {testCase.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded-md"
               >
                 <Tag className="w-2.5 h-2.5" />
                 {tag}
@@ -1704,10 +1704,10 @@ const TestCaseDetailModal: React.FC<{
           {/* Precondition */}
           {testCase.preCondition && (
             <div>
-              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+              <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                 Precondition
               </h4>
-              <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-100">
+              <p className="text-sm text-foreground bg-muted rounded-lg px-3 py-2 border border-border">
                 {testCase.preCondition}
               </p>
             </div>
@@ -1715,26 +1715,26 @@ const TestCaseDetailModal: React.FC<{
 
           {/* Manual Steps */}
           <div>
-            <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+            <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Test Steps
             </h4>
             <div className="space-y-2">
               {testCase.steps.map((step, idx) => (
                 <div
                   key={step.id}
-                  className="flex items-start gap-3 text-sm bg-zinc-50 rounded-lg px-3 py-2.5 border border-zinc-100"
+                  className="flex items-start gap-3 text-sm bg-muted rounded-lg px-3 py-2.5 border border-border"
                 >
-                  <span className="shrink-0 font-mono text-[10px] text-zinc-400 w-5 mt-0.5">
+                  <span className="shrink-0 font-mono text-[10px] text-muted-foreground w-5 mt-0.5">
                     {step.order}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-zinc-800 font-medium">{step.action}</p>
+                    <p className="text-foreground font-medium">{step.action}</p>
                     {step.data && (
-                      <p className="text-zinc-500 text-xs mt-0.5">
+                      <p className="text-muted-foreground text-xs mt-0.5">
                         Data: {step.data}
                       </p>
                     )}
-                    <p className="text-zinc-500 text-xs mt-0.5">
+                    <p className="text-muted-foreground text-xs mt-0.5">
                       Expected: {step.expected}
                     </p>
                   </div>
@@ -1747,13 +1747,13 @@ const TestCaseDetailModal: React.FC<{
           {at && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Automation Test
                 </h4>
                 {at.framework && (
                   <Badge
                     variant="outline"
-                    className="text-[9px] h-4 px-1.5 uppercase font-mono bg-zinc-50/50"
+                    className="text-[9px] h-4 px-1.5 uppercase font-mono bg-muted/50"
                   >
                     {at.framework}
                   </Badge>
@@ -1766,10 +1766,10 @@ const TestCaseDetailModal: React.FC<{
           {/* Note */}
           {testCase.note && (
             <div>
-              <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+              <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                 Note
               </h4>
-              <p className="text-sm text-zinc-600">{testCase.note}</p>
+              <p className="text-sm text-muted-foreground">{testCase.note}</p>
             </div>
           )}
         </div>
@@ -1793,21 +1793,21 @@ const StepItem: React.FC<{
     <div className="flex gap-3 group/step">
       {/* Number + reorder */}
       <div className="flex flex-col items-center pt-1">
-        <div className="w-6 h-6 rounded-full bg-zinc-100 text-zinc-500 text-[10px] font-semibold flex items-center justify-center border border-zinc-200/60 shrink-0">
+        <div className="w-6 h-6 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center border border-border/60 shrink-0">
           {step.order}
         </div>
         <div className="flex flex-col mt-1 opacity-0 group-hover/step:opacity-100 transition-opacity">
           <button
             onClick={onMoveUp}
             disabled={isFirst}
-            className="p-0.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 disabled:opacity-0"
+            className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-muted-foreground disabled:opacity-0"
           >
             <ArrowUp className="w-3 h-3" />
           </button>
           <button
             onClick={onMoveDown}
             disabled={isLast}
-            className="p-0.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 disabled:opacity-0"
+            className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-muted-foreground disabled:opacity-0"
           >
             <ArrowDown className="w-3 h-3" />
           </button>
@@ -1816,8 +1816,8 @@ const StepItem: React.FC<{
 
       {/* Content */}
       <div className="flex-1 pb-5">
-        <div className="bg-white rounded-lg border border-zinc-100 p-3 hover:border-zinc-200 transition-colors">
-          <div className="text-sm text-zinc-900 leading-snug">
+        <div className="bg-card rounded-lg border border-border p-3 hover:border-border transition-colors">
+          <div className="text-sm text-foreground leading-snug">
             <InlineField
               value={step.action}
               onChange={(v) => onChange({ ...step, action: v })}
@@ -1825,8 +1825,8 @@ const StepItem: React.FC<{
             />
           </div>
           {step.data && (
-            <div className="mt-1.5 flex items-start gap-1.5 text-xs text-zinc-500">
-              <span className="font-medium text-zinc-400 shrink-0">Input:</span>
+            <div className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+              <span className="font-medium text-muted-foreground shrink-0">Input:</span>
               <InlineField
                 value={step.data}
                 onChange={(v) => onChange({ ...step, data: v })}
@@ -1834,8 +1834,8 @@ const StepItem: React.FC<{
               />
             </div>
           )}
-          <div className="mt-1.5 flex items-start gap-1.5 text-xs text-zinc-500">
-            <span className="font-medium text-zinc-400 shrink-0">
+          <div className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+            <span className="font-medium text-muted-foreground shrink-0">
               Expected:
             </span>
             <InlineField
@@ -2052,7 +2052,7 @@ const TestRunPanel: React.FC<{
           : isCompleted && runState.result === "fail"
             ? "bg-red-50/40 border-red-100"
             : isCancelled
-              ? "bg-zinc-50 border-zinc-200"
+              ? "bg-muted border-border"
               : "bg-amber-50/30 border-amber-100",
       )}
     >
@@ -2069,7 +2069,7 @@ const TestRunPanel: React.FC<{
               isCompleted &&
                 runState.result === "fail" &&
                 "bg-red-100 text-red-700",
-              isCancelled && "bg-zinc-100 text-zinc-400",
+              isCancelled && "bg-muted text-muted-foreground",
             )}
           >
             {isRunning ? (
@@ -2083,7 +2083,7 @@ const TestRunPanel: React.FC<{
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-zinc-900 truncate">
+            <p className="text-sm font-semibold text-foreground truncate">
               {isRunning
                 ? "Running Automation Test"
                 : isCompleted
@@ -2092,7 +2092,7 @@ const TestRunPanel: React.FC<{
                     : "Failed"
                   : "Cancelled"}
             </p>
-            <p className="text-xs text-zinc-500 truncate mt-0.5">{message}</p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{message}</p>
           </div>
         </div>
 
@@ -2102,7 +2102,7 @@ const TestRunPanel: React.FC<{
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50"
+              className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50"
               onClick={onCancel}
               title="Cancel"
             >
@@ -2115,17 +2115,17 @@ const TestRunPanel: React.FC<{
       {/* Progress bar */}
       {isRunning && (
         <div className="px-4 pb-3">
-          <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500 bg-amber-400"
               style={{ width: `${progressPct}%` }}
             />
           </div>
           <div className="flex items-center justify-between mt-1.5">
-            <span className="text-[10px] text-zinc-400">
+            <span className="text-[10px] text-muted-foreground">
               {runState.completedStepIds.size} of {testCase.steps.length} steps
             </span>
-            <span className="text-[10px] text-zinc-400">{progressPct}%</span>
+            <span className="text-[10px] text-muted-foreground">{progressPct}%</span>
           </div>
         </div>
       )}
@@ -2142,8 +2142,8 @@ const TestRunPanel: React.FC<{
               className={cn(
                 "flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-all",
                 isCurrent && "bg-amber-50 border border-amber-100",
-                isCompleted && !isCurrent && "text-zinc-500",
-                !isCompleted && !isCurrent && "text-zinc-300",
+                isCompleted && !isCurrent && "text-muted-foreground",
+                !isCompleted && !isCurrent && "text-muted-foreground/60",
               )}
             >
               <div
@@ -2153,7 +2153,7 @@ const TestRunPanel: React.FC<{
                     ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                     : isCurrent
                       ? "bg-amber-50 border-amber-200 text-amber-600"
-                      : "bg-zinc-50 border-zinc-100 text-zinc-300",
+                      : "bg-muted border-border text-muted-foreground/60",
                 )}
               >
                 {isCompleted ? (
@@ -2167,7 +2167,7 @@ const TestRunPanel: React.FC<{
               <span
                 className={cn(
                   "truncate flex-1",
-                  isCurrent && "font-medium text-zinc-900",
+                  isCurrent && "font-medium text-foreground",
                   isCompleted && "line-through opacity-70",
                 )}
               >
@@ -2223,8 +2223,8 @@ const RunButton: React.FC<{
       className={cn(
         "h-7 w-7 p-0 rounded-md transition-colors",
         hasAutomation
-          ? "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
-          : "text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50",
+          ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+          : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50",
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -2337,7 +2337,7 @@ const SortableTestCase: React.FC<{
         ? "ring-1 ring-red-100 bg-red-50/10"
         : testCase.automationTest.status === "running"
           ? "ring-1 ring-amber-100 bg-amber-50/10"
-          : "ring-1 ring-zinc-100"
+          : "ring-1 ring-border"
     : "";
 
   return (
@@ -2348,8 +2348,8 @@ const SortableTestCase: React.FC<{
         "rounded-xl border transition-colors group/testcase",
         automationState,
         isDragging
-          ? "border-zinc-300 shadow-lg bg-white"
-          : "border-zinc-200/70 bg-white hover:border-zinc-300 hover:shadow-sm hover:shadow-zinc-950/[0.03]",
+          ? "border-border shadow-lg bg-card"
+          : "border-border/70 bg-card hover:border-border hover:shadow-sm hover:shadow-foreground/[0.03]",
       )}
     >
       {/* Collapsed Header */}
@@ -2361,24 +2361,24 @@ const SortableTestCase: React.FC<{
         <div
           {...attributes}
           {...listeners}
-          className="shrink-0 text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-zinc-50"
+          className="shrink-0 text-muted-foreground/60 hover:text-muted-foreground cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-muted"
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-4 h-4" />
         </div>
 
         {/* Code */}
-        <span className="shrink-0 font-mono text-[11px] font-semibold text-zinc-500 bg-zinc-50 border border-zinc-200/70 px-2 py-1 rounded-md">
+        <span className="shrink-0 font-mono text-[11px] font-semibold text-muted-foreground bg-muted border border-border/70 px-2 py-1 rounded-md">
           {testCase.code}
         </span>
 
         {/* Title */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-zinc-950 truncate">
+          <p className="text-sm font-semibold text-foreground truncate">
             {testCase.title}
           </p>
           {testCase.description && (
-            <p className="text-xs text-zinc-400 truncate mt-0.5">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {testCase.description}
             </p>
           )}
@@ -2389,7 +2389,7 @@ const SortableTestCase: React.FC<{
           {testCase.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md max-w-28 truncate"
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded-md max-w-28 truncate"
             >
               <Tag className="w-2.5 h-2.5" />
               {tag}
@@ -2408,7 +2408,7 @@ const SortableTestCase: React.FC<{
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
             onClick={(e) => {
               e.stopPropagation();
               setDetailOpen(true);
@@ -2428,14 +2428,14 @@ const SortableTestCase: React.FC<{
             />
           )}
 
-          <div className="flex items-center gap-1 text-[11px] text-zinc-400 ml-1">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground ml-1">
             <Layers className="w-3 h-3" />
             {testCase.steps.length}
           </div>
         </div>
 
         {/* Expand chevron */}
-        <div className="shrink-0 text-zinc-400">
+        <div className="shrink-0 text-muted-foreground">
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -2464,7 +2464,7 @@ const SortableTestCase: React.FC<{
             }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-5 border-t border-zinc-50">
+            <div className="px-4 pb-5 border-t border-border/50">
               {/* Test Result / Active Run */}
               {runState &&
               runState.testCaseId === testCase.id &&
@@ -2495,12 +2495,12 @@ const SortableTestCase: React.FC<{
 
                 {/* Description */}
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 block">
                     Description
                   </label>
-                  <p className="text-sm text-zinc-600 leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {testCase.description || (
-                      <span className="italic text-zinc-400">
+                      <span className="italic text-muted-foreground">
                         No description provided.
                       </span>
                     )}
@@ -2508,10 +2508,10 @@ const SortableTestCase: React.FC<{
                 </div>
 
                 {/* Footer stats & actions */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-zinc-50">
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-border/50">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-50 rounded-md border border-zinc-100 text-[11px] font-medium text-zinc-600">
-                      <Layers className="w-3 h-3 text-zinc-400" />
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-muted rounded-md border border-border text-[11px] font-medium text-muted-foreground">
+                      <Layers className="w-3 h-3 text-muted-foreground" />
                       <span>{testCase.steps.length} Steps</span>
                     </div>
                     <PriorityBadge
@@ -2529,7 +2529,7 @@ const SortableTestCase: React.FC<{
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                    className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={() => setDetailOpen(true)}
                   >
                     <Eye className="w-3.5 h-3.5 mr-1.5" />
@@ -2599,12 +2599,12 @@ const SectionSelectModal: React.FC<{
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-        <div className="px-6 py-5 border-b border-zinc-100">
-          <h2 className="text-lg font-semibold text-zinc-900">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="px-6 py-5 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">
             Generate Automation Tests
           </h2>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Select sections to generate AI-powered automation tests from.
           </p>
         </div>
@@ -2618,15 +2618,15 @@ const SectionSelectModal: React.FC<{
                 className={cn(
                   "flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all",
                   isSelected
-                    ? "border-zinc-900 bg-white shadow-sm ring-1 ring-zinc-900"
-                    : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/50",
+                    ? "border-foreground bg-card shadow-sm ring-1 ring-foreground"
+                    : "border-border hover:border-border hover:bg-muted/50",
                 )}
               >
                 <div>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-sm font-medium text-foreground">
                     {section.title}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {section.testCases.length} test cases ·{" "}
                     {section.testCases.filter((tc) => tc.automationTest).length}{" "}
                     already automated
@@ -2636,8 +2636,8 @@ const SectionSelectModal: React.FC<{
                   className={cn(
                     "w-5 h-5 rounded-md border flex items-center justify-center transition-all",
                     isSelected
-                      ? "bg-zinc-900 border-zinc-900"
-                      : "border-zinc-300 bg-white",
+                      ? "bg-zinc-900 border-foreground"
+                      : "border-border bg-background",
                   )}
                 >
                   {isSelected && (
@@ -2648,7 +2648,7 @@ const SectionSelectModal: React.FC<{
             );
           })}
         </div>
-        <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
           <Button variant="ghost" className="rounded-lg" onClick={onClose}>
             Cancel
           </Button>
@@ -2990,14 +2990,14 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F9FAFB]">
+    <div className="flex flex-col h-full bg-background">
       {/* ─── TopAppBar ─── */}
-      <header className="min-h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+      <header className="min-h-14 shrink-0 border-b border-border bg-background flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
         {/* Left: Back */}
         <div className="flex items-center gap-2">
           <button
             onClick={onClose}
-            className="h-9 w-9 p-0 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+            className="h-9 w-9 p-0 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -3005,11 +3005,11 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
         {/* Center: Scenario Title & Description */}
         <div className="flex-1 flex flex-col justify-center min-w-0 px-4 py-2">
-          <h2 className="text-base font-semibold text-zinc-900 truncate max-w-md">
+          <h2 className="text-base font-semibold text-foreground truncate max-w-md">
             {scenario.title}
           </h2>
           {scenario.description && (
-            <p className="text-xs text-zinc-500 truncate max-w-md leading-tight mt-0.5">
+            <p className="text-xs text-muted-foreground truncate max-w-md leading-tight mt-0.5">
               {scenario.description}
             </p>
           )}
@@ -3043,33 +3043,33 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       {/* Split View Workspace */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* ── Left Sidebar: Test Cases List ── */}
-        <aside className="w-[300px] shrink-0 border-r border-zinc-200 bg-[#F9FAFB] flex flex-col">
+        <aside className="w-[300px] shrink-0 border-r border-border bg-background flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-zinc-900">
+          <div className="p-4 border-b border-border bg-card flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">
               Test Cases
             </h3>
-            <span className="text-[11px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
+            <span className="text-[11px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
               {filteredTestCases.length}
             </span>
           </div>
 
           {/* Search */}
-          <div className="p-3 border-b border-zinc-200 bg-white">
+          <div className="p-3 border-b border-border bg-card">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 placeholder="Filter cases..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 bg-[#F9FAFB] border border-zinc-200 rounded-lg text-sm placeholder-zinc-400 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+                className="w-full h-8 pl-8 pr-3 bg-muted/30 border border-border rounded-lg text-sm placeholder-muted-foreground focus:outline-none focus:border-border focus:ring-1 focus:ring-ring/50"
               />
             </div>
           </div>
 
           {/* Section Filter */}
           {availableSections.length > 1 && (
-            <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <div className="px-3 py-2 border-b border-border bg-card">
               <Select
                 value={sectionFilter}
                 onValueChange={(v) => {
@@ -3077,7 +3077,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
                   <SelectValue placeholder="All sections" />
                 </SelectTrigger>
                 <SelectContent>
@@ -3094,7 +3094,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
           {/* Type Filter */}
           {availableTypes.length > 1 && (
-            <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+            <div className="px-3 py-2 border-b border-border bg-card">
               <Select
                 value={typeFilter}
                 onValueChange={(v) => {
@@ -3102,7 +3102,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -3118,7 +3118,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
           )}
 
           {/* Status Filter */}
-          <div className="px-3 py-2 border-b border-zinc-200 bg-white">
+          <div className="px-3 py-2 border-b border-border bg-card">
             <Select
               value={statusFilter}
               onValueChange={(v) => {
@@ -3126,7 +3126,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-[#F9FAFB] border border-zinc-200 text-zinc-600 focus:outline-none focus:border-zinc-400 px-2">
+              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -3157,10 +3157,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     key={tc.id}
                     onClick={() => setSelectedTestCaseId(tc.id)}
                     className={cn(
-                      "px-4 py-2.5 flex flex-col justify-center border-b border-zinc-100 cursor-pointer transition-colors min-h-[52px]",
+                      "px-4 py-2.5 flex flex-col justify-center border-b border-border cursor-pointer transition-colors min-h-[52px]",
                       isSelected
-                        ? "bg-white border-l-2 border-l-zinc-900 shadow-[inset_4px_0_0_0_rgba(0,0,0,0.04)]"
-                        : "hover:bg-zinc-50",
+                        ? "bg-card border-l-2 border-l-foreground shadow-[inset_4px_0_0_0_rgba(0,0,0,0.04)]"
+                        : "hover:bg-muted",
                     )}
                   >
                     <div className="flex items-center justify-between mb-0.5">
@@ -3168,24 +3168,24 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                         className={cn(
                           "text-[11px] font-mono",
                           isSelected
-                            ? "text-zinc-900 font-semibold"
-                            : "text-zinc-500",
+                            ? "text-foreground font-semibold"
+                            : "text-muted-foreground",
                         )}
                       >
                         {tc.code}
                       </span>
                     </div>
-                    <span className="text-sm text-zinc-800 truncate leading-tight mb-0.5">
+                    <span className="text-sm text-foreground truncate leading-tight mb-0.5">
                       {tc.title}
                     </span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {sectionName && (
-                        <span className="text-[10px] text-zinc-400 truncate">
+                        <span className="text-[10px] text-muted-foreground truncate">
                           {sectionName}
                         </span>
                       )}
                       {tc.type && (
-                        <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1 rounded">
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded">
                           {tc.type}
                         </span>
                       )}
@@ -3199,7 +3199,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                           tc.priority === "medium" &&
                             "text-amber-600 bg-amber-50",
                           tc.priority === "low" &&
-                            "text-zinc-500 bg-zinc-100",
+                            "text-muted-foreground bg-muted",
                         )}
                       >
                         {(PRIORITY_META[tc.priority]?.label) ?? tc.priority}
@@ -3214,7 +3214,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                               cat === "api" && "text-sky-600 bg-sky-50",
                               cat === "e2e" && "text-violet-600 bg-violet-50",
                               cat === "manual" &&
-                                "text-zinc-500 bg-zinc-100",
+                                "text-muted-foreground bg-muted",
                             )}
                           >
                             {catMeta.label}
@@ -3226,7 +3226,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 );
               })
             ) : (
-              <div className="flex items-center justify-center h-32 text-sm text-zinc-400">
+              <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
                 {searchQuery || statusFilter !== "all" || sectionFilter !== "all" || typeFilter !== "all"
                   ? "No matches"
                   : "No test cases"}
@@ -3236,15 +3236,15 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-3 py-2 border-t border-zinc-200 bg-white flex items-center justify-between">
-              <span className="text-[11px] text-zinc-500">
+            <div className="px-3 py-2 border-t border-border bg-card flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">
                 {page}/{totalPages}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="h-6 w-6 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-100 disabled:opacity-30"
+                  className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30"
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </button>
@@ -3253,7 +3253,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     setPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={page === totalPages}
-                  className="h-6 w-6 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-100 disabled:opacity-30"
+                  className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30"
                 >
                   <ChevronRight className="w-3 h-3" />
                 </button>
@@ -3263,13 +3263,13 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         </aside>
 
         {/* ── Main Content: Selected Test Case Detail ── */}
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main className="flex-1 overflow-y-auto bg-background">
           {selectedTestCase ? (
             <div className="max-w-3xl mx-auto p-6 pb-6">
               {/* Header Data */}
               <div className="mb-6">
                 <div className="flex items-center gap-2.5 mb-2">
-                  <span className="text-[11px] font-mono px-2 py-1 bg-zinc-50 text-zinc-600 rounded border border-zinc-200">
+                  <span className="text-[11px] font-mono px-2 py-1 bg-muted text-muted-foreground rounded border border-border">
                     {selectedTestCase.code}
                   </span>
                   <TestCaseStatusBadge testCase={selectedTestCase} />
@@ -3285,12 +3285,12 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     }
                   />
                 </div>
-                <h1 className="text-lg font-semibold text-zinc-900 mb-3 leading-snug">
+                <h1 className="text-lg font-semibold text-foreground mb-3 leading-snug">
                   {selectedTestCase.title}
                 </h1>
-                <p className="text-sm text-zinc-500 leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {selectedTestCase.description || (
-                    <span className="italic text-zinc-300">
+                    <span className="italic text-muted-foreground/60">
                       No description provided.
                     </span>
                   )}
@@ -3316,30 +3316,30 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
               {/* Environment & Meta */}
               <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
-                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                <div className="p-3 border border-border rounded-lg bg-muted/50">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Environment
                   </span>
-                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
-                    <Server className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="text-sm text-foreground flex items-center gap-1.5">
+                    <Server className="w-3.5 h-3.5 text-muted-foreground" />
                     {scenario.projectName || "N/A"}
                   </span>
                 </div>
-                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
-                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                <div className="p-3 border border-border rounded-lg bg-muted/50">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Platform
                   </span>
-                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
-                    <Monitor className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="text-sm text-foreground flex items-center gap-1.5">
+                    <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
                     Web
                   </span>
                 </div>
-                <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/50">
-                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">
+                <div className="p-3 border border-border rounded-lg bg-muted/50">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Assignee
                   </span>
-                  <span className="text-sm text-zinc-800 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center text-[10px] font-medium">
+                  <span className="text-sm text-foreground flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[10px] font-medium">
                       {scenario.creatorId
                         ? String(scenario.creatorId).slice(0, 2).toUpperCase()
                         : "?"}
@@ -3353,12 +3353,12 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
               {/* Steps Table */}
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
                   Execution Steps
                 </h3>
-                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                <div className="border border-border rounded-lg overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-[#F9FAFB] border-b border-zinc-200 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                  <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-muted/50 border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     <div className="text-center">#</div>
                     <div>Action</div>
                     <div>Expected Result</div>
@@ -3367,15 +3367,15 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   {selectedTestCase.steps.map((step) => (
                     <div
                       key={step.id}
-                      className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-zinc-100 last:border-b-0 items-start hover:bg-zinc-50/50 transition-colors"
+                      className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-border last:border-b-0 items-start hover:bg-muted/50 transition-colors"
                     >
-                      <div className="text-[11px] font-mono text-zinc-400 text-center pt-1">
+                      <div className="text-[11px] font-mono text-muted-foreground text-center pt-1">
                         {step.order}
                       </div>
-                      <div className="text-sm text-zinc-800 leading-snug">
+                      <div className="text-sm text-foreground leading-snug">
                         {step.action}
                       </div>
-                      <div className="text-sm text-zinc-500 leading-snug">
+                      <div className="text-sm text-muted-foreground leading-snug">
                         {step.expected}
                       </div>
                     </div>
@@ -3385,23 +3385,23 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
 
               {/* Evidence & Artifacts */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
                   Evidence &amp; Artifacts
                 </h3>
-                <div className="border-2 border-dashed border-zinc-200 rounded-xl p-8 bg-zinc-50/30 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center mb-4">
-                    <Upload className="w-5 h-5 text-zinc-400" />
+                <div className="border-2 border-dashed border-border rounded-xl p-8 bg-muted/30 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center mb-4">
+                    <Upload className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-zinc-700 mb-1">
+                  <p className="text-sm text-foreground mb-1">
                     Drag and drop screenshots or screen recordings here
                   </p>
-                  <p className="text-xs text-zinc-400 mb-4">
+                  <p className="text-xs text-muted-foreground mb-4">
                     Supports PNG, JPG, MP4 (Max 50MB)
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 rounded-lg text-xs border-zinc-200 text-zinc-600"
+                    className="h-8 rounded-lg text-xs border-border text-muted-foreground"
                   >
                     Browse Files
                   </Button>
@@ -3411,12 +3411,12 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               {/* Execution Result (for non-manual types - Manual panel handles this above) */}
               {inferAutomationCategory(selectedTestCase) !== "manual" && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-zinc-900 mb-3">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
                     Execution Result
                   </h3>
-                  <div className="border border-zinc-200 rounded-lg p-4 bg-zinc-50/30 space-y-4">
+                  <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-4">
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-zinc-500 font-medium">
+                      <span className="text-xs text-muted-foreground font-medium">
                         Status:
                       </span>
                       <div className="flex items-center gap-3">
@@ -3424,9 +3424,9 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                           <input
                             type="radio"
                             name="exec_status"
-                            className="w-3.5 h-3.5 text-emerald-500 border-zinc-300 focus:ring-emerald-500"
+                            className="w-3.5 h-3.5 text-emerald-500 border-border focus:ring-emerald-500"
                           />
-                          <span className="text-xs text-zinc-700 group-hover:text-emerald-600 transition-colors">
+                          <span className="text-xs text-foreground group-hover:text-emerald-600 transition-colors">
                             Pass
                           </span>
                         </label>
@@ -3434,9 +3434,9 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                           <input
                             type="radio"
                             name="exec_status"
-                            className="w-3.5 h-3.5 text-red-500 border-zinc-300 focus:ring-red-500"
+                            className="w-3.5 h-3.5 text-red-500 border-border focus:ring-red-500"
                           />
-                          <span className="text-xs text-zinc-700 group-hover:text-red-600 transition-colors">
+                          <span className="text-xs text-foreground group-hover:text-red-600 transition-colors">
                             Fail
                           </span>
                         </label>
@@ -3444,9 +3444,9 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                           <input
                             type="radio"
                             name="exec_status"
-                            className="w-3.5 h-3.5 text-amber-500 border-zinc-300 focus:ring-amber-500"
+                            className="w-3.5 h-3.5 text-amber-500 border-border focus:ring-amber-500"
                           />
-                          <span className="text-xs text-zinc-700 group-hover:text-amber-600 transition-colors">
+                          <span className="text-xs text-foreground group-hover:text-amber-600 transition-colors">
                             Block
                           </span>
                         </label>
@@ -3455,7 +3455,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     <div>
                       <textarea
                         placeholder="Add notes about this execution result..."
-                        className="w-full min-h-[60px] text-sm border border-zinc-200 rounded-lg p-2.5 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300 resize-y"
+                        className="w-full min-h-[60px] text-sm border border-border rounded-lg p-2.5 bg-background placeholder-muted-foreground focus:outline-none focus:border-border focus:ring-1 focus:ring-ring/50 resize-y"
                       />
                     </div>
                     <div className="flex justify-end">
@@ -3473,11 +3473,11 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center px-8">
-                <FileSpreadsheet className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
-                <p className="text-sm font-medium text-zinc-600 mb-1">
+                <FileSpreadsheet className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+                <p className="text-sm font-medium text-muted-foreground mb-1">
                   Select a test case
                 </p>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-muted-foreground">
                   Choose a test case from the sidebar to view its details and
                   steps.
                 </p>
@@ -3512,12 +3512,12 @@ function MetricItem({
             ? "text-red-600"
             : accent
               ? "text-emerald-600"
-              : "text-zinc-950",
+              : "text-foreground",
         )}
       >
         {value}
       </span>
-      <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
         {label}
       </span>
     </div>

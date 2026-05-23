@@ -89,12 +89,12 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
 
   const badge = getScenarioBadge();
   const badgeClasses: Record<string, string> = {
-    neutral: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
+    neutral: 'bg-muted text-foreground hover:bg-muted',
     blue: 'bg-blue-100 text-blue-700 hover:bg-blue-100',
     red: 'bg-red-100 text-red-700 hover:bg-red-100',
     green: 'bg-green-100 text-green-700 hover:bg-green-100',
     amber: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
-    zinc: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100',
+    zinc: 'bg-muted text-foreground hover:bg-muted',
   };
 
   // Close confirmation dialog when deletion starts
@@ -116,13 +116,13 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
       onClick={onClick}
       className={cn(
         'group flex flex-col border rounded-xl overflow-hidden cursor-pointer transition-all duration-200',
-        'bg-white border-zinc-100 hover:border-zinc-200 hover:shadow-sm h-full relative',
-        isSelected && 'ring-2 ring-zinc-900 border-transparent shadow-md'
+        'bg-card border-border hover:border-border hover:shadow-sm h-full relative',
+        isSelected && 'ring-2 ring-foreground border-transparent shadow-md'
       )}
     >
       {isConfirmingDelete && (
         <div
-          className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-200"
+          className="absolute inset-0 z-10 bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-200"
           onClick={e => e.stopPropagation()}
         >
           {isDeleting ? (
@@ -131,19 +131,19 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               >
-                <Loader2 className="w-8 h-8 text-zinc-600 mb-2" />
+                <Loader2 className="w-8 h-8 text-muted-foreground mb-2" />
               </motion.div>
-              <p className="text-sm font-semibold text-zinc-900 mb-1">
+              <p className="text-sm font-semibold text-foreground mb-1">
                 Deleting...
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Please wait while we remove this scenario.
               </p>
             </>
           ) : deleteError ? (
             <>
               <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-gray-900 mb-1">
+              <p className="text-sm font-bold text-foreground mb-1">
                 Failed to delete
               </p>
               <p className="text-xs text-red-600 mb-4 max-w-[200px]">
@@ -172,10 +172,10 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           ) : (
             <>
               <Trash2 className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-gray-900 mb-1">
+              <p className="text-sm font-bold text-foreground mb-1">
                 Delete this test scenario?
               </p>
-              <p className="text-xs text-gray-500 mb-4">
+              <p className="text-xs text-muted-foreground mb-4">
                 This action cannot be undone.
               </p>
               <div className="flex items-center gap-2 w-full">
@@ -207,19 +207,19 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h3
-              className="font-semibold text-zinc-900 truncate"
+              className="font-semibold text-foreground truncate"
               title={scenario.title}
             >
               {scenario.title}
             </h3>
-            <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
               <span className="truncate">
                 {formatDistanceToNow(new Date(scenario.createdAt), {
                   addSuffix: true,
                 })}
               </span>
               {scenario.sourceDisplay && (
-                <span className="flex items-center gap-1 text-zinc-400 truncate max-w-[200px]">
+                <span className="flex items-center gap-1 text-muted-foreground truncate max-w-[200px]">
                   <FileText className="w-3 h-3 shrink-0" />
                   <span className="truncate">{scenario.sourceDisplay}</span>
                 </span>
@@ -236,8 +236,8 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
                     className={cn(
                       "h-8 w-8",
                       isDeleting 
-                        ? "text-zinc-400 cursor-not-allowed" 
-                        : "text-zinc-500 hover:text-red-600 hover:bg-red-50"
+                        ? "text-muted-foreground cursor-not-allowed" 
+                        : "text-muted-foreground hover:text-red-600 hover:bg-red-50"
                     )}
                     onClick={e => {
                       e.stopPropagation();
@@ -267,8 +267,8 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
                     className={cn(
                       "h-8 w-8",
                       isDeleting
-                        ? "text-zinc-300 cursor-not-allowed"
-                        : "text-zinc-500 hover:text-zinc-600 hover:bg-zinc-50"
+                        ? "text-muted-foreground/30 cursor-not-allowed"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     )}
                     onClick={onGenerate}
                     disabled={isDeleting}
@@ -283,7 +283,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-sm text-zinc-600">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5" title="Total Sections">
             <FileText className="w-4 h-4" />
             <span>{stats?.totalSections ?? (scenario.sections || []).length} sections</span>
@@ -304,9 +304,9 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
         {/* Stats badges row */}
         {(stats?.generatingCount || stats?.runningCount || stats?.passCount || stats?.failCount || stats?.generationFailedCount) ? (
           <div className="flex flex-wrap items-center gap-1.5">
-            {stats?.generatingCount ? <Badge variant="secondary" className="text-[10px] bg-zinc-100 text-zinc-700">{stats.generatingCount} generating</Badge> : null}
+            {stats?.generatingCount ? <Badge variant="secondary" className="text-[10px] bg-muted text-foreground">{stats.generatingCount} generating</Badge> : null}
             {stats?.runningCount ? <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700">{stats.runningCount} running</Badge> : null}
-            {stats?.coveragePercent ? <Badge variant="secondary" className="text-[10px] bg-zinc-100 text-zinc-600">{stats.coveragePercent}% coverage</Badge> : null}
+            {stats?.coveragePercent ? <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">{stats.coveragePercent}% coverage</Badge> : null}
             {stats?.passCount ? <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700">{stats.passCount} passed</Badge> : null}
             {stats?.failCount ? <Badge variant="destructive" className="text-[10px]">{stats.failCount} failed</Badge> : null}
             {stats?.generationFailedCount ? <Badge variant="destructive" className="text-[10px]">{stats.generationFailedCount} gen. failed</Badge> : null}
@@ -328,7 +328,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           </Badge>
 
           <div
-            className="flex items-center gap-2 text-xs text-zinc-500 min-w-0"
+            className="flex items-center gap-2 text-xs text-muted-foreground min-w-0"
             title={scenario.projectName || projectName || 'Unassigned Project'}
           >
             <span className="truncate">

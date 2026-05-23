@@ -185,11 +185,11 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
         }}
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]"
+        className="bg-card rounded-xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]"
         style={{ pointerEvents: isOpen ? "auto" : "none" }}
       >
         <div className="flex items-center justify-between p-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold">Generate Test from AI</h2>
+          <h2 className="text-lg font-semibold text-foreground">Generate Test from AI</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -206,14 +206,14 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
               <div className="space-y-2">
                 <Label>1. Test Scenario Excel file</Label>
                 <div
-                  className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-accent transition-colors cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="w-8 h-8 text-zinc-400 mb-2" />
-                  <p className="text-sm font-medium text-zinc-900">
+                  <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium text-foreground">
                     {file ? file.name : "Click to upload XLSX"}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1">.xlsx, .xls</p>
+                  <p className="text-xs text-muted-foreground mt-1">.xlsx, .xls</p>
                   <input
                     ref={fileInputRef}
                     id="file-upload"
@@ -230,7 +230,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
               <div className="space-y-2 w-full">
                 <Label>2. Project</Label>
                 {lockedProjectId ? (
-                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800">
+                  <div className="rounded-xl border border-border bg-muted px-3 py-2 text-sm font-medium text-foreground">
                     {projectName || "Current project"}
                   </div>
                 ) : (
@@ -256,11 +256,11 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="h-px bg-zinc-200 flex-1" />
-                  <span className="text-xs text-zinc-500 font-medium">
+                  <div className="h-px bg-border flex-1" />
+                  <span className="text-xs text-muted-foreground font-medium">
                     Auth Constraints
                   </span>
-                  <div className="h-px bg-zinc-200 flex-1" />
+                  <div className="h-px bg-border flex-1" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -371,28 +371,28 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                         }}
                         className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                           isSelected
-                            ? "border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900"
-                            : "hover:border-zinc-300"
+                            ? "border-foreground bg-muted ring-1 ring-ring"
+                            : "hover:border-border"
                         }`}
                       >
                         <div className="flex flex-col">
-                          <span className="font-medium text-sm text-zinc-900">
+                          <span className="font-medium text-sm text-foreground">
                             {section.title}
                           </span>
-                          <span className="text-xs text-zinc-500 mt-0.5">
+                          <span className="text-xs text-muted-foreground mt-0.5">
                             {section.testCases?.length || 0} Test Cases found
                           </span>
                         </div>
                         <div
                           className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
                             isSelected
-                              ? "border-zinc-900 bg-zinc-900 shadow-sm"
-                              : "border-zinc-300"
+                              ? "border-foreground bg-foreground shadow-sm"
+                              : "border-border"
                           }`}
                         >
                           {isSelected && (
                             <Check
-                              className="w-3 h-3 text-white"
+                              className="w-3 h-3 text-background"
                               strokeWidth={3}
                             />
                           )}
@@ -406,7 +406,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
           )}
         </div>
 
-        <div className="p-4 border-t shrink-0 flex justify-end gap-3 bg-zinc-50">
+        <div className="p-4 border-t shrink-0 flex justify-end gap-3 bg-muted">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -425,7 +425,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
                 !authConfig.username ||
                 isUploading
               }
-              className="bg-zinc-900 text-white min-w-[120px]"
+              className="bg-foreground text-background min-w-[120px]"
             >
               {isUploading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -437,7 +437,7 @@ export const UploadWizard: React.FC<UploadWizardProps> = ({
             <Button
               onClick={handleGenerate}
               disabled={selectedSheets.length === 0 || isGenerating}
-              className="bg-zinc-900 text-white min-w-[120px]"
+              className="bg-foreground text-background min-w-[120px]"
             >
               {isGenerating ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
