@@ -447,6 +447,12 @@ export const TestScenariosPage: React.FC<{
                             {item.description}
                           </div>
                         )}
+                        {item.sourceDisplay && (
+                          <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
+                            <FileText className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{item.sourceDisplay}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", pillClasses)}>

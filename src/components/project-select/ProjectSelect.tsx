@@ -445,7 +445,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
         )}
 
       <PopoverContent
-        className={cn('p-0', size === 'compact' ? 'w-[200px]' : 'w-[300px]')}
+        className={cn('p-0', size === 'compact' ? 'w-[200px]' : 'w-[var(--radix-popover-trigger-width)]')}
         align="start"
         container={portalContainer}
         onCloseAutoFocus={e => e.preventDefault()}

@@ -28,8 +28,6 @@ import {
   RotateCcw,
   Sparkles,
   Eye,
-  History,
-  MoreHorizontal,
   Server,
   Monitor,
   ClipboardCheck,
@@ -68,7 +66,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { getGitLabProjects } from "@/api/project";
 import {
   TestScenario,
   TestSection,
@@ -82,6 +79,7 @@ import {
   ManualTestStatus,
 } from "@/types/test-scenario";
 import { testScenarioApi } from "@/api/test-scenario";
+import { ProjectSelect } from "@/components/project-select";
 
 // ─────────────────────────────────────────────
 // Skeleton
@@ -934,83 +932,6 @@ const LastRunPanel: React.FC<{
   );
 };
 
-const RepoPicker: React.FC<{
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}> = ({ label, value, onChange, placeholder }) => {
-  const [search, setSearch] = useState("");
-  const { data, isFetching } = useQuery({
-    queryKey: ["gitlab-projects", "automation-repo", search],
-    queryFn: () => getGitLabProjects(search),
-    enabled: search.trim().length >= 2,
-    staleTime: 30_000,
-  });
-  const projects = data?.data?.projects || [];
-
-  return (
-    <div className="space-y-2">
-      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-        {label}
-      </label>
-      <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={placeholder}
-          className="h-9 rounded-lg border-zinc-200 text-sm"
-        />
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Repo ID"
-          className="h-9 rounded-lg border-zinc-200 font-mono text-sm"
-        />
-      </div>
-      {search.trim().length >= 2 && (
-        <div className="rounded-lg border border-zinc-100 bg-zinc-50/70 p-1.5">
-          {isFetching ? (
-            <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-zinc-500">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Searching repositories
-            </div>
-          ) : projects.length > 0 ? (
-            <div className="max-h-32 overflow-y-auto space-y-1">
-              {projects.slice(0, 6).map((project) => (
-                <button
-                  key={project.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(String(project.id));
-                    setSearch(
-                      project.path_with_namespace ||
-                        project.name ||
-                        String(project.id),
-                    );
-                  }}
-                  className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-white"
-                >
-                  <span className="min-w-0 truncate font-medium text-zinc-700">
-                    {project.path_with_namespace || project.name}
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-400">
-                    {project.id}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="px-2 py-1.5 text-xs text-zinc-500">
-              No repositories found.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const AutomationCategoryPanel: React.FC<{
   scenarioId: string;
   projectId?: string;
@@ -1076,6 +997,63 @@ const AutomationCategoryPanel: React.FC<{
   );
 };
 
+type PipelineStep = "configure" | "generate" | "review";
+
+const PipelineSteps: React.FC<{
+  steps: { key: PipelineStep; label: string }[];
+  current: PipelineStep;
+}> = ({ steps, current }) => {
+  const idx = steps.findIndex((s) => s.key === current);
+  return (
+    <div className="flex items-center gap-0">
+      {steps.map((step, i) => {
+        const state =
+          i < idx ? "done" : i === idx ? "active" : "pending";
+        return (
+          <React.Fragment key={step.key}>
+            {i > 0 && (
+              <div
+                className={cn(
+                  "h-px flex-1 mx-1.5",
+                  state === "done" || state === "active"
+                    ? "bg-zinc-300"
+                    : "bg-zinc-100",
+                )}
+              />
+            )}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div
+                className={cn(
+                  "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-colors",
+                  state === "done" && "bg-zinc-900 text-white",
+                  state === "active" && "bg-zinc-900 text-white ring-2 ring-zinc-900/20",
+                  state === "pending" && "bg-zinc-100 text-zinc-400",
+                )}
+              >
+                {state === "done" ? (
+                  <Check className="w-3 h-3" strokeWidth={3} />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-[11px] font-medium whitespace-nowrap transition-colors",
+                  state === "done" && "text-zinc-700",
+                  state === "active" && "text-zinc-900 font-semibold",
+                  state === "pending" && "text-zinc-400",
+                )}
+              >
+                {step.label}
+              </span>
+            </div>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
+
 const APIAutomationPanel: React.FC<{
   scenarioId: string;
   projectId: string;
@@ -1130,62 +1108,133 @@ const APIAutomationPanel: React.FC<{
       ),
   });
 
-  return (
-    <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-sky-950">Backend prompt</p>
-          <p className="mt-0.5 text-xs text-sky-700/80">
-            Select the backend repo. The result is a compact prompt for a
-            developer's local coding agent.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="h-8 rounded-lg bg-sky-700 text-white hover:bg-sky-800"
-          disabled={!backendRepoId || mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
-          {mutation.isPending ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          )}
-          Generate prompt
-        </Button>
-      </div>
+  const pipelineStep: PipelineStep = mutation.isPending
+    ? "generate"
+    : prompt
+      ? "review"
+      : "configure";
 
-      <RepoPicker
-        label="Backend repository"
-        value={backendRepoId}
-        onChange={setBackendRepoId}
-        placeholder="Search backend repo or paste ID"
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+      {/* Pipeline Header */}
+      <PipelineSteps
+        steps={[
+          { key: "configure", label: "Configure" },
+          { key: "generate", label: "Generate" },
+          { key: "review", label: "Review" },
+        ]}
+        current={pipelineStep}
       />
 
-      {prompt && (
-        <div className="rounded-lg border border-sky-100 bg-white p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-              Generated prompt
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 rounded-md px-2 text-xs"
-              onClick={() => {
-                navigator.clipboard?.writeText(prompt);
-                toast.success("Prompt copied");
-              }}
-            >
-              <Copy className="mr-1.5 h-3.5 w-3.5" />
-              Copy
-            </Button>
-          </div>
-          <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-zinc-950 p-3 text-xs leading-relaxed text-zinc-100">
-            {prompt}
-          </pre>
-        </div>
-      )}
+      {/* Step 1: Configure */}
+      <AnimatePresence mode="wait">
+        {pipelineStep === "configure" && (
+          <motion.div
+            key="configure"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
+          >
+            <div>
+              <p className="text-sm font-semibold text-zinc-900">
+                Backend prompt
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+                Select the backend repo. The result is a compact prompt for a
+                developer's local coding agent.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                Backend repository
+              </label>
+              <ProjectSelect
+                value={backendRepoId ? Number(backendRepoId) : null}
+                onSelect={(project) =>
+                  setBackendRepoId(project ? String(project.id) : "")
+                }
+                placeholder="Select a project..."
+                className="h-10 rounded-lg"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
+                disabled={!backendRepoId}
+                onClick={() => mutation.mutate()}
+              >
+                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                Generate prompt
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 2: Generating */}
+        {pipelineStep === "generate" && (
+          <motion.div
+            key="generate"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center justify-center py-8 text-center"
+          >
+            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
+              <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" />
+            </div>
+            <p className="text-sm font-semibold text-zinc-900">
+              Generating prompt
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              Analyzing backend repo structure…
+            </p>
+          </motion.div>
+        )}
+
+        {/* Step 3: Review */}
+        {pipelineStep === "review" && prompt && (
+          <motion.div
+            key="review"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-zinc-900">
+                  Generated prompt
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  Copy this prompt into your development environment.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-lg text-xs border-zinc-200 text-zinc-600 hover:bg-zinc-50 shrink-0"
+                onClick={() => {
+                  navigator.clipboard?.writeText(prompt);
+                  toast.success("Prompt copied to clipboard");
+                }}
+              >
+                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                Copy
+              </Button>
+            </div>
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-950 p-4 text-xs leading-relaxed text-zinc-100 font-mono">
+              {prompt}
+            </pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -1235,46 +1284,118 @@ const E2EAutomationPanel: React.FC<{
       ),
   });
 
-  return (
-    <div className="rounded-xl border border-violet-100 bg-violet-50/30 p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-violet-950">
-            Browser automation
-          </p>
-          <p className="mt-0.5 text-xs text-violet-700/80">
-            Select the frontend repo. Generation runs in the background and
-            saves executable steps.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="h-8 rounded-lg bg-violet-700 text-white hover:bg-violet-800"
-          disabled={
-            !frontendRepoId ||
-            mutation.isPending ||
-            testCase.automationTest?.status === "running"
-          }
-          onClick={() => mutation.mutate()}
-        >
-          {mutation.isPending ||
-          testCase.automationTest?.status === "running" ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Play className="mr-1.5 h-3.5 w-3.5" />
-          )}
-          {testCase.automationTest?.status === "running"
-            ? "Generating"
-            : "Generate E2E"}
-        </Button>
-      </div>
+  const hasRunResult =
+    testCase.automationTest?.status === "pass" ||
+    testCase.automationTest?.status === "fail";
 
-      <RepoPicker
-        label="Frontend repository"
-        value={frontendRepoId}
-        onChange={setFrontendRepoId}
-        placeholder="Search frontend repo or paste ID"
+  const pipelineStep: PipelineStep = mutation.isPending
+    ? "generate"
+    : testCase.automationTest?.status === "running"
+      ? "generate"
+      : hasRunResult
+        ? "review"
+        : "configure";
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+      {/* Pipeline Header */}
+      <PipelineSteps
+        steps={[
+          { key: "configure", label: "Configure" },
+          { key: "generate", label: "Generate" },
+          { key: "review", label: "Run" },
+        ]}
+        current={pipelineStep}
       />
+
+      {/* Step 1: Configure */}
+      <AnimatePresence mode="wait">
+        {pipelineStep === "configure" && (
+          <motion.div
+            key="configure"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
+          >
+            <div>
+              <p className="text-sm font-semibold text-zinc-900">
+                Browser automation
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+                Select the frontend repo. Generation runs in the background and
+                saves executable steps.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                Frontend repository
+              </label>
+              <ProjectSelect
+                value={frontendRepoId ? Number(frontendRepoId) : null}
+                onSelect={(project) =>
+                  setFrontendRepoId(project ? String(project.id) : "")
+                }
+                placeholder="Select a project..."
+                className="h-10 rounded-lg"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
+                disabled={!frontendRepoId}
+                onClick={() => mutation.mutate()}
+              >
+                <Play className="mr-1.5 h-3.5 w-3.5" />
+                Generate E2E
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 2: Generating / Running */}
+        {pipelineStep === "generate" && (
+          <motion.div
+            key="generate"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center justify-center py-8 text-center"
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center mb-3">
+              <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+            </div>
+            <p className="text-sm font-semibold text-zinc-900">
+              {mutation.isPending
+                ? "Starting generation…"
+                : "Generating E2E tests"}
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              {mutation.isPending
+                ? "Preparing the generation pipeline."
+                : "Analyzing frontend repo and generating Playwright steps."}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Step 3: Review / Run Results */}
+        {pipelineStep === "review" && testCase.automationTest && (
+          <motion.div
+            key="review"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <LastRunPanel test={testCase.automationTest} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -1287,6 +1408,8 @@ const ManualAutomationPanel: React.FC<{
   const [status, setStatus] = useState<ManualTestStatus>("passed");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: results = [], refetch } = useQuery({
     queryKey: ["manual-results", projectId, scenarioId, testCase.id],
     queryFn: () =>
@@ -1312,71 +1435,140 @@ const ManualAutomationPanel: React.FC<{
       ),
   });
 
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = Array.from(e.dataTransfer.files || []);
+    if (dropped.length) setFiles((prev) => [...prev, ...dropped]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-4">
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-5">
+      {/* Header */}
       <div>
         <p className="text-sm font-semibold text-zinc-900">Manual execution</p>
-        <p className="mt-0.5 text-xs text-zinc-500">
+        <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
           Upload evidence, mark the outcome, and keep a concise note for audit
           history.
         </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[160px_1fr]">
-        <div>
-          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+      {/* Two-column form: Result + Evidence */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Result */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
             Result
           </label>
           <Select value={status} onValueChange={(v) => setStatus(v as ManualTestStatus)}>
-            <SelectTrigger className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:ring-1 focus:ring-zinc-300">
+            <SelectTrigger
+              className={cn(
+                "h-10 w-full rounded-lg border bg-white px-3 text-sm outline-none transition-colors",
+                status === "passed"
+                  ? "border-emerald-200 text-emerald-700 focus:ring-emerald-300"
+                  : "border-red-200 text-red-700 focus:ring-red-300",
+              )}
+            >
               <SelectValue placeholder="Select result" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="passed">Passed</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="passed">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  Passed
+                </span>
+              </SelectItem>
+              <SelectItem value="failed">
+                <span className="flex items-center gap-2">
+                  <XCircle className="w-3.5 h-3.5 text-red-500" />
+                  Failed
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+
+        {/* Evidence upload */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
             Evidence files
           </label>
-          <label className="flex h-9 cursor-pointer items-center justify-between rounded-lg border border-dashed border-zinc-300 bg-white px-3 text-sm text-zinc-500 hover:border-zinc-400">
-            <span className="truncate">
-              {files.length
-                ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
-                : "Choose evidence files"}
-            </span>
-            <Upload className="h-3.5 w-3.5" />
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleFileDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "relative flex h-10 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed px-3 text-sm transition-colors",
+              dragOver
+                ? "border-zinc-400 bg-zinc-50"
+                : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
+            )}
+          >
             <input
+              ref={fileInputRef}
               type="file"
               multiple
               className="hidden"
               onChange={(e) => setFiles(Array.from(e.target.files || []))}
             />
-          </label>
+            <div className="flex items-center gap-2 text-zinc-500">
+              <Upload className="h-4 w-4 shrink-0" />
+              {files.length > 0 ? (
+                <span className="truncate text-zinc-700 font-medium">
+                  {files.length} file{files.length > 1 ? "s" : ""} selected
+                </span>
+              ) : (
+                <span className="truncate">Click or drag files here</span>
+              )}
+            </div>
+          </div>
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {files.map((file, i) => (
+                <span
+                  key={`${file.name}-${i}`}
+                  className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600"
+                >
+                  {file.name}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                    className="text-zinc-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+      {/* Description */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
           Description
         </label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What was verified? Mention blockers or evidence context."
-          className="min-h-20 rounded-lg border-zinc-200 bg-white text-sm"
+          className="min-h-[72px] rounded-lg border-zinc-200 bg-white text-sm placeholder:text-zinc-400 resize-y"
         />
       </div>
 
+      {/* Footer */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-zinc-400">
           Evidence is stored in Cloudflare R2.
         </p>
         <Button
           size="sm"
-          className="h-8 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800"
+          className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
           disabled={
             !description.trim() || files.length === 0 || submit.isPending
           }
@@ -1391,51 +1583,74 @@ const ManualAutomationPanel: React.FC<{
         </Button>
       </div>
 
+      {/* Recent Results — Compact Timeline */}
       {results.length > 0 && (
-        <div className="border-t border-zinc-200 pt-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            Recent manual results
+        <div className="border-t border-zinc-100 pt-4">
+          <p className="mb-3 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            Recent results
           </p>
-          <div className="space-y-2">
-            {results.slice(0, 3).map((result) => (
-              <div
-                key={result.id}
-                className="rounded-lg border border-zinc-100 bg-white px-3 py-2"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "capitalize",
-                      result.status === "passed"
-                        ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                        : "border-red-100 bg-red-50 text-red-700",
+          <div className="space-y-0">
+            {results.slice(0, 3).map((result, idx) => (
+              <React.Fragment key={result.id}>
+                <div className="flex gap-3 py-2.5">
+                  {/* Timeline dot */}
+                  <div className="flex flex-col items-center pt-0.5">
+                    <div
+                      className={cn(
+                        "w-2.5 h-2.5 rounded-full ring-2 ring-white shrink-0",
+                        result.status === "passed"
+                          ? "bg-emerald-500"
+                          : "bg-red-500",
+                      )}
+                    />
+                    {idx < Math.min(results.length, 3) - 1 && (
+                      <div className="w-px flex-1 bg-zinc-100 mt-1" />
                     )}
-                  >
-                    {result.status}
-                  </Badge>
-                  <span className="text-xs text-zinc-400">
-                    {new Date(result.createdAt).toLocaleString()}
-                  </span>
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "text-xs font-semibold",
+                          result.status === "passed"
+                            ? "text-emerald-700"
+                            : "text-red-700",
+                        )}
+                      >
+                        {result.status === "passed" ? "Passed" : "Failed"}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 shrink-0">
+                        {new Date(result.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-zinc-700 mt-0.5 leading-snug">
+                      {result.description}
+                    </p>
+                    {result.evidence.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {result.evidence.map((file) => (
+                          <a
+                            key={file.url}
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-md bg-zinc-50 border border-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[140px]">
+                              {file.name}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="mt-1.5 text-sm text-zinc-700">
-                  {result.description}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {result.evidence.map((file) => (
-                    <a
-                      key={file.url}
-                      href={file.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-md bg-zinc-50 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {file.name}
-                    </a>
-                  ))}
-                </div>
-              </div>
+                {idx < Math.min(results.length, 3) - 1 && (
+                  <div className="ml-[14px] border-b border-zinc-50" />
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>
@@ -2162,6 +2377,11 @@ const SortableTestCase: React.FC<{
           <p className="text-sm font-semibold text-zinc-950 truncate">
             {testCase.title}
           </p>
+          {testCase.description && (
+            <p className="text-xs text-zinc-400 truncate mt-0.5">
+              {testCase.description}
+            </p>
+          )}
         </div>
 
         {/* Meta badges */}
@@ -2772,23 +2992,27 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   return (
     <div className="flex flex-col h-full bg-[#F9FAFB]">
       {/* ─── TopAppBar ─── */}
-      <header className="h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+      <header className="min-h-14 shrink-0 border-b border-zinc-200 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
         {/* Left: Back */}
         <div className="flex items-center gap-2">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-zinc-900 transition-colors"
+            className="h-9 w-9 p-0 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Back</span>
+            <ChevronLeft className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Center: Scenario Title */}
-        <div className="flex-1 flex justify-center min-w-0 px-4">
+        {/* Center: Scenario Title & Description */}
+        <div className="flex-1 flex flex-col justify-center min-w-0 px-4 py-2">
           <h2 className="text-base font-semibold text-zinc-900 truncate max-w-md">
             {scenario.title}
           </h2>
+          {scenario.description && (
+            <p className="text-xs text-zinc-500 truncate max-w-md leading-tight mt-0.5">
+              {scenario.description}
+            </p>
+          )}
         </div>
 
         {/* Right: Actions */}
@@ -2800,29 +3024,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             <Play className="w-3.5 h-3.5 mr-1.5" />
             Run Scenario
           </Button>
-          <div className="flex items-center gap-0.5 border-l border-zinc-200 pl-2 ml-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
-            >
-              <History className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
       </header>
 

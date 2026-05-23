@@ -173,6 +173,7 @@ export interface TestScenario {
   automationStats?: ScenarioStats;
   activeTestCases?: ActiveTestCases;
   authConfig?: AuthConfig;
+  sourceDisplay?: string;
   createdAt: string;
   updatedAt: string;
   creatorId?: number;

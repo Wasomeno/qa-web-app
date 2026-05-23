@@ -218,6 +218,12 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
                   addSuffix: true,
                 })}
               </span>
+              {scenario.sourceDisplay && (
+                <span className="flex items-center gap-1 text-zinc-400 truncate max-w-[200px]">
+                  <FileText className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{scenario.sourceDisplay}</span>
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
