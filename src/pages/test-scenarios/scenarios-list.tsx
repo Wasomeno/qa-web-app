@@ -124,7 +124,7 @@ export const TestScenariosPage: React.FC<{
   const renderSyncScenariosButton = () => (
     <Button
       variant="ghost"
-      className="hover:bg-zinc-50 border text-zinc-900 rounded-full gap-2 px-4 h-10"
+      className="hover:bg-accent border text-foreground rounded-full gap-2 px-4 h-10"
       onClick={(e) => {
         e.stopPropagation();
         handleSync();
@@ -247,21 +247,21 @@ export const TestScenariosPage: React.FC<{
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-background relative">
       {/* Header & Filters */}
       <div
         className={cn(
-          "flex-none border-b border-gray-100/80 bg-white/80 backdrop-blur-xl z-10",
+          "flex-none border-b border-border/80 bg-background/80 backdrop-blur-xl z-10",
           hideHeader ? "px-4 py-4 md:px-8" : "px-8 pt-10 pb-6",
         )}
       >
         {!hideHeader && (
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 Test Scenarios
               </h1>
-              <p className="text-sm text-gray-500 mt-1.5">
+              <p className="text-sm text-muted-foreground mt-1.5">
                 {projectName
                   ? `Review scenarios for ${projectName}`
                   : "Review and manage AI-generated test scenarios"}
@@ -287,10 +287,10 @@ export const TestScenariosPage: React.FC<{
         <div className={cn("flex items-center justify-between gap-2", !hideHeader && "mt-5")}>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search scenarios..."
-                className="pl-9 w-64 h-10 bg-white border-theme-border rounded-xl focus-visible:ring-2 focus-visible:ring-zinc-900"
+                className="pl-9 w-64 h-10 bg-background border-border rounded-xl focus-visible:ring-2 focus-visible:ring-foreground"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -310,7 +310,7 @@ export const TestScenariosPage: React.FC<{
                 variant="ghost"
                 size="sm"
                 onClick={() => setTestContextOpen(true)}
-                className="h-10 gap-1.5 rounded-xl text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                className="h-10 gap-1.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent"
                 title="View project test context"
               >
                 <FileText className="w-3.5 h-3.5" />
@@ -332,17 +332,17 @@ export const TestScenariosPage: React.FC<{
           <div className="px-6 pt-6 min-w-0">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-border">
                   <th className="pb-3 w-10"></th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Title</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Status</th>
-                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Cases</th>
-                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Title</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Cases</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i} className="border-b border-gray-50">
+                  <tr key={i} className="border-b border-border/50">
                     <td className="py-3.5 pr-2"><Skeleton className="h-4 w-4 rounded" /></td>
                     <td className="py-3.5 pr-4"><Skeleton className="h-4 w-64" /></td>
                     <td className="py-3.5 pr-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
@@ -356,14 +356,14 @@ export const TestScenariosPage: React.FC<{
         ) : filteredItems.length > 0 ? (
           <div className="px-6 pt-6 min-w-0 relative">
             {isFetching && (
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gray-100 overflow-hidden rounded-full">
-                <div className="h-full bg-zinc-900 rounded-full animate-pulse" style={{ width: "30%" }} />
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-border overflow-hidden rounded-full">
+                <div className="h-full bg-foreground rounded-full animate-pulse" style={{ width: "30%" }} />
               </div>
             )}
             <div className={cn(isFetching && "opacity-60 transition-opacity duration-200")}>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-border">
                   <th className="pb-3 w-10">
                     <StyledCheckbox
                       checked={allSelected}
@@ -371,10 +371,10 @@ export const TestScenariosPage: React.FC<{
                       size="sm"
                     />
                   </th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Title</th>
-                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Status</th>
-                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Cases</th>
-                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Updated</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Title</th>
+                  <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Cases</th>
+                  <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
                 </tr>
               </thead>
               <tbody>
@@ -405,10 +405,10 @@ export const TestScenariosPage: React.FC<{
                     pillClasses = 'bg-amber-50 text-amber-700 border-amber-100';
                   } else if (autoStatus === 'idle') {
                     pillLabel = 'Automated';
-                    pillClasses = 'bg-zinc-50 text-zinc-600 border-zinc-200';
+                    pillClasses = 'bg-muted text-muted-foreground border-muted';
                   } else {
                     pillLabel = 'Not generated';
-                    pillClasses = 'bg-zinc-50 text-zinc-600 border-zinc-200';
+                    pillClasses = 'bg-muted text-muted-foreground border-muted';
                   }
 
                   const testCaseCount =
@@ -429,7 +429,7 @@ export const TestScenariosPage: React.FC<{
                               params: { id: item.id },
                             });
                       }}
-                      className="border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50/60 group"
+                      className="border-b border-border/50 cursor-pointer transition-colors hover:bg-accent/50 group"
                     >
                       <td className="py-2.5 pr-2" onClick={(e) => e.stopPropagation()}>
                         <StyledCheckbox
@@ -439,16 +439,16 @@ export const TestScenariosPage: React.FC<{
                         />
                       </td>
                       <td className="py-2.5 pr-4">
-                        <div className="text-sm font-semibold text-gray-900 group-hover:text-primary-500 transition-colors">
+                        <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                           {item.title}
                         </div>
                         {item.description && (
-                          <div className="mt-0.5 max-w-lg truncate text-xs text-gray-400">
+                          <div className="mt-0.5 max-w-lg truncate text-xs text-muted-foreground">
                             {item.description}
                           </div>
                         )}
                         {item.sourceDisplay && (
-                          <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
+                          <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                             <FileText className="w-3 h-3 shrink-0" />
                             <span className="truncate">{item.sourceDisplay}</span>
                           </div>
@@ -460,12 +460,12 @@ export const TestScenariosPage: React.FC<{
                         </span>
                       </td>
                       <td className="py-2.5 text-center">
-                        <span className="text-xs text-gray-400 tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {testCaseCount}
                         </span>
                       </td>
                       <td className="py-2.5 pl-4 text-right">
-                        <span className="whitespace-nowrap text-xs text-gray-400">
+                        <span className="whitespace-nowrap text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
                         </span>
                       </td>
@@ -477,15 +477,15 @@ export const TestScenariosPage: React.FC<{
 
             {/* Pagination footer */}
             {totalPages > 0 && (
-              <div className="flex items-center justify-between px-1 py-4 border-t border-gray-50">
-                <div className="text-xs text-gray-400">
+              <div className="flex items-center justify-between px-1 py-4 border-t border-border/50">
+                <div className="text-xs text-muted-foreground">
                   {total ? `${(page - 1) * SCENARIOS_PER_PAGE + 1}–${Math.min(page * SCENARIOS_PER_PAGE, total)} of ${total}` : ""}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1 || isFetching}
-                    className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent transition-colors disabled:opacity-30 disabled:pointer-events-none"
                   >
                     Previous
                   </button>
@@ -508,8 +508,8 @@ export const TestScenariosPage: React.FC<{
                           className={cn(
                             "w-7 h-7 text-xs rounded-md transition-colors",
                             pageNum === page
-                              ? "bg-zinc-900 text-white font-medium"
-                              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                              ? "bg-foreground text-background font-medium"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
                           )}
                         >
                           {pageNum}
@@ -520,7 +520,7 @@ export const TestScenariosPage: React.FC<{
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages || isFetching}
-                    className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent transition-colors disabled:opacity-30 disabled:pointer-events-none"
                   >
                     Next
                   </button>
@@ -549,15 +549,15 @@ export const TestScenariosPage: React.FC<{
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="absolute bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
           >
-            <div className="flex items-center gap-3 px-5 py-3 bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] pointer-events-auto">
-              <span className="text-sm font-medium text-zinc-900 bg-zinc-100 px-3 py-1.5 rounded-full tabular-nums">
+            <div className="flex items-center gap-3 px-5 py-3 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] pointer-events-auto">
+              <span className="text-sm font-medium text-foreground bg-muted px-3 py-1.5 rounded-full tabular-nums">
                 {selectedIds.size} selected
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedIds(new Set())}
-                className="h-9 px-4 border-zinc-300 hover:bg-zinc-50 rounded-full text-xs"
+                className="h-9 px-4 border-border hover:bg-accent rounded-full text-xs"
               >
                 Clear
               </Button>
@@ -628,7 +628,7 @@ export const TestScenariosPage: React.FC<{
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-zinc-900 text-white hover:bg-zinc-800"
+                      className="bg-foreground text-background hover:bg-foreground/90"
                       onClick={() =>
                         saveTestContextMutation.mutate(testContextEditValue)
                       }
@@ -647,7 +647,7 @@ export const TestScenariosPage: React.FC<{
           <div className="flex-1 flex flex-col min-h-0">
             {testContextQuery.isLoading ? (
               <div className="flex items-center justify-center flex-1">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <Textarea
@@ -669,7 +669,7 @@ export const TestScenariosPage: React.FC<{
               />
             )}
           </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-3 mt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3 mt-3">
             <span>
               {testContextQuery.data?.data?.markdown
                 ? "Markdown"
