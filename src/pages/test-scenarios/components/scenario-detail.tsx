@@ -33,6 +33,7 @@ import {
   ClipboardCheck,
   Copy,
   Upload,
+  X,
 } from "lucide-react";
 import {
   KeyboardSensor,
