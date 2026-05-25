@@ -120,12 +120,12 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
 
   const selectedIssue = initialIssue || null;
 
-  // If an initial issue is provided, redirect to the standalone route
+  // If an initial issue is provided, redirect to the project detail route
   if (selectedIssue) {
     navigate({
-      to: "/issues/$projectId/$iid",
+      to: "/projects/$id/issues/$iid",
       params: {
-        projectId: String(selectedIssue.project_id),
+        id: String(selectedIssue.project_id),
         iid: String(selectedIssue.iid),
       },
       replace: true,
@@ -179,9 +179,9 @@ export const IssuesPage: React.FC<IssuesPageProps> = ({
                   params: { id: appProjectId, iid: String(issue.iid) },
                 })
               : navigate({
-                  to: "/issues/$projectId/$iid",
+                  to: "/projects/$id/issues/$iid",
                   params: {
-                    projectId: String(issue.project_id),
+                    id: String(issue.project_id),
                     iid: String(issue.iid),
                   },
                 })

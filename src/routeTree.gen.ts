@@ -16,9 +16,7 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PinnedRouteImport } from './routes/pinned'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as IssuesRouteImport } from './routes/issues'
 import { Route as FixSessionsRouteImport } from './routes/fix-sessions'
-import { Route as CreateIssueRouteImport } from './routes/create-issue'
 import { Route as ChatSessionsRouteImport } from './routes/chat-sessions'
 import { Route as BoardsRouteImport } from './routes/boards'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,7 +24,6 @@ import { Route as TestScenariosIndexRouteImport } from './routes/test-scenarios.
 import { Route as SpecsIndexRouteImport } from './routes/specs.index'
 import { Route as RecordingsIndexRouteImport } from './routes/recordings.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
-import { Route as IssuesIndexRouteImport } from './routes/issues.index'
 import { Route as ChatSessionsIndexRouteImport } from './routes/chat-sessions.index'
 import { Route as TestScenariosIdRouteImport } from './routes/test-scenarios.$id'
 import { Route as RecordingsIdRouteImport } from './routes/recordings.$id'
@@ -40,7 +37,6 @@ import { Route as ProjectsIdRecordingsRouteImport } from './routes/projects.$id.
 import { Route as ProjectsIdIssuesRouteImport } from './routes/projects.$id.issues'
 import { Route as ProjectsIdFixSessionsRouteImport } from './routes/projects.$id.fix-sessions'
 import { Route as ProjectsIdBoardsRouteImport } from './routes/projects.$id.boards'
-import { Route as IssuesProjectIdIidRouteImport } from './routes/issues.$projectId.$iid'
 import { Route as ProjectsIdTestScenariosScenarioIdRouteImport } from './routes/projects.$id.test-scenarios.$scenarioId'
 import { Route as ProjectsIdIssuesIidRouteImport } from './routes/projects.$id.issues.$iid'
 
@@ -79,19 +75,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IssuesRoute = IssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FixSessionsRoute = FixSessionsRouteImport.update({
   id: '/fix-sessions',
   path: '/fix-sessions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CreateIssueRoute = CreateIssueRouteImport.update({
-  id: '/create-issue',
-  path: '/create-issue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatSessionsRoute = ChatSessionsRouteImport.update({
@@ -128,11 +114,6 @@ const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ProjectsRoute,
-} as any)
-const IssuesIndexRoute = IssuesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => IssuesRoute,
 } as any)
 const ChatSessionsIndexRoute = ChatSessionsIndexRouteImport.update({
   id: '/',
@@ -199,11 +180,6 @@ const ProjectsIdBoardsRoute = ProjectsIdBoardsRouteImport.update({
   path: '/boards',
   getParentRoute: () => ProjectsIdRoute,
 } as any)
-const IssuesProjectIdIidRoute = IssuesProjectIdIidRouteImport.update({
-  id: '/$projectId/$iid',
-  path: '/$projectId/$iid',
-  getParentRoute: () => IssuesRoute,
-} as any)
 const ProjectsIdTestScenariosScenarioIdRoute =
   ProjectsIdTestScenariosScenarioIdRouteImport.update({
     id: '/$scenarioId',
@@ -220,9 +196,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/boards': typeof BoardsRoute
   '/chat-sessions': typeof ChatSessionsRouteWithChildren
-  '/create-issue': typeof CreateIssueRoute
   '/fix-sessions': typeof FixSessionsRoute
-  '/issues': typeof IssuesRouteWithChildren
   '/login': typeof LoginRoute
   '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
@@ -235,12 +209,10 @@ export interface FileRoutesByFullPath {
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
   '/chat-sessions/': typeof ChatSessionsIndexRoute
-  '/issues/': typeof IssuesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/recordings/': typeof RecordingsIndexRoute
   '/specs/': typeof SpecsIndexRoute
   '/test-scenarios/': typeof TestScenariosIndexRoute
-  '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
   '/projects/$id/boards': typeof ProjectsIdBoardsRoute
   '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
   '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
@@ -255,7 +227,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/boards': typeof BoardsRoute
-  '/create-issue': typeof CreateIssueRoute
   '/fix-sessions': typeof FixSessionsRoute
   '/login': typeof LoginRoute
   '/pinned': typeof PinnedRoute
@@ -264,12 +235,10 @@ export interface FileRoutesByTo {
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
   '/chat-sessions': typeof ChatSessionsIndexRoute
-  '/issues': typeof IssuesIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/recordings': typeof RecordingsIndexRoute
   '/specs': typeof SpecsIndexRoute
   '/test-scenarios': typeof TestScenariosIndexRoute
-  '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
   '/projects/$id/boards': typeof ProjectsIdBoardsRoute
   '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
   '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
@@ -286,9 +255,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/boards': typeof BoardsRoute
   '/chat-sessions': typeof ChatSessionsRouteWithChildren
-  '/create-issue': typeof CreateIssueRoute
   '/fix-sessions': typeof FixSessionsRoute
-  '/issues': typeof IssuesRouteWithChildren
   '/login': typeof LoginRoute
   '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
@@ -301,12 +268,10 @@ export interface FileRoutesById {
   '/recordings/$id': typeof RecordingsIdRoute
   '/test-scenarios/$id': typeof TestScenariosIdRoute
   '/chat-sessions/': typeof ChatSessionsIndexRoute
-  '/issues/': typeof IssuesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/recordings/': typeof RecordingsIndexRoute
   '/specs/': typeof SpecsIndexRoute
   '/test-scenarios/': typeof TestScenariosIndexRoute
-  '/issues/$projectId/$iid': typeof IssuesProjectIdIidRoute
   '/projects/$id/boards': typeof ProjectsIdBoardsRoute
   '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
   '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
@@ -324,9 +289,7 @@ export interface FileRouteTypes {
     | '/'
     | '/boards'
     | '/chat-sessions'
-    | '/create-issue'
     | '/fix-sessions'
-    | '/issues'
     | '/login'
     | '/pinned'
     | '/profile'
@@ -339,12 +302,10 @@ export interface FileRouteTypes {
     | '/recordings/$id'
     | '/test-scenarios/$id'
     | '/chat-sessions/'
-    | '/issues/'
     | '/projects/'
     | '/recordings/'
     | '/specs/'
     | '/test-scenarios/'
-    | '/issues/$projectId/$iid'
     | '/projects/$id/boards'
     | '/projects/$id/fix-sessions'
     | '/projects/$id/issues'
@@ -359,7 +320,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/boards'
-    | '/create-issue'
     | '/fix-sessions'
     | '/login'
     | '/pinned'
@@ -368,12 +328,10 @@ export interface FileRouteTypes {
     | '/recordings/$id'
     | '/test-scenarios/$id'
     | '/chat-sessions'
-    | '/issues'
     | '/projects'
     | '/recordings'
     | '/specs'
     | '/test-scenarios'
-    | '/issues/$projectId/$iid'
     | '/projects/$id/boards'
     | '/projects/$id/fix-sessions'
     | '/projects/$id/issues'
@@ -389,9 +347,7 @@ export interface FileRouteTypes {
     | '/'
     | '/boards'
     | '/chat-sessions'
-    | '/create-issue'
     | '/fix-sessions'
-    | '/issues'
     | '/login'
     | '/pinned'
     | '/profile'
@@ -404,12 +360,10 @@ export interface FileRouteTypes {
     | '/recordings/$id'
     | '/test-scenarios/$id'
     | '/chat-sessions/'
-    | '/issues/'
     | '/projects/'
     | '/recordings/'
     | '/specs/'
     | '/test-scenarios/'
-    | '/issues/$projectId/$iid'
     | '/projects/$id/boards'
     | '/projects/$id/fix-sessions'
     | '/projects/$id/issues'
@@ -426,9 +380,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BoardsRoute: typeof BoardsRoute
   ChatSessionsRoute: typeof ChatSessionsRouteWithChildren
-  CreateIssueRoute: typeof CreateIssueRoute
   FixSessionsRoute: typeof FixSessionsRoute
-  IssuesRoute: typeof IssuesRouteWithChildren
   LoginRoute: typeof LoginRoute
   PinnedRoute: typeof PinnedRoute
   ProfileRoute: typeof ProfileRoute
@@ -489,25 +441,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/issues': {
-      id: '/issues'
-      path: '/issues'
-      fullPath: '/issues'
-      preLoaderRoute: typeof IssuesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/fix-sessions': {
       id: '/fix-sessions'
       path: '/fix-sessions'
       fullPath: '/fix-sessions'
       preLoaderRoute: typeof FixSessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/create-issue': {
-      id: '/create-issue'
-      path: '/create-issue'
-      fullPath: '/create-issue'
-      preLoaderRoute: typeof CreateIssueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat-sessions': {
@@ -558,13 +496,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/'
       preLoaderRoute: typeof ProjectsIndexRouteImport
       parentRoute: typeof ProjectsRoute
-    }
-    '/issues/': {
-      id: '/issues/'
-      path: '/'
-      fullPath: '/issues/'
-      preLoaderRoute: typeof IssuesIndexRouteImport
-      parentRoute: typeof IssuesRoute
     }
     '/chat-sessions/': {
       id: '/chat-sessions/'
@@ -657,13 +588,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdBoardsRouteImport
       parentRoute: typeof ProjectsIdRoute
     }
-    '/issues/$projectId/$iid': {
-      id: '/issues/$projectId/$iid'
-      path: '/$projectId/$iid'
-      fullPath: '/issues/$projectId/$iid'
-      preLoaderRoute: typeof IssuesProjectIdIidRouteImport
-      parentRoute: typeof IssuesRoute
-    }
     '/projects/$id/test-scenarios/$scenarioId': {
       id: '/projects/$id/test-scenarios/$scenarioId'
       path: '/$scenarioId'
@@ -694,19 +618,6 @@ const ChatSessionsRouteChildren: ChatSessionsRouteChildren = {
 const ChatSessionsRouteWithChildren = ChatSessionsRoute._addFileChildren(
   ChatSessionsRouteChildren,
 )
-
-interface IssuesRouteChildren {
-  IssuesIndexRoute: typeof IssuesIndexRoute
-  IssuesProjectIdIidRoute: typeof IssuesProjectIdIidRoute
-}
-
-const IssuesRouteChildren: IssuesRouteChildren = {
-  IssuesIndexRoute: IssuesIndexRoute,
-  IssuesProjectIdIidRoute: IssuesProjectIdIidRoute,
-}
-
-const IssuesRouteWithChildren =
-  IssuesRoute._addFileChildren(IssuesRouteChildren)
 
 interface ProjectsIdIssuesRouteChildren {
   ProjectsIdIssuesIidRoute: typeof ProjectsIdIssuesIidRoute
@@ -816,9 +727,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BoardsRoute: BoardsRoute,
   ChatSessionsRoute: ChatSessionsRouteWithChildren,
-  CreateIssueRoute: CreateIssueRoute,
   FixSessionsRoute: FixSessionsRoute,
-  IssuesRoute: IssuesRouteWithChildren,
   LoginRoute: LoginRoute,
   PinnedRoute: PinnedRoute,
   ProfileRoute: ProfileRoute,

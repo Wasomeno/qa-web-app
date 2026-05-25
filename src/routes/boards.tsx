@@ -8,9 +8,9 @@ function BoardsRoute() {
     <BoardsPage
       onNavigateToIssue={(issue: any) => {
         navigate({
-          to: '/issues/$projectId/$iid',
+          to: '/projects/$id/issues/$iid',
           params: {
-            projectId: String(issue.project_id),
+            id: String(issue.project_id),
             iid: String(issue.iid),
           },
         });

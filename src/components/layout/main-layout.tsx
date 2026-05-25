@@ -5,7 +5,6 @@ import {
   Home,
   LogOut,
   Loader2,
-  GitPullRequest,
   SquareKanban,
   FileText,
   ClipboardList,
@@ -93,7 +92,6 @@ interface ProjectNavItem {
 
 const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
   { id: "overview", path: "", label: "Overview", icon: FolderKanban, exact: true },
-  { id: "issues", path: "/issues", label: "Issues", icon: GitPullRequest },
   { id: "boards", path: "/boards", label: "Boards", icon: SquareKanban },
   { id: "specs", path: "/specs", label: "Specs", icon: FileText },
   { id: "test-scenarios", path: "/test-scenarios", label: "Test Scenarios", icon: ClipboardList },

@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 const SECTION_META: Record<string, { label: string; description: string }> = {
   overview: { label: "Overview", description: "Project overview and quick actions" },
-  issues: { label: "Issues", description: "Track and triage bugs from the configured repository" },
   boards: { label: "Boards", description: "Move issues across board columns and workflow labels" },
   specs: { label: "Specs", description: "Browse and edit specs in the specs repository" },
   "test-scenarios": { label: "Test Scenarios", description: "Review and manage AI-generated test scenarios" },
@@ -25,7 +24,7 @@ function getSectionFromPath(pathname: string, projectBase: string): string | nul
   if (!rest) return "overview";
 
   const parts = rest.split("/");
-  const known = ["issues", "boards", "specs", "test-scenarios", "recordings", "fix-sessions", "settings"];
+  const known = ["boards", "specs", "test-scenarios", "recordings", "fix-sessions", "settings"];
 
   // Only show the project section header on section index pages.
   // Nested pages, such as /projects/:id/test-scenarios/:scenarioId,
