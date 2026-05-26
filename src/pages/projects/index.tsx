@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
   ClipboardList,
@@ -17,6 +18,7 @@ import {
   Trash2,
   Video,
   Wrench,
+  CheckCircle as CheckCircleIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +26,7 @@ import {
   createAppProject,
   deleteAppProject,
   getAppProject,
+  getAppProjectActivity,
   listAppProjects,
 } from "@/api/project";
 import { AppProject, GitLabProject } from "@/types/project";
@@ -114,7 +117,8 @@ function CreateProjectDialog({
       }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["app-projects"] });
-      const created = response.data;
+      const data = response.data;
+      const created = data?.project;
       toast.success("Project created");
       onOpenChange(false);
       setName("");
@@ -124,7 +128,13 @@ function CreateProjectDialog({
       setTestContextMarkdown("");
       setShowTestContext(false);
       if (created?.id) {
-        navigate({ to: "/projects/$id", params: { id: created.id } });
+        navigate({
+          to: "/projects/$id",
+          params: { id: created.id },
+          search: data?.scenarioSyncStarted
+            ? { scenarioSync: "started" }
+            : undefined,
+        });
       }
     },
     onError: (error: any) => {
@@ -401,6 +411,11 @@ export function ProjectsPage() {
 
 export function ProjectOverview({ project }: { project: AppProject }) {
   const navigate = useNavigate();
+  const { data: activityData } = useQuery({
+    queryKey: ["app-project-activity", project.id],
+    queryFn: () => getAppProjectActivity(project.id),
+    enabled: !!project.id,
+  });
 
   const metrics = [
     {
@@ -596,15 +611,75 @@ export function ProjectOverview({ project }: { project: AppProject }) {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
           <div className="mt-4 space-y-0">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
-              <div className="h-2 w-2 rounded-full bg-muted shrink-0" />
-              <p className="text-sm text-muted-foreground">
-                Project created{" "}
-                <span className="text-muted-foreground">
-                  {formatDate(project.createdAt)}
-                </span>
-              </p>
-            </div>
+            {activityData?.data?.activity && activityData.data.activity.length > 0 ? (
+              activityData.data.activity.slice(0, 5).map((a) => {
+                let icon: React.ReactNode;
+                let colorClass: string;
+                let label: string;
+
+                switch (a.action) {
+                  case 'scenario_sync_started':
+                    icon = <Loader2 className="h-3 w-3 animate-spin" />;
+                    colorClass = 'bg-amber-500';
+                    label = 'Scenario import started';
+                    break;
+                  case 'scenario_sync_completed': {
+                    const count = a.changes?.importedCount?.new;
+                    label = count
+                      ? `Scenario import completed (${count} imported)`
+                      : 'Scenario import completed';
+                    icon = <CheckCircle className="h-3 w-3" />;
+                    colorClass = 'bg-emerald-500';
+                    break;
+                  }
+                  case 'scenario_sync_failed': {
+                    const err = String(a.changes?.error?.new ?? '');
+                    label = err
+                      ? `Scenario import failed: ${err.slice(0, 80)}${err.length > 80 ? '...' : ''}`
+                      : 'Scenario import failed';
+                    icon = <AlertTriangle className="h-3 w-3" />;
+                    colorClass = 'bg-red-500';
+                    break;
+                  }
+                  case 'created':
+                    icon = <FolderKanban className="h-3 w-3" />;
+                    colorClass = 'bg-sky-500';
+                    label = `Project created`;
+                    break;
+                  default:
+                    icon = <div className="h-3 w-3" />;
+                    colorClass = 'bg-muted';
+                    label = a.action;
+                }
+
+                return (
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0"
+                  >
+                    <div className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full", colorClass)}>
+                      <span className="text-white">{icon}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {label}
+                    </p>
+                    <span className="ml-auto shrink-0 text-xs text-muted-foreground/60">
+                      {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+                <div className="h-2 w-2 rounded-full bg-muted shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  Project created{" "}
+                  <span className="text-muted-foreground">
+                    {formatDate(project.createdAt)}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
