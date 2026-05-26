@@ -42,12 +42,18 @@ export async function getAppProject(projectId: string) {
   return api.get<AppProject>(`/projects/${projectId}`);
 }
 
+export interface CreateProjectResponse {
+  project: AppProject;
+  scenariosImported?: number;
+  scenarioSyncStarted?: boolean;
+}
+
 export async function createAppProject(request: CreateAppProjectRequest) {
-  const response = await api.post<AppProject | { project: AppProject; scenariosImported?: number }>("/projects", {
+  const response = await api.post<CreateProjectResponse>("/projects", {
     body: JSON.stringify(request),
   });
   if (response.success && response.data && "project" in response.data) {
-    return { ...response, data: response.data.project };
+    return { ...response, data: response.data };
   }
   return response as any;
 }
