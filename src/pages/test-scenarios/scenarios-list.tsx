@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText } from "lucide-react";
+import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
@@ -31,12 +31,17 @@ import { cn } from "@/lib/utils";
 
 const SCENARIOS_PER_PAGE = 10;
 
+interface SyncStateProp {
+  syncState?: ReturnType<typeof import('./hooks/use-project-sync').useProjectSync>;
+}
+
 export const TestScenariosPage: React.FC<{
   portalContainer?: HTMLElement | null;
   projectId?: string;
   projectName?: string;
   hideHeader?: boolean;
-}> = ({ portalContainer, projectId, projectName, hideHeader = false }) => {
+  syncState?: SyncStateProp['syncState'];
+}> = ({ portalContainer, projectId, projectName, hideHeader = false, syncState }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -241,6 +246,13 @@ export const TestScenariosPage: React.FC<{
     });
   }, [scenarios, activeProjectId, projectId]);
 
+  // Refetch scenarios when background sync completes
+  useEffect(() => {
+    if (syncState?.syncState === 'completed' || syncState?.syncState === 'error') {
+      refetch();
+    }
+  }, [syncState?.syncState, refetch]);
+
   const allSelected =
     filteredItems.length > 0 && selectedIds.size === filteredItems.length;
   const someSelected =
@@ -328,6 +340,39 @@ export const TestScenariosPage: React.FC<{
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Sync status banner */}
+        {syncState?.syncState === 'syncing' && (
+          <div className="px-6 pt-6">
+            <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 dark:border-amber-800/30 dark:bg-amber-950/30">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-600" />
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                {syncState.syncMessage}
+              </p>
+            </div>
+          </div>
+        )}
+        {syncState?.syncState === 'completed' && (
+          <div className="px-6 pt-6">
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 dark:border-emerald-800/30 dark:bg-emerald-950/30">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-emerald-600" />
+              <p className="text-sm text-emerald-800 dark:text-emerald-300">
+                {syncState.syncMessage}
+              </p>
+            </div>
+          </div>
+        )}
+        {syncState?.syncState === 'error' && (
+          <div className="px-6 pt-6">
+            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 dark:border-red-800/30 dark:bg-red-950/30">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+              <div>
+                <p className="text-sm text-red-800 dark:text-red-300">
+                  {syncState.syncMessage}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {isLoading ? (
           <div className="px-6 pt-6 min-w-0">
             <table className="w-full">
