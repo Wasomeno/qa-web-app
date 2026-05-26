@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAppProject } from "@/api/project";
 import { usePageHeader } from "@/contexts/project-page-header-context";
 import { TestScenariosPage } from "@/pages/test-scenarios";
+import { useProjectSync } from "@/pages/test-scenarios/hooks/use-project-sync";
 
 function ProjectTestScenariosRoute() {
   const { id } = Route.useParams();
@@ -24,15 +25,23 @@ function ProjectTestScenariosRoute() {
     });
   }, [setHeader]);
 
-  if (!isIndexRoute) return <Outlet />;
+  // Track project sync progress via SSE
+  const syncState = useProjectSync({
+    projectId: id,
+    enabled: isIndexRoute,
+  });
 
+  if (!isIndexRoute) return <Outlet />;
   if (!project) return null;
+
+  const projectId = useMemo(() => id, [id]);
 
   return (
     <TestScenariosPage
-      projectId={id}
+      projectId={projectId}
       projectName={project.name}
       hideHeader
+      syncState={syncState}
     />
   );
 }
