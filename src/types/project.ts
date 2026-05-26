@@ -37,7 +37,13 @@ export interface AppProjectActivity {
   id: string;
   projectId: string;
   actorId?: number;
-  action: 'created' | 'updated' | 'deleted';
+  action:
+    | 'created'
+    | 'updated'
+    | 'deleted'
+    | 'scenario_sync_started'
+    | 'scenario_sync_completed'
+    | 'scenario_sync_failed';
   changes?: Record<string, { old: unknown; new: unknown }>;
   createdAt: string;
 }
