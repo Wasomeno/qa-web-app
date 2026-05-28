@@ -8,11 +8,19 @@ import { ProjectOverview } from "@/pages/projects";
 
 function ProjectIndexRoute() {
   const { id } = Route.useParams();
+  const { scenarioSync } = Route.useSearch();
   const { setHeader } = usePageHeader();
   const { data, isLoading } = useQuery({
     queryKey: ["app-project", id],
     queryFn: () => getAppProject(id),
   });
+
+  // Persist scenarioSync so it survives sidebar navigation to child routes
+  useEffect(() => {
+    if (scenarioSync === 'started') {
+      sessionStorage.setItem(`project:${id}:sync_started`, Date.now().toString());
+    }
+  }, [id, scenarioSync]);
 
   useEffect(() => {
     setHeader({
@@ -33,7 +41,12 @@ function ProjectIndexRoute() {
     return null;
   }
 
-  return <ProjectOverview project={data.data} />;
+  return (
+    <ProjectOverview
+      project={data.data}
+      scenarioSync={scenarioSync === 'started' ? 'started' : undefined}
+    />
+  );
 }
 
 export const Route = createFileRoute("/projects/$id/")({

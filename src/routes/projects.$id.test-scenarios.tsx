@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAppProject } from "@/api/project";
 import { usePageHeader } from "@/contexts/project-page-header-context";
@@ -8,6 +8,7 @@ import { useProjectSync } from "@/pages/test-scenarios/hooks/use-project-sync";
 
 function ProjectTestScenariosRoute() {
   const { id } = Route.useParams();
+  const { scenarioSync } = Route.useSearch();
   const location = useLocation();
   const { setHeader } = usePageHeader();
   const { data } = useQuery({
@@ -31,17 +32,25 @@ function ProjectTestScenariosRoute() {
     enabled: isIndexRoute,
   });
 
+  // Read scenarioSync from search params or fall back to sessionStorage
+  // (the overview route writes it when navigating from project creation)
+  const syncingFromStorage = (() => {
+    if (scenarioSync === 'started') return 'started' as const;
+    const stored = sessionStorage.getItem(`project:${id}:sync_started`);
+    if (stored) return 'started' as const;
+    return undefined;
+  })();
+
   if (!isIndexRoute) return <Outlet />;
   if (!project) return null;
 
-  const projectId = useMemo(() => id, [id]);
-
   return (
     <TestScenariosPage
-      projectId={projectId}
+      projectId={id}
       projectName={project.name}
       hideHeader
       syncState={syncState}
+      scenarioSync={syncingFromStorage}
     />
   );
 }

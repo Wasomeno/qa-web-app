@@ -409,7 +409,7 @@ export function ProjectsPage() {
   );
 }
 
-export function ProjectOverview({ project }: { project: AppProject }) {
+export function ProjectOverview({ project, scenarioSync }: { project: AppProject; scenarioSync?: 'started' }) {
   const navigate = useNavigate();
   const { data: activityData } = useQuery({
     queryKey: ["app-project-activity", project.id],
@@ -435,12 +435,19 @@ export function ProjectOverview({ project }: { project: AppProject }) {
       bg: "bg-zinc-100",
     },
     {
-      label: "Test Scenarios",
-      value: "—",
-      icon: ClipboardList,
+      label: scenarioSync === 'started' ? "Syncing scenarios…" : "Test Scenarios",
+      value: scenarioSync === 'started' ? (
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
+          <span className="text-lg font-normal text-muted-foreground">—</span>
+        </span>
+      ) : (
+        "—"
+      ),
+      icon: scenarioSync === 'started' ? Loader2 : ClipboardList,
       href: "test-scenarios",
-      color: "text-zinc-700",
-      bg: "bg-zinc-100",
+      color: scenarioSync === 'started' ? "text-amber-600" : "text-zinc-700",
+      bg: scenarioSync === 'started' ? "bg-amber-100" : "bg-zinc-100",
     },
     {
       label: "Recordings",
@@ -589,8 +596,18 @@ export function ProjectOverview({ project }: { project: AppProject }) {
               }
               className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              {scenarioSync === 'started' ? (
+                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+              ) : (
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              )}
               View test scenarios
+              {scenarioSync === 'started' && (
+                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Syncing…
+                </span>
+              )}
             </button>
             <button
               onClick={() =>

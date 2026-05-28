@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, AlertTriangle } from "lucide-react";
+import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, AlertTriangle, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
@@ -29,6 +29,9 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { GenerationDashboard } from "./components/generation-dashboard";
+import { TestScenarioChatAgent } from "./components/test-scenario-chat-agent";
+
 const SCENARIOS_PER_PAGE = 10;
 
 interface SyncStateProp {
@@ -41,7 +44,8 @@ export const TestScenariosPage: React.FC<{
   projectName?: string;
   hideHeader?: boolean;
   syncState?: SyncStateProp['syncState'];
-}> = ({ portalContainer, projectId, projectName, hideHeader = false, syncState }) => {
+  scenarioSync?: 'started';
+}> = ({ portalContainer, projectId, projectName, hideHeader = false, syncState, scenarioSync }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -60,6 +64,7 @@ export const TestScenariosPage: React.FC<{
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Use local project state for this page
   const [selectedProjectId, setSelectedProjectId] = useLocalStorage<
@@ -68,6 +73,7 @@ export const TestScenariosPage: React.FC<{
 
   const [testContextOpen, setTestContextOpen] = useState(false);
   const [testContextEditing, setTestContextEditing] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [testContextEditValue, setTestContextEditValue] = useState("");
 
   const handleProjectSelect = (
@@ -258,6 +264,27 @@ export const TestScenariosPage: React.FC<{
   const someSelected =
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
+  // Detect if any scenario is actively generating from polling data
+  const isAnyGenerating = useMemo(
+    () => filteredItems.some((s) => s.processingStatus === 'generating'),
+    [filteredItems],
+  );
+
+  // Keep showDashboard alive while any trigger is active; only dismiss via the dashboard itself
+  useEffect(() => {
+    if (
+      syncState?.syncState === 'syncing' ||
+      syncState?.syncState === 'completed' ||
+      isSyncing ||
+      isAnyGenerating ||
+      scenarioSync === 'started'
+    ) {
+      setShowDashboard(true);
+    }
+    // We intentionally do NOT set showDashboard to false here.
+    // The dashboard's onDismiss callback handles cleanup.
+  }, [syncState?.syncState, isSyncing, isAnyGenerating, scenarioSync]);
+
   return (
     <div className="flex flex-col h-full bg-background relative">
       {/* Header & Filters */}
@@ -340,27 +367,7 @@ export const TestScenariosPage: React.FC<{
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {/* Sync status banner */}
-        {syncState?.syncState === 'syncing' && (
-          <div className="px-6 pt-6">
-            <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 dark:border-amber-800/30 dark:bg-amber-950/30">
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-600" />
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                {syncState.syncMessage}
-              </p>
-            </div>
-          </div>
-        )}
-        {syncState?.syncState === 'completed' && (
-          <div className="px-6 pt-6">
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 dark:border-emerald-800/30 dark:bg-emerald-950/30">
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-emerald-600" />
-              <p className="text-sm text-emerald-800 dark:text-emerald-300">
-                {syncState.syncMessage}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Sync error banner (shown only for error state — syncing/completed use the dashboard) */}
         {syncState?.syncState === 'error' && (
           <div className="px-6 pt-6">
             <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 dark:border-red-800/30 dark:bg-red-950/30">
@@ -373,7 +380,26 @@ export const TestScenariosPage: React.FC<{
             </div>
           </div>
         )}
-        {isLoading ? (
+
+        {/* Generation dashboard: replaces table area during active sync or completion summary */}
+        {showDashboard ? (
+          <GenerationDashboard
+            syncState={syncState?.syncState ?? 'idle'}
+            isAnyGenerating={isAnyGenerating}
+            isManualSyncPending={isSyncing}
+            scenarioSync={scenarioSync}
+            syncMessage={syncState?.syncMessage ?? ''}
+            syncError={syncState?.syncError}
+            scenarios={filteredItems}
+            onDismiss={() => {
+              syncState?.reset?.();
+              setShowDashboard(false);
+              if (projectId) {
+                sessionStorage.removeItem(`project:${projectId}:sync_started`);
+              }
+            }}
+          />
+        ) : isLoading ? (
           <div className="px-6 pt-6 min-w-0">
             <table className="w-full">
               <thead>
@@ -732,6 +758,26 @@ export const TestScenariosPage: React.FC<{
         </DialogContent>
       </Dialog>
 
+      {/* Chat agent floating trigger */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 h-12 rounded-full bg-foreground text-background px-5 shadow-lg hover:bg-foreground/90 transition-colors"
+        aria-label="Open AI chat"
+      >
+        <MessageCircle className="w-5 h-5" />
+        <span className="text-sm font-medium pr-0.5">Ask AI</span>
+      </motion.button>
+
+      {/* Chat agent sheet */}
+      <TestScenarioChatAgent
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        projectId={activeProjectId ?? undefined}
+        projectName={projectName}
+      />
     </div>
   );
 };
