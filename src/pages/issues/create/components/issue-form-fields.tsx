@@ -107,7 +107,7 @@ export const IssueFormFields: React.FC<IssueFormFieldsProps> = ({
       {/* Project */}
       {!hideProjectPicker && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Project</label>
+          <label className="text-sm font-medium text-foreground">Project</label>
           <ProjectSelect
             value={selectedProject?.id ?? null}
             onSelect={project => {
@@ -126,7 +126,7 @@ export const IssueFormFields: React.FC<IssueFormFieldsProps> = ({
 
       {/* Title */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Title</label>
+        <label className="text-sm font-medium text-foreground">Title</label>
         <Input
           placeholder="Issue title"
           value={title}
@@ -138,7 +138,7 @@ export const IssueFormFields: React.FC<IssueFormFieldsProps> = ({
       {/* Labels & Assignee Row */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Labels</label>
+          <label className="text-sm font-medium text-foreground">Labels</label>
           <LabelPicker
             labels={labels}
             isLoading={isLoadingLabels}
@@ -149,7 +149,7 @@ export const IssueFormFields: React.FC<IssueFormFieldsProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Assignee</label>
+          <label className="text-sm font-medium text-foreground">Assignee</label>
           <AssigneePicker
             members={members}
             isLoading={isLoadingMembers}
@@ -163,13 +163,14 @@ export const IssueFormFields: React.FC<IssueFormFieldsProps> = ({
 
       {/* Description */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Description</label>
+        <label className="text-sm font-medium text-foreground">Description</label>
         <DescriptionEditor
           content={description}
           onChange={desc => onChange({ description: desc })}
           templates={TEMPLATES}
           onAIRequest={handleAIRequest}
           aiLoading={aiLoading}
+          projectId={selectedProject?.id}
           portalContainer={portalContainer}
         />
       </div>

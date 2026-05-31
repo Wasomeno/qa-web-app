@@ -64,7 +64,7 @@ export const AssigneePicker: React.FC<AssigneePickerProps> = ({
       <PopoverContent className="w-[300px] p-0" align="start" container={portalContainer}>
         <div className="p-2 border-b border-border">
           <input
-            className="w-full bg-transparent border border-border rounded-md px-2 py-1 text-sm focus:outline-none focus:border-ring"
+            className="w-full bg-transparent border border-border rounded-md px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             placeholder="Search users..."
             value={query}
             onChange={e => setQuery(e.target.value)}

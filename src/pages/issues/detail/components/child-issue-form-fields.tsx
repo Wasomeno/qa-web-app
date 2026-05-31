@@ -144,6 +144,7 @@ export const ChildIssueFormFields: React.FC<ChildIssueFormFieldsProps> = ({
           templates={TEMPLATES}
           onAIRequest={handleAIRequest}
           aiLoading={aiLoading}
+          projectId={projectId}
           portalContainer={portalContainer}
           className="min-h-[120px] text-sm"
         />

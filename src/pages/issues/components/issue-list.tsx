@@ -103,7 +103,7 @@ export const IssueList: React.FC<IssueListProps> = ({
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center py-6">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading more issues...
             </div>
@@ -122,23 +122,23 @@ export const IssueList: React.FC<IssueListProps> = ({
           <motion.div
             key={group.projectId}
             layout
-            className="bg-gray-50/60 border border-gray-100 rounded-2xl p-1"
+            className="bg-muted/60 border border-border rounded-2xl p-1"
           >
             <button
               onClick={() => toggleProject(group.projectId)}
               className="flex items-center gap-2.5 w-full text-left py-2.5 px-3 hover:bg-white/60 rounded-xl transition-colors group"
             >
-              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-border shadow-sm">
                 {isCollapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
                 ) : (
-                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
                 )}
               </div>
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-foreground">
                 {group.projectName}
               </span>
-              <span className="px-2 py-0.5 bg-white border border-gray-100 text-gray-500 text-[11px] font-semibold rounded-full shadow-sm">
+              <span className="px-2 py-0.5 bg-white border border-border text-muted-foreground text-[11px] font-semibold rounded-full shadow-sm">
                 {group.issues.length}
               </span>
             </button>
@@ -177,7 +177,7 @@ export const IssueList: React.FC<IssueListProps> = ({
       })}
       {isFetchingNextPage && (
         <div className="flex justify-center py-6">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading more issues...
           </div>

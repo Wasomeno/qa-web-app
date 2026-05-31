@@ -125,13 +125,13 @@ const CompactIssueList: React.FC<CompactIssueListProps> = ({
       />
 
       {/* Issue List */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-        <span className="text-xs font-semibold text-gray-700">Issues</span>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+        <span className="text-xs font-semibold text-foreground">Issues</span>
         {onGoToMain && (
           <button
             type="button"
             onClick={onGoToMain}
-              className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent px-2 py-1 rounded transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
             Open full page
@@ -230,7 +230,7 @@ const ProjectFilter: React.FC<ProjectFilterProps> = ({
 
   return (
     <div className="space-y-1">
-      <Label className="text-xs text-gray-600">Project</Label>
+      <Label className="text-xs text-muted-foreground">Project</Label>
       <ProjectSelect
         value={selectedIds}
         onSelect={() => {}}
@@ -311,7 +311,7 @@ const LabelsStatusFilter: React.FC<LabelsStatusFilterProps> = ({
 
   return (
     <div className="space-y-1">
-      <Label className="text-xs text-gray-600">Labels & Status</Label>
+      <Label className="text-xs text-muted-foreground">Labels & Status</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -322,7 +322,7 @@ const LabelsStatusFilter: React.FC<LabelsStatusFilterProps> = ({
             <span className="truncate">{displayLabel}</span>
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 text-gray-400 transition-transform',
+                'h-3.5 w-3.5 text-muted-foreground transition-transform',
                 open && 'rotate-90'
               )}
             />
@@ -353,7 +353,7 @@ const LabelsStatusFilter: React.FC<LabelsStatusFilterProps> = ({
                   <button
                     key={status}
                     onClick={() => onToggleStatus(status)}
-                    className="w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-2 py-1.5 rounded hover:bg-accent flex items-center gap-2"
                   >
                     <Checkbox checked={checked} />
                     <span
@@ -367,14 +367,14 @@ const LabelsStatusFilter: React.FC<LabelsStatusFilterProps> = ({
 
               {/* Separator */}
               {filteredLabels.length > 0 && (
-                <div className="border-t border-gray-200 my-1" />
+                <div className="border-t border-border my-1" />
               )}
 
               {/* Label Options */}
               {filteredLabels.length === 0 && selectedProjectIds.length > 0 ? (
-                <p className="text-xs text-gray-500 p-2">No labels found</p>
+                <p className="text-xs text-muted-foreground p-2">No labels found</p>
               ) : filteredLabels.length === 0 ? (
-                <p className="text-xs text-gray-500 p-2">
+                <p className="text-xs text-muted-foreground p-2">
                   Select a project to see labels
                 </p>
               ) : (
@@ -384,7 +384,7 @@ const LabelsStatusFilter: React.FC<LabelsStatusFilterProps> = ({
                     <button
                       key={label.id}
                       onClick={() => onToggleLabel(label.name)}
-                      className="w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 flex items-center gap-2"
+                      className="w-full text-left px-2 py-1.5 rounded hover:bg-accent flex items-center gap-2"
                     >
                       <Checkbox checked={checked} />
                       <span
@@ -425,7 +425,7 @@ const AssigneeFilter: React.FC<AssigneeFilterProps> = ({
 
   return (
     <div className="space-y-1">
-      <Label className="text-xs text-gray-600">Assignee</Label>
+      <Label className="text-xs text-muted-foreground">Assignee</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -436,7 +436,7 @@ const AssigneeFilter: React.FC<AssigneeFilterProps> = ({
             <span className="truncate">MOOO</span>
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 text-gray-400 transition-transform',
+                'h-3.5 w-3.5 text-muted-foreground transition-transform',
                 open && 'rotate-90'
               )}
             />
@@ -473,14 +473,14 @@ const IssueCard: React.FC<IssueCardProps> = ({ issue, onSelect }) => {
   return (
     <button
       onClick={() => onSelect?.(issue)}
-      className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors group"
+      className="w-full text-left p-3 hover:bg-accent rounded-lg transition-colors group"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 truncate group-hover:text-zinc-600">
+          <div className="text-sm font-medium text-foreground truncate group-hover:text-zinc-600">
             {issue.title}
           </div>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
             {issue.number && <span>#{issue.number}</span>}
             <span>·</span>
             <span className="truncate">{issue.project?.name}</span>
@@ -523,7 +523,7 @@ const LoadingState: React.FC = () => (
 
 const LoadingMoreState: React.FC = () => (
   <div className="flex items-center justify-center py-4">
-    <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
   </div>
 );
 
@@ -549,8 +549,8 @@ const ErrorState: React.FC<{ message: string }> = ({ message }) => (
 // Empty State
 const EmptyState: React.FC = () => (
   <div className="flex flex-col items-center justify-center py-12 text-center">
-    <p className="text-sm text-gray-500">No issues found</p>
-    <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+    <p className="text-sm text-muted-foreground">No issues found</p>
+    <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
   </div>
 );
 

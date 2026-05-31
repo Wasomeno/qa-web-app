@@ -279,16 +279,16 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
         ) : (
           <button
             onClick={handlePinToggle}
-            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-muted-foreground transition-colors"
             title="Pin Issue"
           >
             <Pin className="w-3.5 h-3.5" />
           </button>
         )}
-        <div className="w-px h-3 bg-gray-200 mx-0.5" />
+        <div className="w-px h-3 bg-muted mx-0.5" />
         <button
           onClick={handleOpenGitlab}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
+          className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-zinc-600 transition-colors"
           title="Open in GitLab"
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -298,18 +298,18 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
             e.stopPropagation();
             navigator.clipboard.writeText(issue.web_url);
           }}
-          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-zinc-600 transition-colors"
+          className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-zinc-600 transition-colors"
           title="Copy Link"
         >
           <Link2 className="w-3.5 h-3.5" />
         </button>
-        <div className="w-px h-3 bg-gray-200 mx-0.5" />
+        <div className="w-px h-3 bg-muted mx-0.5" />
         <button
           onClick={e => {
             e.stopPropagation();
             onFixIssue?.(issue);
           }}
-          className="p-1 hover:bg-purple-100 rounded text-gray-400 hover:text-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1 hover:bg-purple-100 rounded text-muted-foreground hover:text-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Fix with Agent"
           disabled={issue.state === 'closed'}
         >

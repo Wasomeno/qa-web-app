@@ -31,6 +31,7 @@ import {
   Trash2,
   Columns,
   Rows,
+  Paperclip,
 } from 'lucide-react';
 
 import { Toggle } from '@/components/ui/toggle';
@@ -62,10 +63,12 @@ interface DescriptionEditorProps {
   content: string;
   onChange: (markdown: string) => void;
   onAIRequest?: () => void;
+  onAttachFile?: () => void;
   aiLoading?: boolean;
   templates?: Record<string, string>;
   placeholder?: string;
   className?: string;
+  projectId?: string | number;
   portalContainer?: HTMLElement | null;
 }
 
@@ -142,10 +145,12 @@ export const DescriptionEditor = ({
   content,
   onChange,
   onAIRequest,
+  onAttachFile,
   aiLoading = false,
   templates,
   placeholder = 'Describe the issue...',
   className,
+  projectId,
   portalContainer,
 }: DescriptionEditorProps) => {
   const editor = useEditor({
@@ -196,6 +201,7 @@ export const DescriptionEditor = ({
             const id = Math.random().toString(36).substring(7);
             const pos = view.state.selection.from;
             const src = URL.createObjectURL(file);
+            const fileName = file.name || `image-${Date.now()}.png`;
 
             // Add placeholder decoration
             const tr = view.state.tr.setMeta(uploadPlugin, {
@@ -214,9 +220,8 @@ export const DescriptionEditor = ({
             });
             view.dispatch(tr);
 
-            const fileName = `image-${Date.now()}.png`;
             uploadService
-              .uploadFile(file, fileName)
+              .uploadFile(file, fileName, projectId)
               .then(url => {
                 const { selection } = view.state;
                 const pluginState = view.state.tr.setMeta(uploadPlugin, {
@@ -235,7 +240,8 @@ export const DescriptionEditor = ({
                 );
                 URL.revokeObjectURL(src);
               })
-              .catch(() => {
+              .catch((err) => {
+                console.error('Image upload failed:', err);
                 view.dispatch(
                   view.state.tr.setMeta(uploadPlugin, { remove: { id } })
                 );
@@ -490,6 +496,13 @@ export const DescriptionEditor = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {onAttachFile && (
+            <ToolbarButton
+              onClick={onAttachFile}
+              icon={Paperclip}
+              label="Attach file"
+            />
+          )}
         </div>
 
         <div className="flex-1" />

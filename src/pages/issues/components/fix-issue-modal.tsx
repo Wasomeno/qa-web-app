@@ -177,19 +177,19 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                 duration: 0.25,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden pointer-events-auto mx-4"
+              className="bg-background rounded-2xl shadow-2xl border border-border w-full max-w-md overflow-hidden pointer-events-auto mx-4"
             >
               {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-gray-100 rounded-xl">
-                    <Wrench className="w-5 h-5 text-gray-600" />
+                  <div className="p-2.5 bg-muted rounded-xl">
+                    <Wrench className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900">
+                    <h3 className="text-base font-semibold text-foreground">
                       Fix Issue with Agent
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Configure and start the fix process
                     </p>
                   </div>
@@ -198,27 +198,27 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                   onClick={handleClose}
                   disabled={isSubmitting}
                   className={cn(
-                    "p-2 hover:bg-gray-100 rounded-lg transition-colors",
+                    "p-2 hover:bg-accent rounded-lg transition-colors",
                     isSubmitting && "opacity-50 cursor-not-allowed",
                   )}
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
 
               {/* Content */}
               <div className="p-6 space-y-5">
                 {/* Issue Info */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="p-4 bg-muted rounded-xl border border-border">
                   <div className="flex items-start gap-3">
-                    <span className="text-xs font-mono text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
+                    <span className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded border border-border">
                       #{issue.iid}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                      <p className="text-sm font-medium text-foreground line-clamp-2">
                         {issue.title}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {issue.project_name}
                       </p>
                     </div>
@@ -227,7 +227,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
 
                 {/* Project Selector */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <FolderGit2 className="w-3.5 h-3.5" />
                     Repository Project
                   </label>
@@ -243,28 +243,28 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                     portalContainer={portalContainer}
                     stopPropagation
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     The project where the fix will be applied
                   </p>
                 </div>
 
                 {/* Branch Selector */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <GitBranch className="w-3.5 h-3.5" />
                     Target Branch
                   </label>
 
                   {!selectedProject ? (
-                    <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="text-sm text-gray-400">
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-muted rounded-lg border border-border">
+                      <span className="text-sm text-muted-foreground">
                         Select a project first
                       </span>
                     </div>
                   ) : isLoadingBranches ? (
-                    <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                      <span className="text-sm text-gray-500">
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-muted rounded-lg border border-border">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
                         Loading branches...
                       </span>
                     </div>
@@ -274,7 +274,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                       onValueChange={setTargetBranch}
                       disabled={isSubmitting}
                     >
-                      <SelectTrigger className="w-full bg-white">
+                      <SelectTrigger className="w-full bg-background">
                         <SelectValue placeholder="Select target branch" />
                       </SelectTrigger>
                       <SelectContent container={portalContainer}>
@@ -283,7 +283,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                             <div className="flex items-center gap-2">
                               <span>{branch.name}</span>
                               {branch.default && (
-                                <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">
+                                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-medium">
                                   DEFAULT
                                 </span>
                               )}
@@ -293,19 +293,19 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                       </SelectContent>
                     </Select>
                   )}
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     The branch to create the fix from
                   </p>
                 </div>
 
                 {/* Info Message */}
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-[10px] font-bold text-gray-600">
+                <div className="flex items-start gap-3 p-3 bg-muted rounded-lg border border-border">
+                  <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[10px] font-bold text-muted-foreground">
                       i
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     The fix agent will run in the background. You can monitor
                     its progress in the{" "}
                     <button
@@ -313,7 +313,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                         onClose();
                         push("agent-sessions" as any, { tab: "fix" });
                       }}
-                      className="text-gray-700 hover:text-gray-900 font-medium underline"
+                      className="text-foreground hover:text-foreground font-medium underline"
                     >
                       Fix Agent Sessions
                     </button>{" "}
@@ -323,12 +323,12 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+              <div className="px-6 py-4 bg-muted border-t border-border flex items-center justify-end gap-3">
                 <button
                   onClick={handleClose}
                   disabled={isSubmitting}
                   className={cn(
-                    "px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors",
+                    "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-colors",
                     isSubmitting && "opacity-50 cursor-not-allowed",
                   )}
                 >
@@ -343,7 +343,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                     isLoadingBranches
                   }
                   className={cn(
-                    "flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-sm",
+                    "flex items-center gap-2 px-5 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm",
                     (isSubmitting ||
                       !targetBranch ||
                       !selectedProject ||

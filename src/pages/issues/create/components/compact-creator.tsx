@@ -617,7 +617,7 @@ const CompactIssueCreator: React.FC<CompactIssueCreatorProps> = ({
                   onChange={e => setDescription(e.target.value)}
                   onPaste={handlePaste}
                   placeholder="Describe the issue... (Paste images directly)"
-                  className="w-full px-3 py-2 min-h-[100px] max-h-[140px] text-sm resize-none outline-none bg-transparent"
+                  className="w-full px-3 py-2 min-h-[100px] max-h-[140px] text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md bg-transparent"
                   disabled={createIssueMutation.isPending}
                 />
               </div>

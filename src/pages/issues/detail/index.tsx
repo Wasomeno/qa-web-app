@@ -571,6 +571,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     content={description}
                     onChange={setDescription}
                     className="min-h-[200px]"
+                    projectId={currentIssue?.project_id}
                     portalContainer={portalContainer || containerRef.current}
                   />
                   <div className="flex items-center justify-end gap-2">
@@ -711,6 +712,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                           content={editCommentBody}
                           onChange={setEditCommentBody}
                           className="min-h-[100px]"
+                          projectId={currentIssue?.project_id}
                           portalContainer={
                             portalContainer || containerRef.current
                           }
@@ -769,6 +771,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     onChange={setNewComment}
                     placeholder="Write a comment..."
                     className="min-h-[120px]"
+                    projectId={currentIssue?.project_id}
                     portalContainer={portalContainer || containerRef.current}
                   />
                   <div className="flex justify-end">
