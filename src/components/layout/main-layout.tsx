@@ -244,7 +244,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                       className="flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden"
                     >
                       <FlowGLogo className="h-6 w-6 shrink-0 text-muted-foreground" />
-                      <span className="text-lg font-bold tracking-tight text-foreground">
+                      <span className="text-lg font-semibold tracking-tight text-foreground">
                         FlowG
                       </span>
                     </Link>
@@ -326,7 +326,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         download
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         Download FlowG
                       </a>

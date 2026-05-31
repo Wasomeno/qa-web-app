@@ -37,9 +37,9 @@ export const SortHeader: React.FC<SortHeaderProps> = ({
       variant="ghost"
       size="sm"
       className={cn(
-        'h-8 px-2 font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors gap-1',
+        'h-8 px-2 font-semibold text-muted-foreground hover:text-foreground hover:bg-accent transition-colors gap-1',
         alignClasses[align],
-        isActive && 'text-gray-900 bg-gray-100',
+        isActive && 'text-foreground bg-muted',
         className
       )}
       onClick={() => onSort(field)}

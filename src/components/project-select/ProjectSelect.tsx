@@ -417,7 +417,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
                   disabled={!projectDetails && (isFetching || isFetchingSelected)}
                   className={cn(
                     'w-full min-w-0 justify-between text-left font-normal bg-white border-theme-border rounded-xl',
-                    'focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-gray-50 hover:text-gray-900 transition-all',
+                    'focus:ring-zinc-500/20 focus:border-zinc-500 hover:bg-accent hover:text-foreground transition-all',
                     !projectDetails && (isFetching || isFetchingSelected) && 'opacity-60',
                     className
                   )}
@@ -426,8 +426,8 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
                     className={cn(
                       'truncate',
                       triggerLabel && triggerLabel !== placeholder
-                        ? 'text-gray-900'
-                        : 'text-gray-500'
+                        ? 'text-foreground'
+                        : 'text-muted-foreground'
                     )}
                   >
                     {triggerLabel}
@@ -514,7 +514,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
                             <img
                               src={item.project.avatar_url}
                               alt=""
-                              className="h-4 w-4 rounded-full border border-gray-200 shrink-0"
+                              className="h-4 w-4 rounded-full border border-border shrink-0"
                             />
                           )}
                           <Check

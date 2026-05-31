@@ -83,7 +83,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className={cn('flex items-center justify-between gap-4 py-4 px-6', className)}>
       {/* Items per page */}
-      <div className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span>Show</span>
         <Select
           value={pageSize.toString()}
@@ -104,7 +104,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       </div>
 
       {/* Page info */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-muted-foreground">
         Showing <span className="font-medium">{startItem}</span> to{' '}
         <span className="font-medium">{endItem}</span> of{' '}
         <span className="font-medium">{totalItems}</span> items
@@ -150,7 +150,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               {page}
             </Button>
           ) : (
-            <span key={`ellipsis-${index}`} className="h-8 w-8 flex items-center justify-center text-gray-400">
+            <span key={`ellipsis-${index}`} className="h-8 w-8 flex items-center justify-center text-muted-foreground">
               {page}
             </span>
           )
