@@ -171,7 +171,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
     <div className="flex flex-col h-full bg-background overflow-hidden relative">
       {!hideHeader && (
         <div className="flex-none px-4 md:px-8 pt-6 md:pt-8 pb-4 bg-background z-20">
-          <h1 className="text-2xl font-bold text-foreground">Fix Sessions</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Fix Sessions</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Monitor and manage your automated fix sessions
           </p>

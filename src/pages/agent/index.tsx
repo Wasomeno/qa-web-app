@@ -261,7 +261,7 @@ export const AgentPage: React.FC<{ portalContainer?: HTMLElement | null }> = ({
               </MotionConfig>
             ) : (
               <div className="text-center space-y-3 px-2 sm:px-0">
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
                   Welcome to FlowG
                 </h1>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">

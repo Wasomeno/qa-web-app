@@ -43,10 +43,10 @@ const getStepStatusIcon = (status: FixStep['status']) => {
     case 'error':
       return <XCircle className="h-4 w-4 text-red-500" />;
     case 'skipped':
-      return <Circle className="h-4 w-4 text-gray-300" />;
+      return <Circle className="h-4 w-4 text-muted-foreground" />;
     case 'pending':
     default:
-      return <Circle className="h-4 w-4 text-gray-200" />;
+      return <Circle className="h-4 w-4 text-muted-foreground" />;
   }
 };
 
@@ -59,7 +59,7 @@ const getStepStatusBg = (status: FixStep['status']) => {
     case 'error':
       return 'bg-red-50 border-red-100';
     default:
-      return 'bg-gray-50 border-gray-100';
+      return 'bg-muted border-border';
   }
 };
 
@@ -97,9 +97,9 @@ const getStatusConfig = (status: string) => {
       };
     default:
       return {
-        bg: 'bg-gray-50',
-        text: 'text-gray-700',
-        border: 'border-gray-100',
+        bg: 'bg-muted',
+        text: 'text-foreground',
+        border: 'border-border',
         icon: <Clock className="h-3 w-3" />,
         label: status,
       };
@@ -150,11 +150,11 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
   if (!session) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-white">
-        <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-          <Wrench className="w-6 h-6 text-gray-300" />
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+          <Wrench className="w-6 h-6 text-muted-foreground" />
         </div>
-        <p className="font-medium text-gray-900 text-sm">Select a session</p>
-        <p className="text-xs text-gray-400 mt-1 max-w-[180px]">
+        <p className="font-medium text-foreground text-sm">Select a session</p>
+        <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
           Click on a fix session to view details
         </p>
       </div>
@@ -171,9 +171,9 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900 text-sm">Session Details</h3>
+          <h3 className="font-semibold text-foreground text-sm">Session Details</h3>
           <span className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border",
             statusConfig.bg, statusConfig.text, statusConfig.border
@@ -184,9 +184,9 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-accent rounded-lg transition-colors"
         >
-          <X className="w-4 h-4 text-gray-400" />
+          <X className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
 
@@ -195,14 +195,14 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
           {/* Issue Info */}
           <div>
             <div className="flex items-start gap-2">
-              <span className="text-xs font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 shrink-0">
+              <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border shrink-0">
                 #{session.issueIid}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                <p className="text-sm font-medium text-foreground line-clamp-2">
                   {session.issueTitle || `Issue #${session.issueIid}`}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {session.projectName || `Project ${session.projectId}`}
                 </p>
               </div>
@@ -210,8 +210,8 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
           </div>
 
           {/* Status Message */}
-          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-xs text-gray-600 leading-relaxed">
+          <div className="p-3 bg-muted rounded-xl border border-border">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {session.message}
             </p>
           </div>
@@ -245,13 +245,13 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
           {/* Steps */}
           {steps.length > 0 && (
             <>
-              <Separator className="bg-gray-100" />
+              <Separator className="bg-muted" />
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Execution Steps
                   </h4>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     {completedSteps}/{steps.length}
                   </span>
                 </div>
@@ -268,11 +268,11 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
                         {getStepStatusIcon(step.status)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-800">
+                        <p className="text-xs font-medium text-foreground">
                           {step.title}
                         </p>
                         {step.message && (
-                          <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
+                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                             {step.message}
                           </p>
                         )}
@@ -284,55 +284,55 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
             </>
           )}
 
-          <Separator className="bg-gray-100" />
+          <Separator className="bg-muted" />
 
           {/* Properties */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Properties
             </h4>
 
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-400">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
                   <Hash className="w-3.5 h-3.5" />
                   Session ID
                 </span>
-                <span className="font-mono text-gray-600">
+                <span className="font-mono text-muted-foreground">
                   {session.sessionId ? session.sessionId.substring(0, 8) : 'N/A'}
                 </span>
               </div>
 
               {session.targetBranch && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 text-gray-400">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
                     <GitBranch className="w-3.5 h-3.5" />
                     Branch
                   </span>
-                  <span className="font-mono text-gray-600 text-[11px]">
+                  <span className="font-mono text-muted-foreground text-[11px]">
                     {session.targetBranch}
                   </span>
                 </div>
               )}
 
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-400">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5" />
                   Created
                 </span>
-                <span className="text-gray-600">
+                <span className="text-muted-foreground">
                   {formatFullDate(session.createdAt)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-gray-400">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
                   <Clock className="w-3.5 h-3.5" />
                   Updated
                 </span>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-gray-600 cursor-help">
+                    <span className="text-muted-foreground cursor-help">
                       {formatRelativeTime(session.updatedAt)}
                     </span>
                   </TooltipTrigger>
@@ -347,24 +347,24 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
           {/* Events Timeline */}
           {events.length > 0 && (
             <>
-              <Separator className="bg-gray-100" />
+              <Separator className="bg-muted" />
               <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Event Log
                 </h4>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {events.slice(-8).map((event, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-2 text-xs p-2 bg-gray-50 rounded-lg border border-gray-100"
+                      className="flex items-start gap-2 text-xs p-2 bg-muted rounded-lg border border-border"
                     >
-                      <span className="text-gray-300 font-mono shrink-0">
+                      <span className="text-muted-foreground font-mono shrink-0">
                         {formatEventTime(event.timestamp)}
                       </span>
-                      <span className="font-medium text-gray-500 shrink-0">
+                      <span className="font-medium text-muted-foreground shrink-0">
                         [{event.stage}]
                       </span>
-                      <span className="text-gray-600 flex-1 truncate">
+                      <span className="text-muted-foreground flex-1 truncate">
                         {event.message}
                       </span>
                     </div>
@@ -375,12 +375,12 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
           )}
 
           {/* Actions */}
-          <Separator className="bg-gray-100" />
+          <Separator className="bg-muted" />
           <div className="space-y-2 pb-2">
             {session.mrUrl && (
               <Button
                 variant="default"
-                className="w-full gap-2 bg-gray-900 hover:bg-gray-800 rounded-xl"
+                className="w-full gap-2 bg-primary hover:bg-primary/90 rounded-xl"
                 size="sm"
                 onClick={() => window.open(session.mrUrl, '_blank')}
               >
@@ -391,7 +391,7 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
             {onDelete && (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl"
                 size="sm"
                 onClick={onDelete}
               >
