@@ -1589,12 +1589,7 @@ const ManualAutomationPanel: React.FC<{
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {result.evidence.map((file) => {
                           const sessionId = localStorage.getItem('qa_webapp_session_id');
-                          const params = new URLSearchParams({
-                            url: file.url,
-                            session_id: sessionId || '',
-                            ...(file.contentType ? { content_type: file.contentType } : {}),
-                          });
-                          const proxyUrl = `/api/files/proxy?${params.toString()}`;
+                          const proxyUrl = `/api/files/proxy?url=${encodeURIComponent(file.url)}&session_id=${encodeURIComponent(sessionId || '')}`;
                           return (
                             <a
                               key={file.url}
