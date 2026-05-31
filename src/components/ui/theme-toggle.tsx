@@ -27,7 +27,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     return (
       <div
         className={cn(
-          'flex h-8 w-8 items-center justify-center rounded-lg text-gray-400',
+          'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground',
           className,
         )}
         title="Toggle theme"
@@ -45,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       className={cn(
         'relative flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
         'hover:bg-zinc-100 dark:hover:bg-zinc-800',
-        'text-gray-400 dark:text-gray-500',
+        'text-muted-foreground dark:text-muted-foreground',
         className,
       )}
       title={`Theme: ${currentOption.label}. Click for ${nextTheme.label}.`}

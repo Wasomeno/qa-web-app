@@ -19,7 +19,7 @@ const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      "rounded-md border bg-white px-3 py-1.5 text-sm text-gray-900 shadow-md",
+      "rounded-md border bg-background px-3 py-1.5 text-sm text-foreground shadow-md",
       className
     )}
     style={{

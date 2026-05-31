@@ -24,7 +24,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           success:
             "group-[.toast]:border-l-4 group-[.toast]:border-l-[#10b981]",
           error:
-            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#e24329]",
+            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#334155]",
           info:
             "group-[.toast]:border-l-4 group-[.toast]:border-l-[#3bb2f6]",
           warning:
