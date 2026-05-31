@@ -11,6 +11,23 @@ export interface AppProject {
   updatedAt: string;   // ISO 8601 date string
 }
 
+export interface ProjectDashboard {
+  openIssues: number;
+  testScenarios: number;
+  recordings: number;
+  fixSessions: number;
+  passRate: {
+    value: number;
+    trend: "up" | "down" | "flat";
+    trendLabel: string;
+  } | null;
+  issuesToday: {
+    opened: number;
+    closed: number;
+    status: "success" | "warning" | "neutral";
+  };
+}
+
 export interface CreateAppProjectRequest {
   name: string;
   description?: string;

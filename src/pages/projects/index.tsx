@@ -3,7 +3,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
+  Activity,
   AlertTriangle,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BarChart3,
   CheckCircle,
   ChevronDown,
   ChevronRight,
@@ -13,7 +18,9 @@ import {
   GitPullRequest,
   Info,
   Loader2,
+  Minus,
   Plus,
+  RefreshCw,
   SquareKanban,
   Trash2,
   Video,
@@ -27,9 +34,10 @@ import {
   deleteAppProject,
   getAppProject,
   getAppProjectActivity,
+  getProjectDashboard,
   listAppProjects,
 } from "@/api/project";
-import { AppProject, GitLabProject } from "@/types/project";
+import { AppProject, GitLabProject, ProjectDashboard } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -409,235 +417,238 @@ export function ProjectsPage() {
   );
 }
 
+function TrendIcon({ value }: { value: number }) {
+  if (value > 0) return <ArrowUp className="h-3 w-3 text-red-500" />;
+  if (value < 0) return <ArrowDown className="h-3 w-3 text-emerald-500" />;
+  return <Minus className="h-3 w-3 text-muted-foreground" />;
+}
+
+function HealthTileSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <Skeleton className="h-4 w-4 rounded" />
+      <Skeleton className="mt-3 h-7 w-16" />
+      <Skeleton className="mt-1.5 h-3 w-20" />
+    </div>
+  );
+}
+
+function HealthTile({
+  icon: Icon,
+  label,
+  value,
+  status,
+  trend,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | number | React.ReactNode;
+  status?: "success" | "warning" | "error" | "neutral";
+  trend?: { direction: "up" | "down" | "flat"; label: string };
+}) {
+  const statusDot = status
+    ? {
+        success: "bg-emerald-500",
+        warning: "bg-amber-500",
+        error: "bg-red-500",
+        neutral: "bg-muted-foreground/30",
+      }[status]
+    : null;
+
+  return (
+    <div className="relative rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/30">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          {statusDot && <div className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />}
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        </div>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+      </div>
+      <div className="mt-2 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tracking-tight text-foreground">
+          {value}
+        </span>
+      </div>
+      {trend && (
+        <div className="mt-1 flex items-center gap-1">
+          {trend.direction === "up" && <ArrowUp className="h-3 w-3 text-red-400" />}
+          {trend.direction === "down" && <ArrowDown className="h-3 w-3 text-emerald-400" />}
+          {trend.direction === "flat" && <Minus className="h-3 w-3 text-muted-foreground/50" />}
+          <span className="text-[11px] text-muted-foreground/70">{trend.label}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ProjectOverview({ project, scenarioSync }: { project: AppProject; scenarioSync?: 'started' }) {
   const navigate = useNavigate();
-  const { data: activityData } = useQuery({
+
+  const { data: activityData, isLoading: activityLoading } = useQuery({
     queryKey: ["app-project-activity", project.id],
     queryFn: () => getAppProjectActivity(project.id),
     enabled: !!project.id,
   });
 
-  const metrics = [
-    {
-      label: "Open Issues",
-      value: "—",
-      icon: GitPullRequest,
-      href: "issues",
-      color: "text-zinc-700",
-      bg: "bg-zinc-100",
-    },
-    {
-      label: "Boards",
-      value: "—",
-      icon: SquareKanban,
-      href: "boards",
-      color: "text-zinc-700",
-      bg: "bg-zinc-100",
-    },
-    {
-      label: scenarioSync === 'started' ? "Syncing scenarios…" : "Test Scenarios",
-      value: scenarioSync === 'started' ? (
-        <span className="flex items-center gap-2">
-          <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-          <span className="text-lg font-normal text-muted-foreground">—</span>
-        </span>
-      ) : (
-        "—"
-      ),
-      icon: scenarioSync === 'started' ? Loader2 : ClipboardList,
-      href: "test-scenarios",
-      color: scenarioSync === 'started' ? "text-amber-600" : "text-zinc-700",
-      bg: scenarioSync === 'started' ? "bg-amber-100" : "bg-zinc-100",
-    },
-    {
-      label: "Recordings",
-      value: "—",
-      icon: Video,
-      href: "recordings",
-      color: "text-zinc-700",
-      bg: "bg-zinc-100",
-    },
-    {
-      label: "Fix Sessions",
-      value: "—",
-      icon: Wrench,
-      href: "fix-sessions",
-      color: "text-muted-foreground",
-      bg: "bg-muted",
-    },
-  ];
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ["app-project-dashboard", project.id],
+    queryFn: () => getProjectDashboard(project.id),
+    enabled: !!project.id,
+  });
+
+  const dashboard = dashboardData?.data;
+  const loading = dashboardLoading;
+
+  const issuesStatus = !dashboard
+    ? "neutral" as const
+    : dashboard.openIssues > 10
+      ? "warning" as const
+      : dashboard.openIssues > 0
+        ? "neutral" as const
+        : "success" as const;
+
+  const issuesTrend = dashboard && dashboard.issuesToday
+    ? { direction: (dashboard.issuesToday.closed > 0 ? "down" : "flat") as "down" | "flat", label: `${dashboard.issuesToday.closed} closed` }
+    : undefined;
+
+  const handleNavigate = (tab: string) => {
+    navigate({
+      to: "/projects/$id" as any,
+      params: { id: project.id } as any,
+      search: { tab } as any,
+    });
+  };
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      {/* Project card */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-2xl">
+    <div className="space-y-6 p-4 md:p-8">
+
+      {/* Band 1: Project identity bar -- compact, like GitHub repo header */}
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground/70 ring-1 ring-border">
+            <FolderKanban className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-foreground p-1.5 text-background">
-                <FolderKanban className="h-4 w-4" />
-              </div>
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="truncate text-sm font-semibold text-foreground">
                 {project.name}
               </h2>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {project.description ||
-                "Shared QA workspace for tracking issues, test scenarios, and recordings."}
-            </p>
-            <div className="mt-3 flex items-center gap-2">
               {project.testContextMarkdown ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
-                  Test context configured
+                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  Context set
                 </span>
               ) : (
                 <button
-                  onClick={() =>
-                    navigate({
-                      to: "/projects/$id" as any,
-                      params: { id: project.id } as any,
-                      search: { tab: "settings" } as any,
-                    })
-                  }
-                  className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground ring-1 ring-inset ring-border hover:text-foreground hover:ring-border transition-colors"
+                  onClick={() => handleNavigate("settings")}
+                  className="inline-flex items-center rounded-full bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground ring-1 ring-inset ring-border transition-colors hover:text-foreground"
                 >
-                  No test context — add in Settings
+                  Add context
                 </button>
               )}
             </div>
+            <p className="mt-0.5 max-w-lg truncate text-xs text-muted-foreground">
+              {project.description || "Shared QA workspace for issues, scenarios, and recordings."}
+            </p>
           </div>
-          <div className="grid min-w-64 gap-1.5 text-xs">
-            <div className="flex justify-between gap-4 rounded-lg bg-muted/50 px-3 py-2">
-              <span className="text-muted-foreground">Issues repo</span>
-              <span className="font-mono text-foreground/80">
-                {project.issueRepoName}
-              </span>
-            </div>
-            <div className="flex justify-between gap-4 rounded-lg bg-muted/50 px-3 py-2">
-              <span className="text-muted-foreground">Specs repo</span>
-              <span className="font-mono text-foreground/80">
-                {project.specsRepoName}
-              </span>
-            </div>
-          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
+          <span className="hidden items-center gap-1.5 md:inline-flex">
+            <span className="font-mono text-foreground/60 text-[11px]">{project.issueRepoName}</span>
+            <span className="text-muted-foreground/40">|</span>
+            <span className="font-mono text-foreground/60 text-[11px]">{project.specsRepoName}</span>
+          </span>
         </div>
       </div>
 
-      {/* Metrics row */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <button
-              key={metric.href}
-              onClick={() =>
-                navigate({
-                  to: "/projects/$id" as any,
-                  params: { id: project.id } as any,
-                  search: { tab: metric.href } as any,
-                })
-              }
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm text-left transition-all hover:border-border hover:shadow-md cursor-pointer group"
-            >
-              <div className="flex items-center justify-between">
-                <div className={cn("rounded-xl p-2.5", metric.bg)}>
-                  <Icon className={cn("h-4 w-4", metric.color)} />
+      {/* Band 2: Health indicator row -- compact, status-driven, not clickable */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
+        {/* Open Issues */}
+        <HealthTile
+          icon={GitPullRequest}
+          label="Open Issues"
+          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.openIssues ?? "--"}
+          status={loading ? "neutral" : issuesStatus}
+          trend={loading ? undefined : dashboard ? { direction: "flat", label: dashboard.openIssues === 0 ? "All clear" : "Open issues" } : { direction: "flat", label: "No data" }}
+        />
+        {/* Test Scenarios */}
+        <HealthTile
+          icon={scenarioSync === 'started' ? Loader2 : ClipboardList}
+          label="Test Scenarios"
+          value={scenarioSync === 'started' ? (
+            <span className="flex items-center gap-1.5">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+              <span className="text-lg font-normal text-muted-foreground">{loading ? "--" : dashboard?.testScenarios ?? "--"}</span>
+            </span>
+          ) : loading ? <Skeleton className="h-7 w-12" /> : dashboard?.testScenarios ?? "--"}
+          status={scenarioSync === 'started' ? "warning" : loading ? "neutral" : dashboard && dashboard.testScenarios > 0 ? "success" : "neutral"}
+        />
+        {/* Recordings */}
+        <HealthTile
+          icon={Video}
+          label="Recordings"
+          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.recordings ?? "--"}
+          status={loading ? "neutral" : dashboard && dashboard.recordings > 0 ? "success" : "neutral"}
+        />
+        {/* Fix Sessions */}
+        <HealthTile
+          icon={Wrench}
+          label="Fix Sessions"
+          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.fixSessions ?? "--"}
+          status={loading ? "neutral" : dashboard && dashboard.fixSessions > 0 ? "success" : "neutral"}
+        />
+        {/* Pass Rate */}
+        <HealthTile
+          icon={BarChart3}
+          label="Pass Rate"
+          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.passRate ? `${dashboard.passRate.value}%` : "--"}
+          status={loading ? "neutral" : !dashboard?.passRate ? "neutral" : dashboard.passRate.value >= 80 ? "success" : dashboard.passRate.value >= 50 ? "warning" : "error"}
+          trend={loading ? undefined : dashboard?.passRate ? { direction: dashboard.passRate.trend, label: dashboard.passRate.trendLabel } : { direction: "flat", label: "No runs" }}
+        />
+        {/* Issues Today */}
+        <HealthTile
+          icon={Activity}
+          label="Issues Today"
+          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard ? `+${dashboard.issuesToday.opened}` : "--"}
+          status={loading ? "neutral" : !dashboard ? "neutral" : dashboard.issuesToday.opened > 5 ? "warning" : dashboard.issuesToday.opened > 0 ? "neutral" : "success"}
+          trend={issuesTrend}
+        />
+      </div>
+
+      {/* Band 3: Two-column work area */}
+      <div className="grid gap-6 lg:grid-cols-5">
+
+        {/* Left: Recent activity feed (3/5 width) */}
+        <div className="rounded-xl border border-border bg-card shadow-sm lg:col-span-3">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+            <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
+            {activityLoading && (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          {activityLoading ? (
+            <div className="divide-y divide-border/50 px-5 py-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-3">
+                  <Skeleton className="h-5 w-5 shrink-0 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-3.5 w-3/5" />
+                  </div>
+                  <Skeleton className="h-3 w-12 shrink-0" />
                 </div>
-              </div>
-              <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                {metric.label}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Quick links / activity placeholder */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-foreground">Quick actions</h3>
-          <div className="mt-4 space-y-2">
-            <button
-              onClick={() =>
-                navigate({
-                  to: "/projects/$id" as any,
-                  params: { id: project.id } as any,
-                  search: { tab: "issues" } as any,
-                })
-              }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <GitPullRequest className="h-4 w-4 text-muted-foreground" />
-              Browse open issues
-            </button>
-            <button
-              onClick={() =>
-                navigate({
-                  to: "/projects/$id" as any,
-                  params: { id: project.id } as any,
-                  search: { tab: "recordings" } as any,
-                })
-              }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Video className="h-4 w-4 text-muted-foreground" />
-              Review recent recordings
-            </button>
-            <button
-              onClick={() =>
-                navigate({
-                  to: "/projects/$id" as any,
-                  params: { id: project.id } as any,
-                  search: { tab: "test-scenarios" } as any,
-                })
-              }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              {scenarioSync === 'started' ? (
-                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-              ) : (
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              )}
-              View test scenarios
-              {scenarioSync === 'started' && (
-                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Syncing…
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() =>
-                navigate({
-                  to: "/projects/$id" as any,
-                  params: { id: project.id } as any,
-                  search: { tab: "fix-sessions" } as any,
-                })
-              }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-              Check fix sessions
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
-          <div className="mt-4 space-y-0">
-            {activityData?.data?.activity && activityData.data.activity.length > 0 ? (
-              activityData.data.activity.slice(0, 5).map((a) => {
+              ))}
+            </div>
+          ) : activityData?.data?.activity && activityData.data.activity.length > 0 ? (
+            <div className="divide-y divide-border/50">
+              {activityData.data.activity.slice(0, 6).map((a) => {
                 let icon: React.ReactNode;
-                let colorClass: string;
+                let statusClass: string;
                 let label: string;
 
                 switch (a.action) {
                   case 'scenario_sync_started':
                     icon = <Loader2 className="h-3 w-3 animate-spin" />;
-                    colorClass = 'bg-amber-500';
+                    statusClass = 'bg-amber-500';
                     label = 'Scenario import started';
                     break;
                   case 'scenario_sync_completed': {
@@ -646,57 +657,94 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
                       ? `Scenario import completed (${count} imported)`
                       : 'Scenario import completed';
                     icon = <CheckCircle className="h-3 w-3" />;
-                    colorClass = 'bg-emerald-500';
-                    break;
-                  }
+                    statusClass = 'bg-emerald-500';
+                    break; }
                   case 'scenario_sync_failed': {
                     const err = String(a.changes?.error?.new ?? '');
                     label = err
                       ? `Scenario import failed: ${err.slice(0, 80)}${err.length > 80 ? '...' : ''}`
                       : 'Scenario import failed';
                     icon = <AlertTriangle className="h-3 w-3" />;
-                    colorClass = 'bg-red-500';
-                    break;
-                  }
+                    statusClass = 'bg-red-500';
+                    break; }
                   case 'created':
                     icon = <FolderKanban className="h-3 w-3" />;
-                    colorClass = 'bg-sky-500';
-                    label = `Project created`;
+                    statusClass = 'bg-sky-500';
+                    label = 'Project created';
                     break;
                   default:
-                    icon = <div className="h-3 w-3" />;
-                    colorClass = 'bg-muted';
+                    icon = <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />;
+                    statusClass = 'bg-muted-foreground/30';
                     label = a.action;
                 }
 
                 return (
-                  <div
-                    key={a.id}
-                    className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0"
-                  >
-                    <div className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full", colorClass)}>
-                      <span className="text-white">{icon}</span>
+                  <div key={a.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/30">
+                    <div className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full", statusClass)}>
+                      <span className="flex items-center justify-center text-white">{icon}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                       {label}
                     </p>
-                    <span className="ml-auto shrink-0 text-xs text-muted-foreground/60">
+                    <span className="shrink-0 text-xs text-muted-foreground/50">
                       {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                 );
-              })
-            ) : (
-              <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
-                <div className="h-2 w-2 rounded-full bg-muted shrink-0" />
-                <p className="text-sm text-muted-foreground">
-                  Project created{" "}
-                  <span className="text-muted-foreground">
-                    {formatDate(project.createdAt)}
-                  </span>
-                </p>
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50">
+                <Activity className="h-4 w-4 text-muted-foreground/50" />
               </div>
-            )}
+              <p className="text-sm text-muted-foreground/70">
+                No activity yet. Create an issue or record a test session to get started.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Quick actions grid (2/5 width) */}
+        <div className="rounded-xl border border-border bg-card shadow-sm lg:col-span-2">
+          <div className="border-b border-border px-5 py-3.5">
+            <h3 className="text-sm font-semibold text-foreground">Navigate</h3>
+          </div>
+          <div className="divide-y divide-border/50">
+            {[
+              { icon: GitPullRequest, label: "Issues", tab: "issues", desc: "Browse open issues and boards" },
+              { icon: ClipboardList, label: "Test Scenarios", tab: "test-scenarios", desc: scenarioSync === 'started' ? "Currently syncing" : "Review AI-generated scenarios" },
+              { icon: Video, label: "Recordings", tab: "recordings", desc: "Review browser recordings" },
+              { icon: Wrench, label: "Fix Sessions", tab: "fix-sessions", desc: "Track AI-assisted fixes" },
+              { icon: SquareKanban, label: "Boards", tab: "boards", desc: "Move issues across columns" },
+              { icon: FileText, label: "Specs", tab: "specs", desc: "Browse specs repository" },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.tab}
+                  onClick={() => handleNavigate(item.tab)}
+                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-accent/50 group"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground/60 transition-colors group-hover:bg-foreground/5">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground/80 transition-colors group-hover:text-foreground">
+                      {item.label}
+                      {item.tab === "test-scenarios" && scenarioSync === 'started' && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          Syncing
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground/60">{item.desc}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/60" />
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import {
   GitlabProjectLabel,
   GitLabProjectMember,
   GetProjectBoardsResponse,
+  ProjectDashboard,
   ProjectTestContextResponse,
   UpdateAppProjectRequest,
 } from "@/types/project";
@@ -79,6 +80,10 @@ export async function getAppProjectActivity(projectId: string) {
   return api.get<{ activity: AppProjectActivity[] }>(
     `/projects/${projectId}/activity`,
   );
+}
+
+export async function getProjectDashboard(projectId: string) {
+  return api.get<ProjectDashboard>(`/projects/${projectId}/dashboard`);
 }
 
 export async function getProjectTestContext(projectId: string) {
