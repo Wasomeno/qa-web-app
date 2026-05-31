@@ -32,7 +32,6 @@ import {
   Monitor,
   ClipboardCheck,
   Copy,
-  Upload,
   X,
 } from "lucide-react";
 import {
@@ -81,6 +80,9 @@ import {
 } from "@/types/test-scenario";
 import { testScenarioApi } from "@/api/test-scenario";
 import { ProjectSelect } from "@/components/project-select";
+import { DescriptionEditor } from "@/pages/issues/create/components/description-editor";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { uploadService } from "@/services/upload";
 
 // ─────────────────────────────────────────────
 // Skeleton
@@ -618,7 +620,7 @@ const AutomationCategorySelect: React.FC<{
         <SelectTrigger
           aria-label="Automation category"
           className={cn(
-            "h-7 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold outline-none transition-colors cursor-pointer",
+            "h-7 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors cursor-pointer",
             disabled && "cursor-wait opacity-70",
             meta.classes,
           )}
@@ -1409,7 +1411,6 @@ const ManualAutomationPanel: React.FC<{
   const [status, setStatus] = useState<ManualTestStatus>("passed");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: results = [], refetch } = useQuery({
     queryKey: ["manual-results", projectId, scenarioId, testCase.id],
@@ -1436,13 +1437,6 @@ const ManualAutomationPanel: React.FC<{
       ),
   });
 
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const dropped = Array.from(e.dataTransfer.files || []);
-    if (dropped.length) setFiles((prev) => [...prev, ...dropped]);
-  };
-
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
@@ -1453,126 +1447,88 @@ const ManualAutomationPanel: React.FC<{
       <div>
         <p className="text-sm font-semibold text-foreground">Manual execution</p>
         <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-          Upload evidence, mark the outcome, and keep a concise note for audit
-          history.
+          Describe the outcome, paste screenshots, and attach supporting files.
         </p>
       </div>
 
-      {/* Two-column form: Result + Evidence */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Result */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Result
-          </label>
-          <Select value={status} onValueChange={(v) => setStatus(v as ManualTestStatus)}>
-            <SelectTrigger
-              className={cn(
-                "h-10 w-full rounded-lg border bg-background px-3 text-sm outline-none transition-colors",
-                status === "passed"
-                  ? "border-emerald-200 text-emerald-700 focus:ring-emerald-300"
-                  : "border-red-200 text-red-700 focus:ring-red-300",
-              )}
-            >
-              <SelectValue placeholder="Select result" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="passed">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  Passed
-                </span>
-              </SelectItem>
-              <SelectItem value="failed">
-                <span className="flex items-center gap-2">
-                  <XCircle className="w-3.5 h-3.5 text-red-500" />
-                  Failed
-                </span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Evidence upload */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Evidence files
-          </label>
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleFileDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              "relative flex h-10 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed px-3 text-sm transition-colors",
-              dragOver
-                ? "border-border bg-muted"
-                : "border-border bg-background hover:border-border hover:bg-muted/50",
-            )}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => setFiles(Array.from(e.target.files || []))}
-            />
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Upload className="h-4 w-4 shrink-0" />
-              {files.length > 0 ? (
-                <span className="truncate text-foreground font-medium">
-                  {files.length} file{files.length > 1 ? "s" : ""} selected
-                </span>
-              ) : (
-                <span className="truncate">Click or drag files here</span>
-              )}
-            </div>
-          </div>
-          {files.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {files.map((file, i) => (
-                <span
-                  key={`${file.name}-${i}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
-                >
-                  {file.name}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                    className="text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
+      {/* Result */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Description
+          Result
         </label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="What was verified? Mention blockers or evidence context."
-          className="min-h-[72px] rounded-lg border-border bg-background text-sm placeholder:text-muted-foreground resize-y"
+        <Select value={status} onValueChange={(v) => setStatus(v as ManualTestStatus)}>
+          <SelectTrigger
+            className={cn(
+              "h-10 w-full max-w-[200px] rounded-lg border bg-background px-3 text-sm outline-none transition-colors",
+              status === "passed"
+                ? "border-emerald-200 text-emerald-700 focus:ring-emerald-300"
+                : "border-red-200 text-red-700 focus:ring-red-300",
+            )}
+          >
+            <SelectValue placeholder="Select result" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="passed">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Passed
+              </span>
+            </SelectItem>
+            <SelectItem value="failed">
+              <span className="flex items-center gap-2">
+                <XCircle className="w-3.5 h-3.5 text-red-500" />
+                Failed
+              </span>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* WYSIWYG Editor */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Notes &amp; evidence
+        </label>
+        <DescriptionEditor
+          content={description}
+          onChange={setDescription}
+          placeholder="Describe what was verified, paste screenshots (Cmd+V), or write notes..."
+          onAttachFile={() => fileInputRef.current?.click()}
+          projectId={projectId}
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])}
+        />
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {files.map((file, i) => (
+              <span
+                key={`${file.name}-${i}`}
+                className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground"
+              >
+                {file.name}
+                <button
+                  onClick={() => removeFile(i)}
+                  className="text-muted-foreground hover:text-red-500 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          Evidence is stored in Cloudflare R2.
-        </p>
+      <div className="flex items-center justify-end gap-3">
         <Button
           size="sm"
           className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
-          disabled={
-            !description.trim() || files.length === 0 || submit.isPending
-          }
+          disabled={!description.trim() || submit.isPending}
           onClick={() => submit.mutate()}
         >
           {submit.isPending ? (
@@ -1625,25 +1581,35 @@ const ManualAutomationPanel: React.FC<{
                         {new Date(result.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-sm text-foreground mt-0.5 leading-snug">
-                      {result.description}
-                    </p>
+                    <MarkdownRenderer
+                      content={result.description}
+                      className="text-sm text-foreground mt-0.5 leading-snug [&>p]:my-0 [&>p]:leading-snug [&_img]:my-1 [&_img]:max-h-48 [&_img]:rounded-md [&_img]:border [&_img]:border-border"
+                    />
                     {result.evidence.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
-                        {result.evidence.map((file) => (
-                          <a
-                            key={file.url}
-                            href={file.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md bg-muted border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3 shrink-0" />
-                            <span className="truncate max-w-[140px]">
-                              {file.name}
-                            </span>
-                          </a>
-                        ))}
+                        {result.evidence.map((file) => {
+                          const sessionId = localStorage.getItem('qa_webapp_session_id');
+                          const params = new URLSearchParams({
+                            url: file.url,
+                            session_id: sessionId || '',
+                            ...(file.contentType ? { content_type: file.contentType } : {}),
+                          });
+                          const proxyUrl = `/api/files/proxy?${params.toString()}`;
+                          return (
+                            <a
+                              key={file.url}
+                              href={proxyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md bg-muted border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            >
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                              <span className="truncate max-w-[140px]">
+                                {file.name}
+                              </span>
+                            </a>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -2485,6 +2451,36 @@ const SortableTestCase: React.FC<{
 
               {/* Concise Content */}
               <div className="mt-4 space-y-4">
+                {/* Execution Steps */}
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                    Execution Steps
+                  </label>
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-2.5 bg-muted/50 border-b border-border text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <div className="text-center">#</div>
+                      <div>Action</div>
+                      <div>Expected Result</div>
+                    </div>
+                    {testCase.steps.map((step) => (
+                      <div
+                        key={step.id}
+                        className="grid grid-cols-[40px_1fr_1fr] gap-3 p-2.5 border-b border-border last:border-b-0 items-start hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="text-[10px] font-mono text-muted-foreground text-center pt-0.5">
+                          {step.order}
+                        </div>
+                        <div className="text-xs text-foreground leading-snug">
+                          {step.action}
+                        </div>
+                        <div className="text-xs text-muted-foreground leading-snug">
+                          {step.expected}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <AutomationCategoryPanel
                   scenarioId={scenarioId}
                   projectId={projectId}
@@ -3063,7 +3059,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 placeholder="Filter cases..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 bg-muted/30 border border-border rounded-lg text-sm placeholder-muted-foreground focus:outline-none focus:border-border focus:ring-1 focus:ring-ring/50"
+                className="w-full h-8 pl-8 pr-3 bg-muted/30 border border-border rounded-lg text-sm placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
           </div>
@@ -3078,7 +3074,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
                   <SelectValue placeholder="All sections" />
                 </SelectTrigger>
                 <SelectContent>
@@ -3103,7 +3099,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
+                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -3127,7 +3123,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus:outline-none focus:border-border px-2">
+              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -3298,60 +3294,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 </p>
               </div>
 
-              {/* Automation Category Panel */}
-              <div className="mb-6">
-                <AutomationCategoryPanel
-                  scenarioId={scenario.id}
-                  projectId={projectId || scenario.projectId}
-                  sectionId={(selectedTestCase as any)._sectionId}
-                  testCase={selectedTestCase}
-                  category={inferAutomationCategory(selectedTestCase)}
-                  onUpdate={(updated) =>
-                    updateTestCase(
-                      (selectedTestCase as any)._sectionId,
-                      updated,
-                    )
-                  }
-                />
-              </div>
-
-              {/* Environment & Meta */}
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="p-3 border border-border rounded-lg bg-muted/50">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    Environment
-                  </span>
-                  <span className="text-sm text-foreground flex items-center gap-1.5">
-                    <Server className="w-3.5 h-3.5 text-muted-foreground" />
-                    {scenario.projectName || "N/A"}
-                  </span>
-                </div>
-                <div className="p-3 border border-border rounded-lg bg-muted/50">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    Platform
-                  </span>
-                  <span className="text-sm text-foreground flex items-center gap-1.5">
-                    <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
-                    Web
-                  </span>
-                </div>
-                <div className="p-3 border border-border rounded-lg bg-muted/50">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    Assignee
-                  </span>
-                  <span className="text-sm text-foreground flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[10px] font-medium">
-                      {scenario.creatorId
-                        ? String(scenario.creatorId).slice(0, 2).toUpperCase()
-                        : "?"}
-                    </span>
-                    {scenario.creatorId
-                      ? `User #${scenario.creatorId}`
-                      : "Unassigned"}
-                  </span>
-                </div>
-              </div>
-
               {/* Steps Table */}
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-foreground mb-3">
@@ -3384,29 +3326,21 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 </div>
               </div>
 
-              {/* Evidence & Artifacts */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">
-                  Evidence &amp; Artifacts
-                </h3>
-                <div className="border-2 border-dashed border-border rounded-xl p-8 bg-muted/30 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center mb-4">
-                    <Upload className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-foreground mb-1">
-                    Drag and drop screenshots or screen recordings here
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Supports PNG, JPG, MP4 (Max 50MB)
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-lg text-xs border-border text-muted-foreground"
-                  >
-                    Browse Files
-                  </Button>
-                </div>
+              {/* Automation Category Panel */}
+              <div className="mb-6">
+                <AutomationCategoryPanel
+                  scenarioId={scenario.id}
+                  projectId={projectId || scenario.projectId}
+                  sectionId={(selectedTestCase as any)._sectionId}
+                  testCase={selectedTestCase}
+                  category={inferAutomationCategory(selectedTestCase)}
+                  onUpdate={(updated) =>
+                    updateTestCase(
+                      (selectedTestCase as any)._sectionId,
+                      updated,
+                    )
+                  }
+                />
               </div>
 
               {/* Execution Result (for non-manual types - Manual panel handles this above) */}
@@ -3456,7 +3390,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     <div>
                       <textarea
                         placeholder="Add notes about this execution result..."
-                        className="w-full min-h-[60px] text-sm border border-border rounded-lg p-2.5 bg-background placeholder-muted-foreground focus:outline-none focus:border-border focus:ring-1 focus:ring-ring/50 resize-y"
+                        className="w-full min-h-[60px] text-sm border border-border rounded-lg p-2.5 bg-background placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
                       />
                     </div>
                     <div className="flex justify-end">
