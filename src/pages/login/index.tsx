@@ -113,7 +113,7 @@ export const LoginPage: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <FlowGLogo className="h-10 w-10 text-white" />
-            <span className="text-3xl font-bold tracking-tight text-white">
+            <span className="text-3xl font-semibold tracking-tight text-white">
               FlowG
             </span>
           </div>
@@ -194,7 +194,7 @@ export const LoginPage: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               <FlowGLogo className="h-9 w-9 text-white" />
-              <span className="text-2xl font-bold tracking-tight">FlowG</span>
+              <span className="text-2xl font-semibold tracking-tight">FlowG</span>
             </div>
 
             <h2 className="mt-8 text-[32px] font-semibold leading-tight tracking-tight">
@@ -248,10 +248,10 @@ export const LoginPage: React.FC = () => {
             className="w-full max-w-[360px]"
           >
             <div className="flex flex-col items-start">
-              <h1 className="text-[22px] font-semibold tracking-tight text-gray-900">
+              <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
                 Sign in to FlowG
               </h1>
-              <p className="mt-1.5 text-[14px] text-gray-500">
+              <p className="mt-1.5 text-[14px] text-muted-foreground">
                 Continue with your GitLab account to get started.
               </p>
             </div>
@@ -271,12 +271,12 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
 
-            <p className="mt-4 text-[12px] text-gray-400">
+            <p className="mt-4 text-[12px] text-muted-foreground">
               Secure authentication via GitLab OAuth
             </p>
           </motion.div>
 
-          <div className="absolute bottom-6 text-[12px] text-gray-400">
+          <div className="absolute bottom-6 text-[12px] text-muted-foreground">
             &copy; {new Date().getFullYear()} FlowG
           </div>
         </div>

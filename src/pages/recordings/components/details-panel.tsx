@@ -51,7 +51,7 @@
            </div>
  
            <div>
-             <h2 className="text-lg font-bold text-foreground leading-tight">{recording.name}</h2>
+             <h2 className="text-lg font-semibold text-foreground leading-tight">{recording.name}</h2>
              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                {recording.description || 'No description provided for this automation test.'}
              </p>

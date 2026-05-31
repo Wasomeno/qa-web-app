@@ -143,7 +143,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           ) : deleteError ? (
             <>
               <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-foreground mb-1">
+              <p className="text-sm font-semibold text-foreground mb-1">
                 Failed to delete
               </p>
               <p className="text-xs text-red-600 mb-4 max-w-[200px]">
@@ -172,7 +172,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
           ) : (
             <>
               <Trash2 className="w-8 h-8 text-red-500 mb-2" />
-              <p className="text-sm font-bold text-foreground mb-1">
+              <p className="text-sm font-semibold text-foreground mb-1">
                 Delete this test scenario?
               </p>
               <p className="text-xs text-muted-foreground mb-4">

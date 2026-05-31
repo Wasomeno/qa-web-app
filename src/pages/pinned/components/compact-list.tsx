@@ -44,7 +44,7 @@ const CompactPinnedList: React.FC<CompactPinnedListProps> = ({
           <button
             type="button"
             onClick={onGoToMain}
-            className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent px-2 py-1 rounded transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
             Open full page
@@ -62,13 +62,13 @@ const CompactPinnedList: React.FC<CompactPinnedListProps> = ({
             </div>
           ) : pinnedIssues.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-                <Pin className="w-6 h-6 text-gray-300" />
+              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
+                <Pin className="w-6 h-6 text-muted-foreground" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-700">
+              <h3 className="text-sm font-semibold text-foreground">
                 No pinned issues
               </h3>
-              <p className="text-xs text-gray-400 mt-1 max-w-[200px] mx-auto">
+              <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
                 Pin important issues from the Issues tab to keep them here for
                 quick access.
               </p>

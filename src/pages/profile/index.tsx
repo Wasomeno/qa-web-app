@@ -23,14 +23,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     <ScrollArea className="h-full">
       <div className="space-y-8 p-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-foreground">Profile</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your account and preferences
           </p>
         </div>
 
         {/* Profile Card */}
-        <div className="flex items-start gap-5 p-6 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl border border-gray-200/60">
+        <div className="flex items-start gap-5 p-6 bg-gradient-to-br from-muted to-muted/50 rounded-2xl border border-border/60">
           {user?.avatar_url ? (
             <img
               src={user.avatar_url}
@@ -45,14 +45,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
               {user?.name || user?.username || 'Guest User'}
             </h3>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               @{user?.username || 'username'}
             </p>
             {/* Note: User interface doesn't strictly have email in all cases, but we assume it might */}
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {user?.public_email || user?.email || 'No public email'}
             </p>
 
@@ -69,36 +69,36 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
         {/* Settings Sections */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-gray-700">Settings</h3>
+          <h3 className="text-sm font-semibold text-foreground">Settings</h3>
 
           {/* Settings Items */}
           <div className="space-y-2">
-            <button className="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer text-left group">
+            <button className="w-full flex items-center gap-4 p-4 bg-white border border-border rounded-xl hover:border-border hover:shadow-sm transition-all cursor-pointer text-left group">
               <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-900 transition-colors">
                 <Settings className="w-5 h-5 text-zinc-900 group-hover:text-zinc-100" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   General Settings
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Configure default project and preferences
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             </button>
 
-            <button className="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer text-left group">
+            <button className="w-full flex items-center gap-4 p-4 bg-white border border-border rounded-xl hover:border-border hover:shadow-sm transition-all cursor-pointer text-left group">
               <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-900 transition-colors">
                 <Bell className="w-5 h-5 text-zinc-900 group-hover:text-zinc-100" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   Notifications
                 </p>
-                <p className="text-xs text-gray-500">Desktop: On • Sound: On</p>
+                <p className="text-xs text-muted-foreground">Desktop: On • Sound: On</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             </button>
           </div>
         </div>

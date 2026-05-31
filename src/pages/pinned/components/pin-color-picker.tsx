@@ -25,16 +25,16 @@ export const PinColorPicker: React.FC<PinColorPickerProps> = ({
   onClose,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-xl border border-gray-200 p-3 min-w-[180px]">
-      <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+    <div className="bg-background rounded-xl shadow-xl border border-border p-3 min-w-[180px]">
+      <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Pin Color
         </span>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+          className="p-1 hover:bg-accent rounded-md transition-colors"
         >
-          <X className="w-3.5 h-3.5 text-gray-400" />
+          <X className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -45,7 +45,7 @@ export const PinColorPicker: React.FC<PinColorPickerProps> = ({
             className={cn(
               'w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center',
               currentColor === item.id
-                ? 'border-gray-900 scale-110'
+                ? 'border-foreground scale-110'
                 : 'border-transparent hover:scale-105'
             )}
             title={item.label}
@@ -57,8 +57,8 @@ export const PinColorPicker: React.FC<PinColorPickerProps> = ({
           </button>
         ))}
       </div>
-      <div className="mt-3 pt-2 border-t border-gray-100 italic">
-        <p className="text-[10px] text-gray-400 text-center">
+      <div className="mt-3 pt-2 border-t border-border italic">
+        <p className="text-[10px] text-muted-foreground text-center">
           Colors help you group your pinned issues
         </p>
       </div>
