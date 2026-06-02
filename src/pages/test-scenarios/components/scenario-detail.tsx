@@ -1584,6 +1584,7 @@ const ManualAutomationPanel: React.FC<{
                     <MarkdownRenderer
                       content={result.description}
                       className="text-sm text-foreground mt-0.5 leading-snug [&>p]:my-0 [&>p]:leading-snug [&_img]:my-1 [&_img]:max-h-48 [&_img]:rounded-md [&_img]:border [&_img]:border-border"
+                      clickableImages
                     />
                     {result.evidence.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
