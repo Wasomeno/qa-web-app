@@ -6,6 +6,8 @@ interface UseAgentOptions {
   sessionId?: string;
   initialMessages?: Message[];
   onMessagesChange?: (messages: Message[]) => void;
+  /** API endpoint for the chat request. Defaults to /api/agent/chat */
+  endpoint?: string;
 }
 
 export const useAgent = (options?: UseAgentOptions) => {
@@ -106,7 +108,7 @@ export const useAgent = (options?: UseAgentOptions) => {
       try {
         // Use direct fetch with POST to agent chat endpoint
         const authSessionId = localStorage.getItem('qa_webapp_session_id');
-        const url = new URL('/api/agent/chat', window.location.origin);
+        const url = new URL(options?.endpoint || '/api/agent/chat', window.location.origin);
         if (authSessionId) {
           url.searchParams.set('session_id', authSessionId);
         }
@@ -255,7 +257,7 @@ export const useAgent = (options?: UseAgentOptions) => {
         activeSessionIdRef.current = null;
       }
     },
-    [sessionId]
+    [sessionId, options?.endpoint]
   );
 
   // Reset messages
