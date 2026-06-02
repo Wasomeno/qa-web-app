@@ -8,7 +8,7 @@ import { ChatInput } from '@/pages/agent/components/chat-input';
 import { useAgent } from '@/pages/agent/hooks/use-agent';
 import { cn } from '@/lib/utils';
 
-const easing = [0.16, 1, 0.3, 1];
+const easing: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 interface TestScenarioChatAgentProps {
   open: boolean;

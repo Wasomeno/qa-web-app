@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { getAppProject } from "@/api/project";
 import { usePageHeader } from "@/contexts/project-page-header-context";
@@ -49,6 +50,11 @@ function ProjectIndexRoute() {
   );
 }
 
+const searchSchema = z.object({
+  scenarioSync: z.literal('started').optional(),
+});
+
 export const Route = createFileRoute("/projects/$id/")({
+  validateSearch: searchSchema,
   component: ProjectIndexRoute,
 });

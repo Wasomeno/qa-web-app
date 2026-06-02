@@ -4,7 +4,7 @@ import { Loader2, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import type { ProjectSyncState, SyncStepInfo } from '../hooks/use-project-sync';
 import { cn } from '@/lib/utils';
 
-const easing = [0.16, 1, 0.3, 1];
+const easing: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 interface SyncProgressPanelProps {
   syncState: ProjectSyncState;

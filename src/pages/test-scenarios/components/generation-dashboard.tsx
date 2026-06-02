@@ -13,7 +13,7 @@ import type { ProjectSyncState } from '../hooks/use-project-sync';
 import type { TestScenario } from '@/types/test-scenario';
 import { cn } from '@/lib/utils';
 
-const easing = [0.16, 1, 0.3, 1];
+const easing: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const COMPLETED_VISIBLE_MS = 4000;
 
 interface ScenarioCardProps {
@@ -311,6 +311,7 @@ export const GenerationDashboard: React.FC<GenerationDashboardProps> = ({
                     <p
                       className={cn('mt-0.5 text-sm', {
                         amber: 'text-amber-700/80 dark:text-amber-400/80',
+                        emerald: 'text-emerald-700/80 dark:text-emerald-400/80',
                         red: 'text-red-700/80 dark:text-red-400/80',
                       }[statusColor])}
                     >
