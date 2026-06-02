@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VideoPlaceholder } from './video-placeholder';
 
@@ -9,11 +10,13 @@ const VIDEO_EXTENSIONS = ['.webm', '.mp4', '.mov'];
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  clickableImages?: boolean;
 }
 
 export function MarkdownRenderer({
   content,
   className,
+  clickableImages = false,
 }: MarkdownRendererProps) {
   return (
     <div className={cn('text-foreground', className)}>
@@ -124,16 +127,37 @@ export function MarkdownRenderer({
               {...props}
             />
           ),
-          img: ({ className, alt, ...props }) => (
-            <img
-              className={cn(
-                'rounded-md border my-6 max-w-full h-auto',
-                className
-              )}
-              alt={alt}
-              {...props}
-            />
-          ),
+          img: ({ className, alt, src, ...props }) => {
+            const imgEl = (
+              <img
+                className={cn(
+                  'rounded-md border my-6 max-w-full h-auto',
+                  clickableImages && 'transition-opacity group-hover:opacity-90',
+                  className
+                )}
+                alt={alt}
+                src={src}
+                {...props}
+              />
+            );
+            if (clickableImages && src) {
+              return (
+                <a
+                  href={src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative inline-block cursor-zoom-in"
+                  title="Open image in new tab"
+                >
+                  {imgEl}
+                  <span className="pointer-events-none absolute bottom-2 right-2 flex items-center justify-center rounded bg-black/50 p-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <ExternalLink className="h-3 w-3 text-white" />
+                  </span>
+                </a>
+              );
+            }
+            return imgEl;
+          },
           hr: ({ className, ...props }) => (
             <hr className={cn('my-8 border-border', className)} {...props} />
           ),
