@@ -35,7 +35,10 @@ export const TestScenarioChatAgent: React.FC<TestScenarioChatAgentProps> = ({
     isAgentLoading,
     progressMessage,
     sendMessage,
-  } = useAgent({ sessionId });
+  } = useAgent({
+    sessionId,
+    endpoint: projectId ? `/api/projects/${projectId}/scenario-agent/chat` : '/api/agent/chat',
+  });
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
