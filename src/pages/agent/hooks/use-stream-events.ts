@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import type { ScenarioImportStatus } from '@/api/test-scenario';
 
 export interface StreamEvent {
   type: string;
@@ -11,6 +12,12 @@ export interface StreamEvent {
     totalSteps: number;
     stepName: string;
     action?: string;
+    progress?: number;
+  };
+  importStatus?: ScenarioImportStatus;
+  errorInfo?: {
+    code?: string;
+    details?: string;
   };
   timestamp: string;
 }
@@ -31,7 +38,11 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
   const { resourceId, type, onEvent, enabled = true } = options;
   const eventSourceRef = useRef<EventSource | null>(null);
   const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const connect = useCallback(() => {
     // Build URL with optional filters
@@ -53,6 +64,7 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
 
     eventSource.onopen = () => {
       console.log('[useStreamEvents] SSE connection opened');
+      setIsConnected(true);
     };
 
     eventSource.onmessage = (event) => {
@@ -69,6 +81,7 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
 
     eventSource.onerror = (error) => {
       console.warn('[useStreamEvents] SSE error:', error);
+      setIsConnected(false);
     };
   }, [resourceId, type]);
 
@@ -77,6 +90,7 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
       console.log('[useStreamEvents] Disconnecting SSE');
       eventSourceRef.current.close();
       eventSourceRef.current = null;
+      setIsConnected(false);
     }
   }, []);
 
@@ -94,6 +108,7 @@ export const useStreamEvents = (options: UseStreamEventsOptions = {}) => {
   }, [enabled, connect, disconnect]);
 
   return {
+    isConnected,
     disconnect,
     reconnect: connect,
   };

@@ -24,6 +24,7 @@ export const SyncProgressPanel: React.FC<SyncProgressPanelProps> = ({
   hidden = false,
 }) => {
   const isActive = syncState !== 'idle' && !hidden;
+  const isWorking = syncState === 'syncing' || syncState === 'importing';
 
   return (
     <AnimatePresence mode="wait">
@@ -41,7 +42,7 @@ export const SyncProgressPanel: React.FC<SyncProgressPanelProps> = ({
             aria-live="polite"
             className={cn(
               'rounded-xl border px-4 py-3',
-              syncState === 'syncing' &&
+              isWorking &&
                 'border-amber-200 bg-amber-50 dark:border-amber-800/30 dark:bg-amber-950/30',
               syncState === 'completed' &&
                 'border-emerald-200 bg-emerald-50 dark:border-emerald-800/30 dark:bg-emerald-950/30',
@@ -54,14 +55,14 @@ export const SyncProgressPanel: React.FC<SyncProgressPanelProps> = ({
               <div
                 className={cn(
                   'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
-                  syncState === 'syncing' && 'bg-amber-100 text-amber-700 dark:bg-amber-800/40 dark:text-amber-400',
+                  isWorking && 'bg-amber-100 text-amber-700 dark:bg-amber-800/40 dark:text-amber-400',
                   syncState === 'completed' &&
                     'bg-emerald-100 text-emerald-700 dark:bg-emerald-800/40 dark:text-emerald-400',
                   syncState === 'error' &&
                     'bg-red-100 text-red-700 dark:bg-red-800/40 dark:text-red-400',
                 )}
               >
-                {syncState === 'syncing' && (
+                {isWorking && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 )}
                 {syncState === 'completed' && (
@@ -77,7 +78,7 @@ export const SyncProgressPanel: React.FC<SyncProgressPanelProps> = ({
                 <p
                   className={cn(
                     'text-sm font-medium',
-                    syncState === 'syncing' && 'text-amber-800 dark:text-amber-300',
+                    isWorking && 'text-amber-800 dark:text-amber-300',
                     syncState === 'completed' && 'text-emerald-800 dark:text-emerald-300',
                     syncState === 'error' && 'text-red-800 dark:text-red-300',
                   )}
@@ -86,7 +87,7 @@ export const SyncProgressPanel: React.FC<SyncProgressPanelProps> = ({
                 </p>
 
                 {/* Progress bar — only shown during syncing when step info is available */}
-                {syncState === 'syncing' && syncStep && syncStep.totalSteps > 0 && (
+                {isWorking && syncStep && syncStep.totalSteps > 0 && (
                   <div className="mt-2 space-y-1">
                     <div className="h-1.5 rounded-full bg-amber-200/60 dark:bg-amber-800/30">
                       <motion.div
