@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, AlertTriangle, MessageCircle } from "lucide-react";
+import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
@@ -28,11 +28,24 @@ import {
 } from "@/components/ui/dialog";
 
 import { cn } from "@/lib/utils";
+import type { ScenarioImportStatus } from "@/api/test-scenario";
 
-import { GenerationDashboard } from "./components/generation-dashboard";
+import { ScenarioImportDashboard } from "./components/generation-dashboard";
 import { TestScenarioChatAgent } from "./components/test-scenario-chat-agent";
 
 const SCENARIOS_PER_PAGE = 10;
+const isActiveImportState = (state: ScenarioImportStatus['state']) =>
+  state === 'syncing' || state === 'importing';
+const isTerminalImportState = (state: ScenarioImportStatus['state']) =>
+  state === 'completed' || state === 'error';
+
+const idleImportStatus: ScenarioImportStatus = {
+  state: 'idle',
+  indicatorText: 'No import running',
+  counts: { total: 0, imported: 0, pending: 0, failed: 0 },
+  feed: [],
+  updatedAt: new Date(0).toISOString(),
+};
 
 interface SyncStateProp {
   syncState?: ReturnType<typeof import('./hooks/use-project-sync').useProjectSync>;
@@ -64,7 +77,8 @@ export const TestScenariosPage: React.FC<{
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [dismissedDashboardKey, setDismissedDashboardKey] = useState<string | null>(null);
+  const refetchedTerminalImportKeyRef = useRef<string | null>(null);
 
   // Use local project state for this page
   const [selectedProjectId, setSelectedProjectId] = useLocalStorage<
@@ -86,6 +100,7 @@ export const TestScenariosPage: React.FC<{
   const activeProjectId = projectId || selectedProjectId;
 
   const queryClient = useQueryClient();
+  const sseImportStatus = syncState?.importStatus ?? null;
 
   const testContextQuery = useQuery({
     queryKey: ["project-test-context", activeProjectId],
@@ -123,8 +138,12 @@ export const TestScenariosPage: React.FC<{
     setIsSyncing(true);
     try {
       const result = await testScenarioApi.syncScenarios(activeProjectId);
-      await refetch();
-      toast.success(`Synced ${result.count} scenario${result.count === 1 ? "" : "s"}`);
+      queryClient.setQueryData(
+        ["test-scenarios-import-status", activeProjectId],
+        result.status,
+      );
+      setDismissedDashboardKey(null);
+      toast.success("Import started");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sync scenarios");
     } finally {
@@ -177,9 +196,67 @@ export const TestScenariosPage: React.FC<{
     placeholderData: (prev) => prev, // Keep previous data while fetching next page
   });
 
-  const scenarios = data?.scenarios ?? [];
+  const scenarios = useMemo(() => data?.scenarios ?? [], [data?.scenarios]);
   const total = data?.total;
   const totalPages = total ? Math.ceil(total / SCENARIOS_PER_PAGE) : 0;
+
+  const { data: importStatusData } = useQuery({
+    queryKey: ["test-scenarios-import-status", activeProjectId],
+    queryFn: () => testScenarioApi.getScenarioImportStatus(activeProjectId!),
+    enabled: !!activeProjectId,
+    refetchInterval: (query) => {
+      const status = sseImportStatus ?? query.state.data ?? null;
+      const state = status?.state;
+
+      if (state && isActiveImportState(state)) {
+        return syncState?.isStreamConnected ? 5000 : 2000;
+      }
+
+      if (scenarioSync === 'started') {
+        return syncState?.isStreamConnected ? 10000 : 2000;
+      }
+
+      return syncState?.isStreamConnected ? false : 15000;
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  useEffect(() => {
+    if (activeProjectId && sseImportStatus) {
+      queryClient.setQueryData(
+        ["test-scenarios-import-status", activeProjectId],
+        sseImportStatus,
+      );
+    }
+  }, [activeProjectId, queryClient, sseImportStatus]);
+
+  const importStatus = sseImportStatus ?? importStatusData ?? idleImportStatus;
+  const isImportActive = isActiveImportState(importStatus.state);
+  const isImportTerminal = isTerminalImportState(importStatus.state);
+  const shouldShowImportDashboard =
+    isSyncing ||
+    scenarioSync === 'started' ||
+    isImportActive ||
+    isImportTerminal;
+  const dashboardImportStatus: ScenarioImportStatus =
+    (isSyncing || scenarioSync === 'started') && importStatus.state === 'idle'
+      ? {
+          ...idleImportStatus,
+          state: 'syncing',
+          indicatorText: 'Syncing specs repository',
+          updatedAt: new Date().toISOString(),
+        }
+      : importStatus;
+  const dashboardKey = shouldShowImportDashboard
+    ? importStatus.state === 'idle'
+      ? `placeholder:${activeProjectId ?? 'all'}:${scenarioSync ?? ''}:${isSyncing ? 'syncing' : ''}`
+      : `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`
+    : null;
+  const showDashboard =
+    dashboardKey !== null && dismissedDashboardKey !== dashboardKey;
+  const hideScenarioControls =
+    isImportActive ||
+    isSyncing;
 
   // Handlers
   const handleDelete = async (id: string) => {
@@ -252,38 +329,34 @@ export const TestScenariosPage: React.FC<{
     });
   }, [scenarios, activeProjectId, projectId]);
 
-  // Refetch scenarios when background sync completes
+  // Refetch the paginated list once when backend import finishes.
   useEffect(() => {
-    if (syncState?.syncState === 'completed' || syncState?.syncState === 'error') {
+    if (!isImportTerminal) {
+      return;
+    }
+
+    const terminalKey = `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`;
+    if (refetchedTerminalImportKeyRef.current !== terminalKey) {
+      refetchedTerminalImportKeyRef.current = terminalKey;
       refetch();
     }
-  }, [syncState?.syncState, refetch]);
+
+    if (activeProjectId) {
+      sessionStorage.removeItem(`project:${activeProjectId}:sync_started`);
+    }
+  }, [
+    activeProjectId,
+    importStatus.completedAt,
+    importStatus.state,
+    importStatus.updatedAt,
+    isImportTerminal,
+    refetch,
+  ]);
 
   const allSelected =
     filteredItems.length > 0 && selectedIds.size === filteredItems.length;
   const someSelected =
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
-
-  // Detect if any scenario is actively generating from polling data
-  const isAnyGenerating = useMemo(
-    () => filteredItems.some((s) => s.processingStatus === 'generating'),
-    [filteredItems],
-  );
-
-  // Keep showDashboard alive while any trigger is active; only dismiss via the dashboard itself
-  useEffect(() => {
-    if (
-      syncState?.syncState === 'syncing' ||
-      syncState?.syncState === 'completed' ||
-      isSyncing ||
-      isAnyGenerating ||
-      scenarioSync === 'started'
-    ) {
-      setShowDashboard(true);
-    }
-    // We intentionally do NOT set showDashboard to false here.
-    // The dashboard's onDismiss callback handles cleanup.
-  }, [syncState?.syncState, isSyncing, isAnyGenerating, scenarioSync]);
 
   return (
     <div className="flex flex-col h-full bg-background relative">
@@ -301,14 +374,16 @@ export const TestScenariosPage: React.FC<{
                 Test Scenarios
               </h1>
               <p className="text-sm text-muted-foreground mt-1.5">
-                {projectName
-                  ? `Review scenarios for ${projectName}`
-                  : "Review and manage AI-generated test scenarios"}
+                {hideScenarioControls
+                  ? dashboardImportStatus.indicatorText
+                  : projectName
+                    ? `Review scenarios for ${projectName}`
+                    : "Review and manage AI-generated test scenarios"}
               </p>
             </div>
             <div className="shrink-0 pt-1">
               <AnimatePresence mode="wait">
-                {selectedIds.size === 0 && (
+                {selectedIds.size === 0 && !hideScenarioControls && (
                   <motion.div
                     key="import-btn"
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -323,6 +398,7 @@ export const TestScenariosPage: React.FC<{
             </div>
           </div>
         )}
+        {!hideScenarioControls && (
         <div className={cn("flex items-center justify-between gap-2", !hideHeader && "mt-5")}>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -363,39 +439,22 @@ export const TestScenariosPage: React.FC<{
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {/* Sync error banner (shown only for error state — syncing/completed use the dashboard) */}
-        {syncState?.syncState === 'error' && (
-          <div className="px-6 pt-6">
-            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 dark:border-red-800/30 dark:bg-red-950/30">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
-              <div>
-                <p className="text-sm text-red-800 dark:text-red-300">
-                  {syncState.syncMessage}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Generation dashboard: replaces table area during active sync or completion summary */}
+        {/* Import dashboard: replaces table area during scenario import. */}
         {showDashboard ? (
-          <GenerationDashboard
-            syncState={syncState?.syncState ?? 'idle'}
-            isAnyGenerating={isAnyGenerating}
-            isManualSyncPending={isSyncing}
-            scenarioSync={scenarioSync}
-            syncMessage={syncState?.syncMessage ?? ''}
-            syncError={syncState?.syncError}
-            scenarios={filteredItems}
+          <ScenarioImportDashboard
+            importStatus={dashboardImportStatus}
+            generationMessage={syncState?.generationMessage}
+            generationStep={syncState?.generationStep}
             onDismiss={() => {
               syncState?.reset?.();
-              setShowDashboard(false);
-              if (projectId) {
-                sessionStorage.removeItem(`project:${projectId}:sync_started`);
+              setDismissedDashboardKey(dashboardKey);
+              if (activeProjectId) {
+                sessionStorage.removeItem(`project:${activeProjectId}:sync_started`);
               }
             }}
           />

@@ -1,70 +1,105 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2,
-  CheckCircle2,
   AlertTriangle,
-  X,
+  CheckCircle2,
+  Clock3,
   FileText,
-  Sparkles,
-  RefreshCw,
+  Loader2,
+  ListChecks,
+  X,
 } from 'lucide-react';
-import type { ProjectSyncState } from '../hooks/use-project-sync';
-import type { TestScenario } from '@/types/test-scenario';
+import type {
+  ScenarioImportFeedItem,
+  ScenarioImportStatus,
+} from '@/api/test-scenario';
+import type { SyncStepInfo } from '../hooks/use-project-sync';
 import { cn } from '@/lib/utils';
 
 const easing: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const COMPLETED_VISIBLE_MS = 4000;
 
-interface ScenarioCardProps {
-  scenario: TestScenario;
+interface ScenarioFeedCardProps {
+  item: ScenarioImportFeedItem;
   index: number;
 }
 
-const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, index }) => {
-  const procStatus = scenario.processingStatus ?? 'idle';
-  const stats = scenario.automationStats ?? scenario.stats;
-  const total = stats?.totalTestCases ?? 0;
-  const completed =
-    (stats?.generatedCount ?? 0) + (stats?.passCount ?? 0) + (stats?.failCount ?? 0);
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const isGenerating = procStatus === 'generating';
+const statusCopy = {
+  pending: 'Pending',
+  importing: 'Importing',
+  imported: 'Imported',
+  error: 'Error',
+} as const;
+
+const ScenarioFeedCard: React.FC<ScenarioFeedCardProps> = ({ item, index }) => {
+  const isImporting = item.status === 'importing';
+  const isImported = item.status === 'imported';
+  const isError = item.status === 'error';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: easing, delay: index * 0.05 }}
-      className="rounded-lg border border-border bg-card/60 px-3 py-2.5"
+      transition={{ duration: 0.24, ease: easing, delay: index * 0.035 }}
+      className="rounded-xl border border-border bg-card px-4 py-3.5 shadow-sm shadow-slate-950/[0.03]"
     >
-      <div className="flex items-start gap-2.5">
-        <Loader2
+      <div className="flex items-start gap-3">
+        <div
           className={cn(
-            'mt-0.5 h-3.5 w-3.5 shrink-0',
-            isGenerating ? 'animate-spin text-amber-500' : 'text-muted-foreground/30',
+            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border',
+            isImporting && 'border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-400',
+            isImported && 'border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-400',
+            isError && 'border-red-200 bg-red-50 text-red-600 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-400',
+            !isImporting && !isImported && !isError && 'border-border bg-muted/30 text-muted-foreground',
           )}
-        />
+        >
+          {isImporting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isImported ? (
+            <CheckCircle2 className="h-4 w-4" />
+          ) : isError ? (
+            <AlertTriangle className="h-4 w-4" />
+          ) : (
+            <Clock3 className="h-4 w-4" />
+          )}
+        </div>
+
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-foreground">
-            {scenario.title}
-          </p>
-          {stats && (
-            <div className="mt-1.5 space-y-1">
-              <div className="h-1 rounded-full bg-muted overflow-hidden">
-                <motion.div
-                  className={cn(
-                    'h-full rounded-full',
-                    isGenerating ? 'bg-amber-400' : 'bg-emerald-400',
-                  )}
-                  initial={{ width: '0%' }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.6, ease: easing }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground tabular-nums">
-                {completed}/{total} test cases
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {item.title}
               </p>
+              {item.sourcePath && (
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {item.sourcePath}
+                </p>
+              )}
             </div>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset',
+                isImporting && 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800/50',
+                isImported && 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50',
+                isError && 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-800/50',
+                !isImporting && !isImported && !isError && 'bg-muted text-muted-foreground ring-border',
+              )}
+            >
+              {statusCopy[item.status]}
+            </span>
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <FileText className="h-3.5 w-3.5 shrink-0" />
+            <span className="tabular-nums">
+              {item.testCaseCount} test case{item.testCaseCount === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {item.error && (
+            <p className="mt-2 rounded-lg bg-red-50 px-2.5 py-2 text-xs leading-5 text-red-700 dark:bg-red-950/30 dark:text-red-300">
+              {item.error}
+            </p>
           )}
         </div>
       </div>
@@ -72,178 +107,60 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, index }) => {
   );
 };
 
-interface GenerationDashboardProps {
-  /** SSE-based sync state from useProjectSync (may be idle if no SSE) */
-  syncState: ProjectSyncState;
-  /** Polling-derived state: true when any scenario has processingStatus === 'generating' */
-  isAnyGenerating: boolean;
-  /** True while the manual sync POST is in-flight (isSyncing state variable) */
-  isManualSyncPending: boolean;
-  /** 'started' when navigating from project creation flow */
-  scenarioSync?: 'started';
-  syncMessage: string;
-  syncError?: string;
-  scenarios: TestScenario[];
+interface ScenarioImportDashboardProps {
+  importStatus: ScenarioImportStatus;
+  generationMessage?: string;
+  generationStep?: SyncStepInfo | null;
   onDismiss?: () => void;
 }
 
-/**
- * Immersive dashboard that replaces the table during test scenario generation.
- *
- * Trigger sources (any one triggers the dashboard):
- * 1. SSE syncState === 'syncing' (project creation background goroutine — now covers both import AND generation)
- * 2. Polling shows scenarios with processingStatus === 'generating' (secondary safety net)
- * 3. Manual sync is in-flight (isManualSyncPending)
- *
- * Completion sources:
- * 1. SSE syncState === 'completed' (fires only after import + generation both finish)
- * 2. Polling + debounce detects no more generating scenarios (safety net)
- * 3. Manual sync resolves (isManualSyncPending -> false)
- */
-export const GenerationDashboard: React.FC<GenerationDashboardProps> = ({
-  syncState,
-  isAnyGenerating,
-  isManualSyncPending,
-  scenarioSync,
-  syncMessage,
-  syncError,
-  scenarios,
+export const ScenarioImportDashboard: React.FC<ScenarioImportDashboardProps> = ({
+  importStatus,
+  generationMessage,
+  generationStep,
   onDismiss,
 }) => {
-  const [completionVisible, setCompletionVisible] = useState(false);
-  const completionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [scenarioSyncTimedOut, setScenarioSyncTimedOut] = useState(false);
-
-  // Debounce: when generation activity pauses between scenarios,
-  // wait 8s before allowing the state to transition to idle/completed.
-  // This handles the gap between back-to-back scenarios and is a safety
-  // net for when SSE events are missed (e.g. user navigates away and back).
-  const [debounceComplete, setDebounceComplete] = useState(true);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSyncing = importStatus.state === 'syncing';
+  const isImporting = importStatus.state === 'importing';
+  const isCompleted = importStatus.state === 'completed';
+  const isError = importStatus.state === 'error';
+  const isActive = isSyncing || isImporting;
+  const feed = importStatus.feed ?? [];
+  const counts = importStatus.counts ?? { total: 0, imported: 0, pending: 0, failed: 0 };
+  const generationProgress =
+    generationStep && generationStep.totalSteps > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            generationStep.progress ??
+              Math.round((generationStep.currentStep / generationStep.totalSteps) * 100),
+          ),
+        )
+      : null;
 
   useEffect(() => {
-    if (isAnyGenerating) {
-      // Generation resumed - cancel debounce
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
-        setDebounceComplete(true);
-      }
-      return;
-    }
-
-    // No current generating activity, start debounce
-    if (debounceTimerRef.current === null && debounceComplete) {
-      setDebounceComplete(false);
-      debounceTimerRef.current = setTimeout(() => {
-        setDebounceComplete(true);
-        debounceTimerRef.current = null;
-        // Debounce expired: show completion
-        setCompletionVisible(true);
-        completionTimer.current = setTimeout(() => {
-          setCompletionVisible(false);
-          setDebounceComplete(true);
-          onDismiss?.();
-        }, COMPLETED_VISIBLE_MS);
-      }, 8000);
-    }
-
+    if (!isCompleted || !onDismiss) return;
+    dismissTimer.current = setTimeout(onDismiss, COMPLETED_VISIBLE_MS);
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
-      }
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
     };
-  }, [isAnyGenerating, debounceComplete, onDismiss]);
+  }, [isCompleted, onDismiss]);
 
-  // Derive effective state
-  // scenarioSync is a one-shot trigger from the project creation flow — it activates the
-  // dashboard on initial mount. After the first render, real data (SSE, polling) takes over.
-  const effectiveState = ((): 'idle' | 'syncing' | 'completed' | 'error' => {
-    if (syncState === 'error') return 'error';
-    if (syncState === 'syncing') return 'syncing';
-    if (isManualSyncPending) return 'syncing';
-    // Keep syncing while generating or waiting for debounce (gap between scenarios)
-    if (isAnyGenerating) return 'syncing';
-    if (!debounceComplete) return 'syncing';
-    if (syncState === 'completed' || completionVisible) return 'completed';
-    // scenarioSync activates the dashboard during project creation, but is ignored
-    // once the safety timeout fires to prevent a stuck state.
-    if (!scenarioSyncTimedOut && scenarioSync === 'started') return 'syncing';
-    return 'idle';
-  })();
+  const title = isError
+    ? 'Import failed'
+    : isCompleted
+      ? 'Import complete'
+      : isSyncing
+        ? 'Syncing specs repository'
+        : 'Importing test scenarios';
 
-  // SSE completion trigger: when syncState becomes 'completed' and no debounce
-  // is pending (i.e., only import ran, no generation needed), show completion.
-  useEffect(() => {
-    if (syncState !== 'completed' || completionVisible) return;
-    if (debounceTimerRef.current) return; // debounce already running
-
-    setCompletionVisible(true);
-    completionTimer.current = setTimeout(() => {
-      setCompletionVisible(false);
-      onDismiss?.();
-    }, COMPLETED_VISIBLE_MS);
-  }, [syncState, completionVisible, onDismiss]);
-
-  // Safety timeout: if scenarioSync triggered the dashboard but no real sync
-  // events arrive within 15s, auto-dismiss to avoid a stuck "Syncing..." state.
-  useEffect(() => {
-    if (scenarioSync !== 'started') return;
-
-    const timer = setTimeout(() => {
-      setScenarioSyncTimedOut(true);
-    }, 15000);
-    return () => clearTimeout(timer);
-  }, [scenarioSync]);
-
-  // Cleanup timer
-  useEffect(() => {
-    return () => {
-      if (completionTimer.current) clearTimeout(completionTimer.current);
-    };
-  }, []);
-
-  const handleDismiss = useCallback(() => {
-    setCompletionVisible(false);
-    setDebounceComplete(true);
-    if (completionTimer.current) clearTimeout(completionTimer.current);
-    onDismiss?.();
-  }, [onDismiss]);
-
-  // Don't render if truly idle
-  const isVisible =
-    effectiveState === 'syncing' ||
-    effectiveState === 'error' ||
-    completionVisible;
-
-  if (!isVisible) return null;
-
-  const showStatus = effectiveState === 'syncing' || effectiveState === 'error';
-  const isError = effectiveState === 'error';
-
-  const statusColor = isError ? 'red' : completionVisible ? 'emerald' : 'amber';
-
-  const statusBg = {
-    amber: 'border-amber-200 bg-amber-50 dark:border-amber-800/30 dark:bg-amber-950/30',
-    emerald:
-      'border-emerald-200 bg-emerald-50 dark:border-emerald-800/30 dark:bg-emerald-950/30',
-    red: 'border-red-200 bg-red-50 dark:border-red-800/30 dark:bg-red-950/30',
-  }[statusColor];
-
-  const StatusIcon = isError
-    ? AlertTriangle
-    : completionVisible
-      ? CheckCircle2
-      : Loader2;
-
-  const generatingCount = scenarios.filter(
-    (s) => s.processingStatus === 'generating',
-  ).length;
-
-  const completedScenarioCount = scenarios.filter(
-    (s) => s.processingStatus !== 'generating' && s.processingStatus !== 'generation_failed',
-  ).length;
+  const iconClass = isError
+    ? 'border-red-200 bg-red-50 text-red-600 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-400'
+    : isCompleted
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-400'
+      : 'border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-400';
 
   return (
     <motion.div
@@ -253,219 +170,169 @@ export const GenerationDashboard: React.FC<GenerationDashboardProps> = ({
       transition={{ duration: 0.2, ease: easing }}
       className="flex-1 overflow-hidden flex flex-col"
     >
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-          {/* Left column: Status area */}
-          <div className="space-y-5">
-            {/* Status header card */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: easing }}
-              className={cn('rounded-xl border px-5 py-4', statusBg)}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={cn(
-                    'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                    {
-                      amber:
-                        'bg-amber-100 text-amber-700 dark:bg-amber-800/40 dark:text-amber-400',
-                      emerald:
-                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-800/40 dark:text-emerald-400',
-                      red: 'bg-red-100 text-red-700 dark:bg-red-800/40 dark:text-red-400',
-                    }[statusColor],
+      <div className="flex-1 overflow-y-auto px-5 py-5 md:px-6 md:py-6">
+        <div className="mx-auto max-w-5xl space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: easing }}
+            className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-slate-950/[0.04]"
+          >
+            <div className="flex items-start justify-between gap-4 px-5 py-5 md:px-6">
+              <div className="flex min-w-0 items-start gap-3.5">
+                <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border', iconClass)}>
+                  {isActive ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : isCompleted ? (
+                    <CheckCircle2 className="h-5 w-5" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5" />
                   )}
-                >
-                  <StatusIcon
-                    className={cn(
-                      'h-4 w-4',
-                      effectiveState === 'syncing' && 'animate-spin',
-                    )}
-                  />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className={cn('text-sm font-semibold', {
-                      amber: 'text-amber-800 dark:text-amber-300',
-                      emerald: 'text-emerald-800 dark:text-emerald-300',
-                      red: 'text-red-800 dark:text-red-300',
-                    }[statusColor])}
-                  >
-                    {isError
-                      ? 'Sync failed'
-                      : completionVisible
-                        ? 'Sync complete'
-                        : 'Syncing test scenarios'}
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                    {title}
                   </h3>
-
-                  {completionVisible && (
-                    <p className="mt-0.5 text-sm text-emerald-700/80 dark:text-emerald-400/80">
-                      {completedScenarioCount > 0
-                        ? `${completedScenarioCount} scenario${completedScenarioCount === 1 ? '' : 's'} imported`
-                        : 'Import finished'}
+                  <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    {importStatus.indicatorText}
+                  </p>
+                  {importStatus.current?.title && isImporting && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Current: <span className="font-medium text-foreground">{importStatus.current.title}</span>
+                      {importStatus.current.total ? (
+                        <span className="tabular-nums"> ({importStatus.current.index}/{importStatus.current.total})</span>
+                      ) : null}
                     </p>
                   )}
-
-                  {showStatus && (
-                    <p
-                      className={cn('mt-0.5 text-sm', {
-                        amber: 'text-amber-700/80 dark:text-amber-400/80',
-                        emerald: 'text-emerald-700/80 dark:text-emerald-400/80',
-                        red: 'text-red-700/80 dark:text-red-400/80',
-                      }[statusColor])}
-                    >
-                      {syncMessage || (isManualSyncPending
-                        ? 'Importing scenarios from specs repository…'
-                        : generatingCount > 0
-                          ? `Generating ${generatingCount} scenario${generatingCount === 1 ? '' : 's'}…`
-                          : 'Preparing import…')}
+                  {importStatus.error && (
+                    <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                      {importStatus.error}
                     </p>
                   )}
-
-                  {isError && syncError && (
-                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                      {syncError}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {(isError || completionVisible) && onDismiss && (
-                    <button
-                      onClick={handleDismiss}
-                      className={cn(
-                        'rounded-md p-1 transition-colors',
-                        isError
-                          ? 'text-red-500 hover:bg-red-200/50 dark:hover:bg-red-800/30'
-                          : 'text-muted-foreground hover:bg-accent',
+                  {isCompleted && generationMessage && (
+                    <div className="mt-3 max-w-xl rounded-xl border border-border bg-background/70 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-xs font-medium text-foreground">
+                          {generationMessage}
+                        </p>
+                        {generationStep && (
+                          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                            {generationStep.currentStep} of {generationStep.totalSteps}
+                          </span>
+                        )}
+                      </div>
+                      {generationProgress !== null && (
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                          <motion.div
+                            className="h-full rounded-full bg-foreground"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${generationProgress}%` }}
+                            transition={{ duration: 0.35, ease: easing }}
+                          />
+                        </div>
                       )}
-                      aria-label="Dismiss"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Live stats row */}
-              {effectiveState === 'syncing' && (
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-white/60 dark:bg-black/20 px-3 py-2 text-center">
-                    <p className="text-lg font-semibold text-foreground tabular-nums">
-                      {scenarios.length}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      Total
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white/60 dark:bg-black/20 px-3 py-2 text-center">
-                    <p className="text-lg font-semibold text-amber-600 tabular-nums">
-                      {generatingCount}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      Generating
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white/60 dark:bg-black/20 px-3 py-2 text-center">
-                    <p className="text-lg font-semibold text-emerald-600 tabular-nums">
-                      {completedScenarioCount}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      Imported
-                    </p>
-                  </div>
-                </div>
+              {(isCompleted || isError) && onDismiss && (
+                <button
+                  onClick={onDismiss}
+                  className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               )}
-            </motion.div>
+            </div>
 
-            {/* Activity tip */}
-            {effectiveState === 'syncing' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="rounded-xl border border-border bg-card px-4 py-3"
-              >
-                <div className="flex items-start gap-2.5">
-                  <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      Import in progress
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {isManualSyncPending
-                        ? 'Fetching and parsing markdown scenarios from the specs repository. This may take a moment.'
-                        : 'Scenarios are being generated from the specs repository. The list updates automatically as they complete.'}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Right column: Scenario feed */}
-          <div className="lg:border-l lg:border-border lg:pl-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <h3 className="text-sm font-semibold text-foreground">
-                  Scenarios
-                </h3>
+            <div className="grid border-t border-border/70 bg-muted/20 sm:grid-cols-3">
+              <div className="px-5 py-4 sm:border-r sm:border-border/70">
+                <p className="text-2xl font-semibold tabular-nums text-foreground">
+                  {counts.total}
+                </p>
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Found
+                </p>
               </div>
-              {scenarios.length > 0 && (
-                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
-                  {scenarios.length}
+              <div className="px-5 py-4 sm:border-r sm:border-border/70">
+                <p className="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {counts.imported}
+                </p>
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Imported
+                </p>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">
+                  {counts.failed}
+                </p>
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Errors
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <section className="rounded-2xl border border-border bg-card p-4 shadow-sm shadow-slate-950/[0.03]">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground ring-1 ring-inset ring-border">
+                  <ListChecks className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Scenario feed
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Markdown scenarios reported by the backend
+                  </p>
+                </div>
+              </div>
+              {feed.length > 0 && (
+                <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                  {feed.length}
                 </span>
               )}
             </div>
 
-            <div className="space-y-2 max-h-[calc(100vh-380px)] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[calc(100vh-430px)] overflow-y-auto pr-1">
               <AnimatePresence mode="popLayout">
-                {scenarios.length > 0 ? (
-                  scenarios.map((s, i) => (
-                    <ScenarioCard key={s.id} scenario={s} index={i} />
+                {feed.length > 0 ? (
+                  feed.map((item, index) => (
+                    <ScenarioFeedCard
+                      key={item.sourcePath || item.id || index}
+                      item={item}
+                      index={index}
+                    />
                   ))
-                ) : effectiveState === 'syncing' ? (
+                ) : (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center py-12 text-center"
                   >
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-amber-400/10 animate-ping" />
-                      <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
-                        <FileText className="h-5 w-5 text-amber-500" />
-                      </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                      <FileText className="h-5 w-5" />
                     </div>
-                    <p className="mt-4 text-sm font-medium text-muted-foreground">
-                      Waiting for scenarios…
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground/60">
-                      Scenarios will appear here as they are imported.
-                    </p>
-                  </motion.div>
-                ) : completionVisible ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-12 text-center"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    </div>
-                    <p className="mt-4 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                      All scenarios processed
+                    <p className="mt-4 text-sm font-medium text-foreground">
+                      {isCompleted ? 'No scenario files found' : 'Reading docs/test-scenarios'}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Refreshing the list…
+                      {isCompleted
+                        ? 'The backend completed the import without reporting Markdown scenarios.'
+                        : 'Scenario files will appear here when the backend reports them.'}
                     </p>
                   </motion.div>
-                ) : null}
+                )}
               </AnimatePresence>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </motion.div>
   );
 };
+
+export const GenerationDashboard = ScenarioImportDashboard;
