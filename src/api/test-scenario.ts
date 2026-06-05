@@ -25,6 +25,49 @@ export interface GenerateAutomationResponse {
   updated?: number;
 }
 
+export type ScenarioImportState = 'idle' | 'syncing' | 'importing' | 'completed' | 'error';
+export type ScenarioImportItemStatus = 'pending' | 'importing' | 'imported' | 'error';
+
+export interface ScenarioImportCurrent {
+  title?: string;
+  sourcePath?: string;
+  index?: number;
+  total?: number;
+}
+
+export interface ScenarioImportCounts {
+  total: number;
+  imported: number;
+  pending: number;
+  failed: number;
+}
+
+export interface ScenarioImportFeedItem {
+  id?: string;
+  title: string;
+  sourcePath: string;
+  testCaseCount: number;
+  status: ScenarioImportItemStatus;
+  error?: string;
+}
+
+export interface ScenarioImportStatus {
+  state: ScenarioImportState;
+  indicatorText: string;
+  current?: ScenarioImportCurrent;
+  counts: ScenarioImportCounts;
+  feed: ScenarioImportFeedItem[];
+  error?: string;
+  startedAt?: string;
+  updatedAt: string;
+  completedAt?: string;
+}
+
+export interface ScenarioImportStartResponse {
+  started: boolean;
+  status: ScenarioImportStatus;
+}
+
 export type UpdateAutomationCategoryResponse =
   | TestScenario
   | TestCase
@@ -127,9 +170,17 @@ export const testScenarioApi = {
     };
   }, 
 
-  syncScenarios: async (projectId: string): Promise<{ scenarios: TestScenario[]; count: number }> => {
-    const response = await api.post<{ scenarios: TestScenario[]; count: number }>(
+  syncScenarios: async (projectId: string): Promise<ScenarioImportStartResponse> => {
+    const response = await api.post<ScenarioImportStartResponse>(
       `/projects/${projectId}/test-scenarios/sync`,
+    );
+    if (!response.success) throw new Error(response.error);
+    return response.data!;
+  },
+
+  getScenarioImportStatus: async (projectId: string): Promise<ScenarioImportStatus> => {
+    const response = await api.get<ScenarioImportStatus>(
+      `/projects/${projectId}/test-scenarios/import-status`,
     );
     if (!response.success) throw new Error(response.error);
     return response.data!;
