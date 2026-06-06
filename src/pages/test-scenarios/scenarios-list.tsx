@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
@@ -212,7 +212,7 @@ export const TestScenariosPage: React.FC<{
         return syncState?.isStreamConnected ? 5000 : 2000;
       }
 
-      if (scenarioSync === 'started') {
+      if (scenarioSync === 'started' && (!state || !isTerminalImportState(state))) {
         return syncState?.isStreamConnected ? 10000 : 2000;
       }
 
@@ -233,13 +233,15 @@ export const TestScenariosPage: React.FC<{
   const importStatus = sseImportStatus ?? importStatusData ?? idleImportStatus;
   const isImportActive = isActiveImportState(importStatus.state);
   const isImportTerminal = isTerminalImportState(importStatus.state);
+  const isScenarioSyncPending =
+    scenarioSync === 'started' && !isImportTerminal;
   const shouldShowImportDashboard =
     isSyncing ||
-    scenarioSync === 'started' ||
+    isScenarioSyncPending ||
     isImportActive ||
     isImportTerminal;
   const dashboardImportStatus: ScenarioImportStatus =
-    (isSyncing || scenarioSync === 'started') && importStatus.state === 'idle'
+    (isSyncing || isScenarioSyncPending) && importStatus.state === 'idle'
       ? {
           ...idleImportStatus,
           state: 'syncing',
@@ -249,7 +251,7 @@ export const TestScenariosPage: React.FC<{
       : importStatus;
   const dashboardKey = shouldShowImportDashboard
     ? importStatus.state === 'idle'
-      ? `placeholder:${activeProjectId ?? 'all'}:${scenarioSync ?? ''}:${isSyncing ? 'syncing' : ''}`
+      ? `placeholder:${activeProjectId ?? 'all'}:${isScenarioSyncPending ? 'started' : ''}:${isSyncing ? 'syncing' : ''}`
       : `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`
     : null;
   const showDashboard =
@@ -257,6 +259,29 @@ export const TestScenariosPage: React.FC<{
   const hideScenarioControls =
     isImportActive ||
     isSyncing;
+
+  const clearScenarioSyncMarker = useCallback(() => {
+    if (!activeProjectId) {
+      return;
+    }
+
+    sessionStorage.removeItem(`project:${activeProjectId}:sync_started`);
+
+    if (projectId && scenarioSync === 'started') {
+      navigate({
+        to: "/projects/$id/test-scenarios",
+        params: { id: projectId },
+        search: {},
+        replace: true,
+      });
+    }
+  }, [activeProjectId, navigate, projectId, scenarioSync]);
+
+  const handleDismissImportDashboard = useCallback(() => {
+    syncState?.reset?.();
+    setDismissedDashboardKey(dashboardKey);
+    clearScenarioSyncMarker();
+  }, [clearScenarioSyncMarker, dashboardKey, syncState]);
 
   // Handlers
   const handleDelete = async (id: string) => {
@@ -341,11 +366,9 @@ export const TestScenariosPage: React.FC<{
       refetch();
     }
 
-    if (activeProjectId) {
-      sessionStorage.removeItem(`project:${activeProjectId}:sync_started`);
-    }
+    clearScenarioSyncMarker();
   }, [
-    activeProjectId,
+    clearScenarioSyncMarker,
     importStatus.completedAt,
     importStatus.state,
     importStatus.updatedAt,
@@ -450,13 +473,7 @@ export const TestScenariosPage: React.FC<{
             importStatus={dashboardImportStatus}
             generationMessage={syncState?.generationMessage}
             generationStep={syncState?.generationStep}
-            onDismiss={() => {
-              syncState?.reset?.();
-              setDismissedDashboardKey(dashboardKey);
-              if (activeProjectId) {
-                sessionStorage.removeItem(`project:${activeProjectId}:sync_started`);
-              }
-            }}
+            onDismiss={handleDismissImportDashboard}
           />
         ) : isLoading ? (
           <div className="px-6 pt-6 min-w-0">
