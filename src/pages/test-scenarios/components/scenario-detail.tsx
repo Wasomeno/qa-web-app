@@ -3484,12 +3484,14 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             <div className="max-w-3xl mx-auto p-6 pb-6">
               {/* Header Data */}
               <div className="mb-6">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <span className="text-[11px] font-mono px-2 py-1 bg-muted text-muted-foreground rounded border border-border">
-                    {selectedTestCase.code}
-                  </span>
+                <span className="text-[11px] font-mono text-muted-foreground mb-1 block">
+                  {selectedTestCase.code}
+                </span>
+                <h1 className="text-lg font-semibold text-foreground mb-2 leading-snug">
+                  {selectedTestCase.title}
+                </h1>
+                <div className="flex items-center gap-2 mb-3">
                   <TestCaseStatusBadge testCase={selectedTestCase} />
-                  <PriorityBadge priority={selectedTestCase.priority} />
                   <AutomationCategorySelect
                     value={inferAutomationCategory(selectedTestCase)}
                     onChange={(category) =>
@@ -3501,16 +3503,11 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     }
                   />
                 </div>
-                <h1 className="text-lg font-semibold text-foreground mb-3 leading-snug">
-                  {selectedTestCase.title}
-                </h1>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {selectedTestCase.description || (
-                    <span className="italic text-muted-foreground/60">
-                      No description provided.
-                    </span>
-                  )}
-                </p>
+                {selectedTestCase.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {selectedTestCase.description}
+                  </p>
+                )}
               </div>
 
               {/* Steps Table */}
