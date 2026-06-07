@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Message } from '../components/chat-message';
 import { useStreamEvents, StreamEvent } from './use-stream-events';
 
+// Module-level cache so messages survive component unmount/remount across navigation.
+const messageCache = new Map<string, Message[]>();
+
 interface UseAgentOptions {
   sessionId?: string;
   initialMessages?: Message[];
@@ -11,12 +14,13 @@ interface UseAgentOptions {
 }
 
 export const useAgent = (options?: UseAgentOptions) => {
+  const [sessionId] = useState(() => options?.sessionId || crypto.randomUUID());
+
   const [messages, setMessages] = useState<Message[]>(
-    options?.initialMessages || []
+    () => messageCache.get(sessionId) ?? options?.initialMessages ?? []
   );
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
-  const [sessionId] = useState(() => options?.sessionId || crypto.randomUUID());
 
   // Track which session is currently being processed for stream events
   const activeSessionIdRef = useRef<string | null>(null);
@@ -46,14 +50,13 @@ export const useAgent = (options?: UseAgentOptions) => {
     },
   });
 
-  // Notify parent when messages change - but skip initial mount to avoid circular updates
+  // Keep the module-level cache in sync and notify parent on change.
   useEffect(() => {
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       return;
     }
-    
-    // Call the ref-based callback to avoid dependency issues
+    messageCache.set(sessionId, messages);
     onMessagesChangeRef.current?.(messages);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
@@ -167,32 +170,10 @@ export const useAgent = (options?: UseAgentOptions) => {
                 console.log('[useAgent] Parsed SSE event:', data);
 
                 if (data.event === 'progress' && data.data?.message) {
-                  const chunk = data.data.message;
-                  setProgressMessage(chunk);
-                  
-                  // If the chunk looks like actual response text (not just "Agent is processing...")
-                  // we can optionally append it to a temporary streaming message
-                  if (chunk !== 'Agent is processing...' && !chunk.startsWith('Calling tool')) {
-                    setMessages(prev => {
-                      const lastMsg = prev[prev.length - 1];
-                      if (lastMsg && lastMsg.role === 'assistant' && lastMsg.id === responseId) {
-                        return [
-                          ...prev.slice(0, -1),
-                          { ...lastMsg, content: lastMsg.content + chunk }
-                        ];
-                      } else {
-                        return [
-                          ...prev,
-                          {
-                            id: responseId,
-                            role: 'assistant',
-                            content: chunk,
-                            timestamp: Date.now(),
-                          }
-                        ];
-                      }
-                    });
-                  }
+                  // Only update the status indicator — never put progress chunks into the
+                  // message bubble. Tool-call lines (e.g. "Calling X", "X completed") would
+                  // otherwise appear as content. The clean response arrives via `final`.
+                  setProgressMessage(data.data.message);
                 } else if (data.event === 'final') {
                   receivedFinal = true;
                   setIsAgentLoading(false);
@@ -200,17 +181,28 @@ export const useAgent = (options?: UseAgentOptions) => {
                   activeSessionIdRef.current = null;
 
                   const responseContent = data.data?.content || data.data?.response || data.data;
+                  const responseActivities = data.data?.activities || data.data?.tool_calls;
                   console.log('[useAgent] Final event received. Content length:', typeof responseContent === 'string' ? responseContent.length : 'not string');
-                  
+
                   if (responseContent) {
+                    // Strip any embedded tool-call lines from the content string
+                    const rawContent = typeof responseContent === 'string'
+                      ? responseContent
+                      : JSON.stringify(responseContent);
+                    const cleanContent = rawContent
+                      .split('\n')
+                      .filter(line => !line.startsWith('Calling tool:') && !line.startsWith('Tool result:'))
+                      .join('\n')
+                      .trim();
+
                     setMessages(prev => {
-                      // Check if we already have a streaming message with this ID
                       const existingIndex = prev.findIndex(m => m.id === responseId);
                       const newMessage: Message = {
                         id: responseId,
                         role: 'assistant',
-                        content: typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent),
+                        content: cleanContent,
                         timestamp: Date.now(),
+                        activities: Array.isArray(responseActivities) ? responseActivities : undefined,
                       };
 
                       if (existingIndex >= 0) {
@@ -260,10 +252,12 @@ export const useAgent = (options?: UseAgentOptions) => {
     [sessionId, options?.endpoint]
   );
 
-  // Reset messages
+  // Reset messages and clear the cache for this session
   const resetMessages = useCallback((newMessages?: Message[]) => {
-    setMessages(newMessages || []);
-  }, []);
+    const next = newMessages || [];
+    messageCache.set(sessionId, next);
+    setMessages(next);
+  }, [sessionId]);
 
   return {
     messages,
