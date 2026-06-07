@@ -3515,27 +3515,20 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                 <h3 className="text-sm font-semibold text-foreground mb-3">
                   Execution Steps
                 </h3>
-                <div className="border border-border rounded-lg overflow-hidden">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 bg-muted/50 border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    <div className="text-center">#</div>
-                    <div>Action</div>
-                    <div>Expected Result</div>
-                  </div>
-                  {/* Rows */}
+                <div className="flex flex-col divide-y divide-border border border-border rounded-lg overflow-hidden">
                   {selectedTestCase.steps.map((step) => (
                     <div
                       key={step.id}
-                      className="grid grid-cols-[40px_1fr_1fr] gap-3 p-3 border-b border-border last:border-b-0 items-start hover:bg-muted/50 transition-colors"
+                      className="flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="text-[11px] font-mono text-muted-foreground text-center pt-1">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[11px] font-mono text-muted-foreground mt-0.5">
                         {step.order}
-                      </div>
-                      <div className="text-sm text-foreground leading-snug">
-                        {step.action}
-                      </div>
-                      <div className="text-sm text-muted-foreground leading-snug">
-                        {step.expected}
+                      </span>
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <p className="text-sm text-foreground leading-snug">{step.action}</p>
+                        <p className="text-[12px] text-muted-foreground leading-snug">
+                          <span className="font-medium">Expected: </span>{step.expected}
+                        </p>
                       </div>
                     </div>
                   ))}
