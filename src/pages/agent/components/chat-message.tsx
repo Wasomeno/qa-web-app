@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import { Bot, User, Sparkles, AlertCircle, FileText, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { Bot, User, AlertCircle, FileText, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AgentActivity } from './agent-activity';
 
@@ -105,9 +105,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     {file.url ? (
                       <>
                         <img src={file.url} alt={file.name} className="h-full w-full object-cover" />
-                        <a 
-                          href={file.url} 
-                          target="_blank" 
+                        <a
+                          href={file.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
                         >
@@ -138,7 +138,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         )}
         <div
           className={cn(
-            'px-4 py-2.5 rounded-2xl shadow-sm text-sm relative overflow-hidden break-words',
+            'px-4 py-2.5 rounded-2xl shadow-sm text-sm break-words w-full',
             isUser
               ? 'bg-muted/80 text-foreground rounded-tr-none shadow-black/5'
               : cn(
@@ -147,31 +147,28 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 )
           )}
         >
-          <div className="relative z-10">
-            {isUser ? (
-              <div className="whitespace-pre-wrap leading-relaxed">
-                {message.content}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <MarkdownRenderer
-                  content={message.content}
-                  className="prose-sm dark:prose-invert leading-relaxed"
-                />
-
-                {message.activities && message.activities.length > 0 && (
-                  <motion.div className="pt-1 border-t border-muted/30">
-                    <AnimatePresence initial={false}>
-                      {message.activities.map(activity => (
-                        <AgentActivity key={activity.id} activity={activity} />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </div>
-            )}
-          </div>
+          {isUser ? (
+            <div className="whitespace-pre-wrap leading-relaxed">
+              {message.content}
+            </div>
+          ) : (
+            <MarkdownRenderer
+              content={message.content}
+              className="prose-sm dark:prose-invert leading-relaxed"
+            />
+          )}
         </div>
+
+        {!isUser && message.activities && message.activities.length > 0 && (
+          <div className="mt-1.5 w-full space-y-0.5">
+            <AnimatePresence initial={false}>
+              {message.activities.map(activity => (
+                <AgentActivity key={activity.id} activity={activity} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
         <span className="text-[10px] text-muted-foreground mt-1 px-1">
           {new Date(message.timestamp).toLocaleTimeString([], {
             hour: '2-digit',
