@@ -3305,79 +3305,88 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             </div>
           </div>
 
-          {/* Section Filter */}
-          {availableSections.length > 1 && (
-            <div className="px-3 py-2 border-b border-border bg-card">
-              <Select
-                value={sectionFilter}
-                onValueChange={(v) => {
-                  setSectionFilter(v);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
-                  <SelectValue placeholder="All sections" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All sections</SelectItem>
-                  {availableSections.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Type Filter */}
-          {availableTypes.length > 1 && (
-            <div className="px-3 py-2 border-b border-border bg-card">
-              <Select
-                value={typeFilter}
-                onValueChange={(v) => {
-                  setTypeFilter(v);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  {availableTypes.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Status Filter */}
+          {/* Filters */}
           <div className="px-3 py-2 border-b border-border bg-card">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => {
-                setStatusFilter(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-full h-7 text-xs rounded-md bg-muted/30 border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-2">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="generating">Generating</SelectItem>
-                <SelectItem value="generation_failed">Generation failed</SelectItem>
-                <SelectItem value="running">Running</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="passed">Passed</SelectItem>
-                <SelectItem value="idle">Generated</SelectItem>
-                <SelectItem value="not_generated">Not generated</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-border text-xs text-muted-foreground hover:bg-muted transition-colors">
+                  <SlidersHorizontal className="w-3 h-3" />
+                  Filters
+                  {[sectionFilter !== "all", typeFilter !== "all", statusFilter !== "all"].filter(Boolean).length > 0 && (
+                    <span className="ml-0.5 bg-foreground text-background text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                      {[sectionFilter !== "all", typeFilter !== "all", statusFilter !== "all"].filter(Boolean).length}
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-60 p-3 space-y-3">
+                {availableSections.length > 1 && (
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                      Section
+                    </label>
+                    <Select
+                      value={sectionFilter}
+                      onValueChange={(v) => { setSectionFilter(v); setPage(1); }}
+                    >
+                      <SelectTrigger className="w-full h-7 text-xs">
+                        <SelectValue placeholder="All sections" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All sections</SelectItem>
+                        {availableSections.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {availableTypes.length > 1 && (
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                      Type
+                    </label>
+                    <Select
+                      value={typeFilter}
+                      onValueChange={(v) => { setTypeFilter(v); setPage(1); }}
+                    >
+                      <SelectTrigger className="w-full h-7 text-xs">
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All types</SelectItem>
+                        {availableTypes.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                    Status
+                  </label>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(v) => { setStatusFilter(v); setPage(1); }}
+                  >
+                    <SelectTrigger className="w-full h-7 text-xs">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      <SelectItem value="generating">Generating</SelectItem>
+                      <SelectItem value="generation_failed">Generation failed</SelectItem>
+                      <SelectItem value="running">Running</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="passed">Passed</SelectItem>
+                      <SelectItem value="idle">Generated</SelectItem>
+                      <SelectItem value="not_generated">Not generated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Test Case Items */}
