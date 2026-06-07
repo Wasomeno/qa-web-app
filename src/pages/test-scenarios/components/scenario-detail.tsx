@@ -3425,35 +3425,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                     <span className="text-sm text-foreground truncate leading-tight mb-0.5">
                       {tc.title}
                     </span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {sectionName && (
-                        <span className="text-[10px] text-muted-foreground truncate">
-                          {sectionName}
-                        </span>
-                      )}
-                      {tc.type && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded">
-                          {tc.type}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       <span
                         className={cn(
-                          "text-[10px] px-1 rounded",
-                          tc.priority === "critical" &&
-                            "text-red-600 bg-red-50",
-                          tc.priority === "high" &&
-                            "text-orange-600 bg-orange-50",
-                          tc.priority === "medium" &&
-                            "text-amber-600 bg-amber-50",
-                          tc.priority === "low" &&
-                            "text-muted-foreground bg-muted",
-                        )}
-                      >
-                        {(PRIORITY_META[tc.priority]?.label) ?? tc.priority}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-0.5 text-[10px] px-1 rounded",
+                          "inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border",
                           TEST_CASE_STATUS_CLASSES[getTestCaseDisplayStatus(tc)],
                         )}
                       >
@@ -3462,23 +3437,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                         )}
                         {getTestCaseDisplayStatus(tc)}
                       </span>
-                      {(() => {
-                        const cat = inferAutomationCategory(tc);
-                        const catMeta = CATEGORY_META[cat] ?? { label: cat, icon: null, description: '', classes: '' };
-                        return (
-                          <span
-                            className={cn(
-                              "text-[10px] px-1 rounded",
-                              cat === "api" && "text-sky-600 bg-sky-50",
-                              cat === "e2e" && "text-violet-600 bg-violet-50",
-                              cat === "manual" &&
-                                "text-muted-foreground bg-muted",
-                            )}
-                          >
-                            {catMeta.label}
-                          </span>
-                        );
-                      })()}
                     </div>
                   </div>
                 );
