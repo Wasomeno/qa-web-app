@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText, MessageCircle } from "lucide-react";
+import { Search, RefreshCw, Terminal, Trash2, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { testScenarioApi } from "@/api/test-scenario";
@@ -87,7 +87,7 @@ export const TestScenariosPage: React.FC<{
 
   const [testContextOpen, setTestContextOpen] = useState(false);
   const [testContextEditing, setTestContextEditing] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
+
   const [testContextEditValue, setTestContextEditValue] = useState("");
 
   const handleProjectSelect = (
@@ -834,23 +834,7 @@ export const TestScenariosPage: React.FC<{
         </DialogContent>
       </Dialog>
 
-      {/* Chat agent floating trigger */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 h-12 rounded-full bg-foreground text-background px-5 shadow-lg hover:bg-foreground/90 transition-colors"
-        aria-label="Open AI chat"
-      >
-        <MessageCircle className="w-5 h-5" />
-        <span className="text-sm font-medium pr-0.5">Ask AI</span>
-      </motion.button>
-
-      {/* Chat agent sheet */}
       <TestScenarioChatAgent
-        open={chatOpen}
-        onOpenChange={setChatOpen}
         projectId={activeProjectId ?? undefined}
         projectName={projectName}
       />

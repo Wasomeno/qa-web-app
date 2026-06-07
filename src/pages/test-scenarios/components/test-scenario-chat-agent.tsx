@@ -1,54 +1,49 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { Bot, MessageCircle, X } from 'lucide-react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { Bot, Trash2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { ChatMessage } from '@/pages/agent/components/chat-message';
 import { ChatInput } from '@/pages/agent/components/chat-input';
 import { useAgent } from '@/pages/agent/hooks/use-agent';
-import { cn } from '@/lib/utils';
-
-const easing: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 interface TestScenarioChatAgentProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   projectId?: string;
   projectName?: string;
+  /** Left pixel offset so the chat centers within the visible content area, not the full viewport. */
+  leftOffset?: number;
 }
 
 export const TestScenarioChatAgent: React.FC<TestScenarioChatAgentProps> = ({
-  open,
-  onOpenChange,
   projectId,
   projectName,
+  leftOffset,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [minimized, setMinimized] = useState(false);
 
-  // Use a stable session ID scoped to this project so chat history is preserved
   const sessionId = projectId
     ? `scenario-chat-${projectId}`
     : 'scenario-chat-global';
 
-  const {
-    messages,
-    isAgentLoading,
-    progressMessage,
-    sendMessage,
-  } = useAgent({
+  const { messages, isAgentLoading, progressMessage, sendMessage, resetMessages } = useAgent({
     sessionId,
-    endpoint: projectId ? `/api/projects/${projectId}/scenario-agent/chat` : '/api/agent/chat',
+    endpoint: projectId
+      ? `/api/projects/${projectId}/scenario-agent/chat`
+      : '/api/agent/chat',
   });
 
-  // Auto-scroll to bottom when messages change
+  const hasHistory = messages.length > 0 || isAgentLoading;
+  const isExpanded = hasHistory && !minimized;
+
+  // Auto-expand when the agent responds so the user sees the answer
+  useEffect(() => {
+    if (isAgentLoading) setMinimized(false);
+  }, [isAgentLoading]);
+
   useEffect(() => {
     if (scrollRef.current) {
-      const viewport = scrollRef.current.querySelector(
-        '[data-radix-scroll-area-viewport]'
-      );
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isAgentLoading, progressMessage]);
 
@@ -61,174 +56,120 @@ export const TestScenarioChatAgent: React.FC<TestScenarioChatAgentProps> = ({
   );
 
   return (
-    <>
-      {/* Backdrop overlay */}
+    <div
+      className="fixed bottom-6 z-50 flex items-end justify-center"
+      style={{ left: leftOffset ?? 0, right: 0 }}
+    >
+      <div className="flex w-[min(560px,calc(100%-2rem))] flex-col">
+      {/* Messages panel — slides up from the input when conversation starts */}
       <AnimatePresence>
-        {open && (
+        {isExpanded && (
           <motion.div
-            key="chat-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: easing }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-            onClick={() => onOpenChange(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Slide-in panel */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="chat-panel"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{
-              type: 'spring',
-              stiffness: 300,
-              damping: 32,
-              mass: 0.9,
-            }}
-            className={cn(
-              'fixed inset-y-0 right-0 z-50',
-              'w-full sm:max-w-md',
-              'flex flex-col',
-              'bg-background border-l border-border shadow-2xl'
-            )}
+            key="messages-panel"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            className="relative mb-2 flex flex-col overflow-hidden rounded-2xl border bg-background/95 shadow-2xl backdrop-blur-xl"
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-border shrink-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <Bot className="h-4 w-4 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  AI Assistant
-                </h2>
-                <p className="text-xs text-muted-foreground truncate">
-                  {projectName
-                    ? `Ask about test scenarios for ${projectName}`
-                    : 'Ask about test scenarios'}
-                </p>
-              </div>
+            {/* Action buttons — float top-right */}
+            <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5">
               <button
-                onClick={() => onOpenChange(false)}
-                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={() => setMinimized(true)}
+                title="Minimize"
+                className="p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
               >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => { resetMessages(); setMinimized(false); }}
+                title="Clear conversation"
+                className="p-1 text-destructive/40 transition-colors hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
-              <div className="px-5 py-4 flex flex-col min-h-full justify-end">
-                <div className="space-y-1">
-                  {messages.length === 0 && !isAgentLoading && (
-                    <motion.div
-                      key="empty-state"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex flex-col items-center justify-center py-16 text-center"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                        <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            {/* Scrollable message list */}
+            <div className="max-h-[50vh] overflow-y-auto" ref={scrollRef}>
+              <div className="space-y-1 px-3 py-2">
+                <AnimatePresence initial={false}>
+                  {messages.map(msg => (
+                    <ChatMessage key={msg.id} message={msg} />
+                  ))}
+                </AnimatePresence>
+
+                {/* Loading indicator */}
+                {isAgentLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex w-full gap-3 px-2 py-2"
+                  >
+                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+                      <Bot className="h-4 w-4 text-primary" />
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                        className="absolute inset-0 rounded-full bg-primary/20"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center space-x-1.5 rounded-2xl rounded-tl-none border bg-muted/40 px-3 py-2.5">
+                        {[0, 0.15, 0.3].map((delay, i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                            transition={{ repeat: Infinity, duration: 1.2, delay, ease: 'easeInOut' }}
+                            className="h-1.5 w-1.5 rounded-full bg-primary/60"
+                          />
+                        ))}
                       </div>
-                      <p className="mt-4 text-sm font-medium text-foreground">
-                        How can I help?
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground max-w-[240px]">
-                        Ask me anything about your test scenarios, test cases, or
-                        automation status.
-                      </p>
-                    </motion.div>
-                  )}
-
-                  <AnimatePresence initial={false}>
-                    {messages.map((msg) => (
-                      <ChatMessage key={msg.id} message={msg} />
-                    ))}
-                  </AnimatePresence>
-
-                  {isAgentLoading && (
-                    <motion.div
-                      key="loading-indicator"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                      className="flex w-full gap-3 py-4"
-                    >
-                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 relative">
-                        <Bot className="h-5 w-5 text-primary" />
+                      {progressMessage && (
                         <motion.div
-                          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 2,
-                            ease: 'easeInOut',
-                          }}
-                          className="absolute inset-0 rounded-full bg-primary/20"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center space-x-1.5 px-4 py-3 bg-muted/40 backdrop-blur-sm rounded-2xl rounded-tl-none border shadow-sm">
-                          <motion.div
-                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 1.2,
-                              delay: 0,
-                              ease: 'easeInOut',
-                            }}
-                            className="w-1.5 h-1.5 bg-primary/60 rounded-full"
-                          />
-                          <motion.div
-                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 1.2,
-                              delay: 0.15,
-                              ease: 'easeInOut',
-                            }}
-                            className="w-1.5 h-1.5 bg-primary/60 rounded-full"
-                          />
-                          <motion.div
-                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 1.2,
-                              delay: 0.3,
-                              ease: 'easeInOut',
-                            }}
-                            className="w-1.5 h-1.5 bg-primary/60 rounded-full"
-                          />
-                        </div>
-                        {progressMessage && (
-                          <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-[10px] text-muted-foreground px-1 font-medium italic"
-                          >
-                            {progressMessage}
-                          </motion.div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="px-1 text-[10px] font-medium italic text-muted-foreground"
+                        >
+                          {progressMessage}
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
-            </ScrollArea>
-
-            {/* Input */}
-            <div className="shrink-0 border-t border-border px-4 pt-3 pb-4">
-              <ChatInput onSend={handleSend} isLoading={isAgentLoading} />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+
+      {/* Minimized restore pill — shown above input when history is hidden */}
+      <AnimatePresence>
+        {minimized && hasHistory && (
+          <motion.button
+            key="restore"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            onClick={() => setMinimized(false)}
+            className="mb-1.5 self-center flex items-center gap-1.5 rounded-full border bg-background/95 px-3 py-1 text-xs text-muted-foreground shadow-md backdrop-blur-xl transition-colors hover:text-foreground"
+          >
+            <ChevronDown className="h-3 w-3 rotate-180" />
+            Show conversation
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Floating input — always visible */}
+      <ChatInput
+        onSend={handleSend}
+        isLoading={isAgentLoading}
+        placeholder={projectName ? `Ask about ${projectName}…` : 'Ask about test scenarios…'}
+        hideCommandsPopover
+      />
+    </div>
+    </div>
   );
 };

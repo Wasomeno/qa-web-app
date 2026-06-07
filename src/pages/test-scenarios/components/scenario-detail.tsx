@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,7 @@ import {
   RotateCcw,
   Sparkles,
   Eye,
+
   Server,
   Monitor,
   ClipboardCheck,
@@ -83,6 +84,8 @@ import { ProjectSelect } from "@/components/project-select";
 import { DescriptionEditor } from "@/pages/issues/create/components/description-editor";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { uploadService } from "@/services/upload";
+import { useStreamEvents, StreamEvent } from "@/pages/agent/hooks/use-stream-events";
+import { TestScenarioChatAgent } from "./test-scenario-chat-agent";
 
 // ─────────────────────────────────────────────
 // Skeleton
@@ -219,6 +222,7 @@ export const ScenarioDetailSkeleton: React.FC<{ nested?: boolean }> = ({
           </div>
         </main>
       </div>
+
     </div>
   );
 };
@@ -604,6 +608,17 @@ function getAutomationGenerationPollKey(scenario: TestScenario): string {
   return `${scenario.processingStatus || "idle"}:${statuses}`;
 }
 
+function hasGeneratedE2EAutomation(testCase: TestCase): boolean {
+  return Boolean(
+    testCase.automationTest?.category === "e2e" &&
+      (testCase.automationTest.steps?.length ?? 0) > 0,
+  );
+}
+
+function getAutomationStepKey(index: number): string {
+  return `automation-step-${index}`;
+}
+
 const AutomationCategorySelect: React.FC<{
   value: AutomationCategory;
   onChange: (category: AutomationCategory) => void;
@@ -942,7 +957,18 @@ const AutomationCategoryPanel: React.FC<{
   testCase: TestCase;
   category: AutomationCategory;
   onUpdate: (tc: TestCase) => void;
-}> = ({ scenarioId, projectId, sectionId, testCase, category, onUpdate }) => {
+  runState?: TestRunState | null;
+  onRunStateChange?: React.Dispatch<React.SetStateAction<TestRunState | null>>;
+}> = ({
+  scenarioId,
+  projectId,
+  sectionId,
+  testCase,
+  category,
+  onUpdate,
+  runState,
+  onRunStateChange,
+}) => {
   const [backendRepoId, setBackendRepoId] = useState(
     testCase.automationTest?.repoId || "",
   );
@@ -987,6 +1013,8 @@ const AutomationCategoryPanel: React.FC<{
         frontendRepoId={frontendRepoId}
         setFrontendRepoId={setFrontendRepoId}
         onUpdate={onUpdate}
+        runState={runState}
+        onRunStateChange={onRunStateChange}
       />
     );
   }
@@ -1072,6 +1100,7 @@ const APIAutomationPanel: React.FC<{
   setBackendRepoId,
   onUpdate,
 }) => {
+  const queryClient = useQueryClient();
   const prompt =
     testCase.automationTest?.category === "api"
       ? testCase.automationTest.prompt
@@ -1102,6 +1131,11 @@ const APIAutomationPanel: React.FC<{
         },
       });
       toast.success("API prompt generated");
+      queryClient.invalidateQueries({
+        queryKey: projectId
+          ? ["test-scenario", projectId, scenarioId]
+          : ["test-scenario", scenarioId],
+      });
     },
     onError: (error) =>
       toast.error(
@@ -1219,18 +1253,34 @@ const APIAutomationPanel: React.FC<{
                   Copy this prompt into your development environment.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-lg text-xs border-border text-muted-foreground hover:bg-muted shrink-0"
-                onClick={() => {
-                  navigator.clipboard?.writeText(prompt);
-                  toast.success("Prompt copied to clipboard");
-                }}
-              >
-                <Copy className="mr-1.5 h-3.5 w-3.5" />
-                Copy
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-lg text-xs border-border text-muted-foreground hover:bg-muted"
+                  disabled={!backendRepoId || mutation.isPending}
+                  onClick={() => mutation.mutate()}
+                >
+                  {mutation.isPending ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Regenerate
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-lg text-xs border-border text-muted-foreground hover:bg-muted"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(prompt);
+                    toast.success("Prompt copied to clipboard");
+                  }}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copy
+                </Button>
+              </div>
             </div>
             <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-foreground p-4 text-xs leading-relaxed text-background font-mono">
               {prompt}
@@ -1250,14 +1300,33 @@ const E2EAutomationPanel: React.FC<{
   frontendRepoId: string;
   setFrontendRepoId: (value: string) => void;
   onUpdate: (tc: TestCase) => void;
+  runState?: TestRunState | null;
+  onRunStateChange?: React.Dispatch<React.SetStateAction<TestRunState | null>>;
 }> = ({
   scenarioId,
   projectId,
+  sectionId,
   testCase,
   frontendRepoId,
   setFrontendRepoId,
   onUpdate,
+  runState,
+  onRunStateChange,
 }) => {
+  const queryClient = useQueryClient();
+  const [localRunState, setLocalRunState] = useState<TestRunState | null>(null);
+  const resolvedRunState = onRunStateChange ? runState ?? null : localRunState;
+  const setResolvedRunState = onRunStateChange ?? setLocalRunState;
+  const runner = useTestRunner(
+    scenarioId,
+    projectId,
+    sectionId,
+    testCase,
+    resolvedRunState?.testCaseId === testCase.id ? resolvedRunState : null,
+    setResolvedRunState,
+    onUpdate,
+  );
+
   const mutation = useMutation({
     mutationFn: () =>
       testScenarioApi.generateAutomation(scenarioId, projectId, {
@@ -1278,6 +1347,11 @@ const E2EAutomationPanel: React.FC<{
         },
       });
       toast.success("E2E generation started");
+      queryClient.invalidateQueries({
+        queryKey: projectId
+          ? ["test-scenario", projectId, scenarioId]
+          : ["test-scenario", scenarioId],
+      });
     },
     onError: (error) =>
       toast.error(
@@ -1287,15 +1361,19 @@ const E2EAutomationPanel: React.FC<{
       ),
   });
 
+  const isRunningThisTest =
+    resolvedRunState?.testCaseId === testCase.id &&
+    resolvedRunState.phase !== "cancelled";
+  const isGenerated = hasGeneratedE2EAutomation(testCase);
   const hasRunResult =
     testCase.automationTest?.status === "pass" ||
     testCase.automationTest?.status === "fail";
 
   const pipelineStep: PipelineStep = mutation.isPending
     ? "generate"
-    : testCase.automationTest?.status === "running"
+    : testCase.automationTest?.status === "running" && !isGenerated
       ? "generate"
-      : hasRunResult
+      : isGenerated || hasRunResult
         ? "review"
         : "configure";
 
@@ -1394,8 +1472,58 @@ const E2EAutomationPanel: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
           >
-            <LastRunPanel test={testCase.automationTest} />
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Generated E2E automation
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {testCase.automationTest.steps?.length ?? 0} executable steps
+                  are ready for the browser runner.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-lg border-border text-muted-foreground hover:bg-muted px-3 text-xs"
+                  disabled={!frontendRepoId || mutation.isPending || isRunningThisTest}
+                  onClick={() => mutation.mutate()}
+                >
+                  {mutation.isPending ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Regenerate
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-3 text-xs shadow-sm"
+                  disabled={!isGenerated || isRunningThisTest}
+                  onClick={runner.start}
+                >
+                  {isRunningThisTest ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {isRunningThisTest ? "Running" : "Run"}
+                </Button>
+              </div>
+            </div>
+
+            {isRunningThisTest && resolvedRunState ? (
+              <TestRunPanel
+                testCase={testCase}
+                runState={resolvedRunState}
+                onCancel={runner.cancel}
+              />
+            ) : (
+              <LastRunPanel test={testCase.automationTest} />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1820,15 +1948,18 @@ type RunPhase = "idle" | "running" | "paused" | "completed" | "cancelled";
 
 interface TestRunState {
   testCaseId: string;
+  automationId?: string;
   phase: RunPhase;
   currentStepIndex: number;
   completedStepIds: Set<string>;
   result: "pass" | "fail" | null;
+  message?: string;
   errorMessage?: string;
 }
 
 function useTestRunner(
   scenarioId: string,
+  projectId: string | undefined,
   sectionId: string,
   testCase: TestCase,
   state: TestRunState | null,
@@ -1844,45 +1975,142 @@ function useTestRunner(
     }
   }, []);
 
+  const findCurrentTestCase = useCallback(
+    async () => {
+      const scenario = await testScenarioApi.getScenario(scenarioId, projectId);
+      const section = scenario.sections?.find((s) => s.id === sectionId);
+      return section?.testCases.find((tc) => tc.id === testCase.id);
+    },
+    [projectId, scenarioId, sectionId, testCase.id],
+  );
+
+  const refreshCurrentTestCase = useCallback(async () => {
+    const updatedTc = await findCurrentTestCase();
+    if (!updatedTc) return null;
+    onTestCaseUpdate(updatedTc);
+    return updatedTc;
+  }, [findCurrentTestCase, onTestCaseUpdate]);
+
+  const syncTerminalState = useCallback(
+    (updatedTc: TestCase) => {
+      if (!updatedTc.automationTest || updatedTc.automationTest.status === "running") {
+        return false;
+      }
+
+      clearPolling();
+      onTestCaseUpdate(updatedTc);
+      onUpdateState((prev) => {
+        if (!prev || prev.testCaseId !== testCase.id) return prev;
+        const status = updatedTc.automationTest!.status;
+        return {
+          ...prev,
+          phase: "completed",
+          currentStepIndex: Math.max(
+            prev.currentStepIndex,
+            (updatedTc.automationTest?.steps?.length ?? 1) - 1,
+          ),
+          completedStepIds: new Set(
+            (updatedTc.automationTest?.steps ?? []).map((_, index) =>
+              getAutomationStepKey(index),
+            ),
+          ),
+          result: status === "pass" ? "pass" : "fail",
+          message:
+            status === "pass"
+              ? "All automation steps completed."
+              : "Automation run failed.",
+          errorMessage: updatedTc.automationTest?.errorMessage,
+        };
+      });
+      setTimeout(() => onUpdateState(null), 1200);
+      return true;
+    },
+    [clearPolling, onTestCaseUpdate, onUpdateState, testCase.id],
+  );
+
+  useStreamEvents({
+    resourceId: testCase.automationTest?.id,
+    type: "execution",
+    enabled:
+      !!testCase.automationTest?.id &&
+      state?.testCaseId === testCase.id &&
+      state.phase === "running",
+    onEvent: (event: StreamEvent) => {
+      if (event.type !== "execution") return;
+
+      if (event.stage === "progress" && event.stepInfo) {
+        const currentStepIndex = Math.max(event.stepInfo.currentStep - 1, 0);
+        onUpdateState((prev) => {
+          if (!prev || prev.testCaseId !== testCase.id) return prev;
+          const completedStepIds = new Set(prev.completedStepIds);
+          for (let index = 0; index < currentStepIndex; index += 1) {
+            completedStepIds.add(getAutomationStepKey(index));
+          }
+          return {
+            ...prev,
+            currentStepIndex,
+            completedStepIds,
+            message: event.message || event.stepInfo?.stepName,
+          };
+        });
+        return;
+      }
+
+      if (event.stage === "done" || event.stage === "error") {
+        onUpdateState((prev) => {
+          if (!prev || prev.testCaseId !== testCase.id) return prev;
+          const completedStepIds = new Set(prev.completedStepIds);
+          const stepCount = testCase.automationTest?.steps?.length ?? 0;
+          if (event.stage === "done") {
+            for (let index = 0; index < stepCount; index += 1) {
+              completedStepIds.add(getAutomationStepKey(index));
+            }
+          }
+          return {
+            ...prev,
+            currentStepIndex:
+              event.stage === "done"
+                ? Math.max(stepCount - 1, 0)
+                : prev.currentStepIndex,
+            completedStepIds,
+            message: event.message,
+            errorMessage:
+              event.stage === "error" ? event.message : prev.errorMessage,
+          };
+        });
+
+        window.setTimeout(() => {
+          refreshCurrentTestCase()
+            .then((updatedTc) => {
+              if (updatedTc) syncTerminalState(updatedTc);
+            })
+            .catch((err) => console.error("Failed to refresh run result:", err));
+        }, 500);
+      }
+    },
+  });
+
   // If the test case is already running when the component mounts, start polling
   React.useEffect(() => {
     if (
       testCase.automationTest?.status === "running" &&
+      hasGeneratedE2EAutomation(testCase) &&
       (!state || state.testCaseId !== testCase.id)
     ) {
       onUpdateState({
         testCaseId: testCase.id,
+        automationId: testCase.automationTest.id,
         phase: "running",
         currentStepIndex: 0,
         completedStepIds: new Set(),
         result: null,
+        message: "Waiting for execution progress...",
       });
 
       intervalRef.current = setInterval(async () => {
         try {
-          const scenario = await testScenarioApi.getScenario(scenarioId);
-          const section = scenario.sections?.find((s) => s.id === sectionId);
-          const updatedTc = section?.testCases.find(
-            (tc) => tc.id === testCase.id,
-          );
-
-          if (
-            updatedTc?.automationTest &&
-            updatedTc.automationTest.status !== "running"
-          ) {
-            clearPolling();
-            onTestCaseUpdate(updatedTc);
-            onUpdateState((prev) => {
-              if (!prev || prev.testCaseId !== testCase.id) return prev;
-              return {
-                ...prev,
-                phase: "completed",
-                result:
-                  updatedTc.automationTest!.status === "pass" ? "pass" : "fail",
-              };
-            });
-            setTimeout(() => onUpdateState(null), 800);
-          }
+          const updatedTc = await findCurrentTestCase();
+          if (updatedTc) syncTerminalState(updatedTc);
         } catch (err) {
           console.error("Polling error:", err);
         }
@@ -1897,10 +2125,12 @@ function useTestRunner(
 
     onUpdateState({
       testCaseId: testCase.id,
+      automationId: testCase.automationTest?.id,
       phase: "running",
       currentStepIndex: 0,
       completedStepIds: new Set(),
       result: null,
+      message: "Starting test execution...",
     });
 
     try {
@@ -1908,6 +2138,7 @@ function useTestRunner(
         scenarioId,
         sectionId,
         testCase.id,
+        projectId,
       );
     } catch (err) {
       console.error("Failed to start test:", err);
@@ -1930,40 +2161,21 @@ function useTestRunner(
     // Start polling for completion
     intervalRef.current = setInterval(async () => {
       try {
-        const scenario = await testScenarioApi.getScenario(scenarioId);
-        const section = scenario.sections?.find((s) => s.id === sectionId);
-        const updatedTc = section?.testCases.find(
-          (tc) => tc.id === testCase.id,
-        );
-
-        if (
-          updatedTc?.automationTest &&
-          updatedTc.automationTest.status !== "running"
-        ) {
-          clearPolling();
-          onTestCaseUpdate(updatedTc);
-          onUpdateState((prev) => {
-            if (!prev || prev.testCaseId !== testCase.id) return prev;
-            return {
-              ...prev,
-              phase: "completed",
-              result:
-                updatedTc.automationTest!.status === "pass" ? "pass" : "fail",
-            };
-          });
-          setTimeout(() => onUpdateState(null), 800);
-        }
+        const updatedTc = await findCurrentTestCase();
+        if (updatedTc) syncTerminalState(updatedTc);
       } catch (err) {
         console.error("Polling error:", err);
       }
     }, 3000);
   }, [
     scenarioId,
+    projectId,
     sectionId,
     testCase,
     onUpdateState,
-    onTestCaseUpdate,
     clearPolling,
+    findCurrentTestCase,
+    syncTerminalState,
   ]);
 
   const cancel = useCallback(() => {
@@ -1990,6 +2202,8 @@ const TestRunPanel: React.FC<{
   const isRunning = runState.phase === "running";
   const isCompleted = runState.phase === "completed";
   const isCancelled = runState.phase === "cancelled";
+  const automationSteps = testCase.automationTest?.steps ?? [];
+  const totalSteps = automationSteps.length || testCase.steps.length;
 
   const message = isCompleted
     ? runState.result === "pass"
@@ -1997,12 +2211,12 @@ const TestRunPanel: React.FC<{
       : "Test failed. See details below."
     : isCancelled
       ? "Run cancelled by user."
-      : "Running automation steps…";
+      : runState.message || "Running automation steps...";
 
   const progressPct =
-    testCase.steps.length > 0
+    totalSteps > 0
       ? Math.round(
-          (runState.completedStepIds.size / testCase.steps.length) * 100,
+          (runState.completedStepIds.size / totalSteps) * 100,
         )
       : 0;
 
@@ -2086,7 +2300,7 @@ const TestRunPanel: React.FC<{
           </div>
           <div className="flex items-center justify-between mt-1.5">
             <span className="text-[10px] text-muted-foreground">
-              {runState.completedStepIds.size} of {testCase.steps.length} steps
+              {runState.completedStepIds.size} of {totalSteps} steps
             </span>
             <span className="text-[10px] text-muted-foreground">{progressPct}%</span>
           </div>
@@ -2095,13 +2309,15 @@ const TestRunPanel: React.FC<{
 
       {/* Step list */}
       <div className="px-4 pb-4 space-y-1.5">
-        {testCase.steps.map((step, idx) => {
-          const isCompleted = runState.completedStepIds.has(step.id);
+        {automationSteps.length > 0 ? (
+          automationSteps.map((step, idx) => {
+          const stepKey = getAutomationStepKey(idx);
+          const isCompleted = runState.completedStepIds.has(stepKey);
           const isCurrent = isRunning && idx === runState.currentStepIndex;
 
           return (
             <div
-              key={step.id}
+              key={stepKey}
               className={cn(
                 "flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-all",
                 isCurrent && "bg-amber-50 border border-amber-100",
@@ -2134,11 +2350,19 @@ const TestRunPanel: React.FC<{
                   isCompleted && "line-through opacity-70",
                 )}
               >
-                {step.action}
+                <span className="truncate">
+                  {step.action}
+                  {step.description ? `: ${step.description}` : ""}
+                </span>
               </span>
             </div>
           );
-        })}
+          })
+        ) : (
+          <div className="rounded-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
+            Generated automation steps are not available yet.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2155,6 +2379,7 @@ const RunButton: React.FC<{
 }> = ({ testCase, runState, onStart, onCancel }) => {
   const isThisRunning =
     runState?.testCaseId === testCase.id && runState.phase === "running";
+  const canRun = hasGeneratedE2EAutomation(testCase);
 
   if (isThisRunning) {
     return (
@@ -2185,15 +2410,25 @@ const RunButton: React.FC<{
       size="sm"
       className={cn(
         "h-7 w-7 p-0 rounded-md transition-colors",
-        hasAutomation
+        !canRun
+          ? "text-muted-foreground/40 cursor-not-allowed"
+          : hasAutomation
           ? "text-muted-foreground hover:text-foreground hover:bg-muted"
           : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50",
       )}
+      disabled={!canRun}
       onClick={(e) => {
         e.stopPropagation();
+        if (!canRun) return;
         onStart();
       }}
-      title={hasAutomation ? "Re-run test" : "Run test"}
+      title={
+        canRun
+          ? hasAutomation
+            ? "Re-run test"
+            : "Run test"
+          : "Generate E2E automation before running"
+      }
     >
       {hasAutomation ? (
         <RotateCcw className="w-3.5 h-3.5" />
@@ -2253,6 +2488,7 @@ const SortableTestCase: React.FC<{
 
   const runner = useTestRunner(
     scenarioId,
+    projectId,
     sectionId,
     testCase,
     runState?.testCaseId === testCase.id ? runState : null,
@@ -2484,6 +2720,8 @@ const SortableTestCase: React.FC<{
                   testCase={testCase}
                   category={selectedCategory}
                   onUpdate={onUpdate}
+                  runState={runState}
+                  onRunStateChange={onRunStateChange}
                 />
 
                 {/* Description */}
@@ -2714,6 +2952,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [runState, setRunState] = useState<TestRunState | null>(null);
+
   const [selectedTestCaseId, setSelectedTestCaseId] = useState<string | null>(
     null,
   );
@@ -3197,6 +3436,17 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                       >
                         {(PRIORITY_META[tc.priority]?.label) ?? tc.priority}
                       </span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-0.5 text-[10px] px-1 rounded",
+                          TEST_CASE_STATUS_CLASSES[getTestCaseDisplayStatus(tc)],
+                        )}
+                      >
+                        {(tc.processingStatus === 'generating' || tc.automationStatus === 'running') && (
+                          <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                        )}
+                        {getTestCaseDisplayStatus(tc)}
+                      </span>
                       {(() => {
                         const cat = inferAutomationCategory(tc);
                         const catMeta = CATEGORY_META[cat] ?? { label: cat, icon: null, description: '', classes: '' };
@@ -3336,6 +3586,8 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
                       updated,
                     )
                   }
+                  runState={runState}
+                  onRunStateChange={setRunState}
                 />
               </div>
 
@@ -3417,6 +3669,13 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
           )}
         </main>
       </div>
+
+      {/* 48px icon nav + 300px test-cases aside = 348px content area offset */}
+      <TestScenarioChatAgent
+        projectId={projectId || scenario.projectId}
+        projectName={projectName || scenario.projectName}
+        leftOffset={348}
+      />
     </div>
   );
 };
