@@ -34,6 +34,7 @@ import {
   ClipboardCheck,
   Copy,
   X,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   KeyboardSensor,
@@ -86,6 +87,11 @@ import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { uploadService } from "@/services/upload";
 import { useStreamEvents, StreamEvent } from "@/pages/agent/hooks/use-stream-events";
 import { TestScenarioChatAgent } from "./test-scenario-chat-agent";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 // ─────────────────────────────────────────────
 // Skeleton
