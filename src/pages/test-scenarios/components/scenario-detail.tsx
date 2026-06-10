@@ -1022,7 +1022,7 @@ const LastRunPanel: React.FC<{
           </DialogHeader>
           <div
             className="flex items-center justify-center bg-muted/40"
-            style={preview?.type === "video" ? { width: "100%", height: 624 } : undefined}
+            style={{ width: "100%", height: 624 }}
           >
             {preview?.type === "video" ? (
               <video
@@ -1032,13 +1032,11 @@ const LastRunPanel: React.FC<{
                 className="w-full h-full rounded-lg object-contain"
               />
             ) : preview ? (
-              <div className="p-4">
-                <img
-                  src={preview.src}
-                  alt="Evidence screenshot"
-                  className="max-w-full max-h-[91vh] rounded-lg object-contain"
-                />
-              </div>
+              <img
+                src={preview.src}
+                alt="Evidence screenshot"
+                className="w-full h-full rounded-lg object-contain"
+              />
             ) : null}
           </div>
         </DialogContent>
