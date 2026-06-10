@@ -667,14 +667,31 @@ const AutomationCategorySelect: React.FC<{
 const GeneratedAutomationSteps: React.FC<{
   steps?: NonNullable<TestCase["automationTest"]>["steps"];
 }> = ({ steps }) => {
+  const [open, setOpen] = useState(false);
   if (!steps || steps.length === 0) return null;
 
   return (
-    <div className="px-4 py-3 border-b border-border">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-        Generated Steps
-      </p>
-      <div className="space-y-1.5">
+    <div className="border-b border-border">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+      >
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Generated Steps
+          <span className="ml-2 font-normal normal-case tracking-normal opacity-60">{steps.length}</span>
+        </p>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200", open ? "rotate-0" : "-rotate-90")} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+      <div className="px-4 pb-3 space-y-1.5">
         {steps.map((step, idx) => (
           <div
             key={idx}
@@ -770,6 +787,9 @@ const GeneratedAutomationSteps: React.FC<{
           </div>
         ))}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -792,6 +812,7 @@ const LastRunPanel: React.FC<{
   const isFail = test.status === "fail";
   const [preview, setPreview] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [stepResultsOpen, setStepResultsOpen] = useState(false);
 
   const openPreview = (src: string, type: "image" | "video") => {
     setPreview({ src, type });
@@ -899,11 +920,27 @@ const LastRunPanel: React.FC<{
 
       {/* Step Results */}
       {test.stepResults && test.stepResults.length > 0 && (
-        <div className="px-4 py-3 border-b border-border">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Step Results
-          </p>
-          <div className="space-y-2">
+        <div className="border-b border-border">
+          <button
+            onClick={() => setStepResultsOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+          >
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Step Results
+              <span className="ml-2 font-normal normal-case tracking-normal opacity-60">{test.stepResults.length}</span>
+            </p>
+            <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200", stepResultsOpen ? "rotate-0" : "-rotate-90")} />
+          </button>
+          <AnimatePresence initial={false}>
+            {stepResultsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden"
+              >
+          <div className="px-4 pb-3 space-y-2">
             {test.stepResults.map((sr) => {
               const screenshotSrc = sr.screenshot
                 ? sr.screenshot.startsWith("http") || sr.screenshot.startsWith("data:")
@@ -952,6 +989,9 @@ const LastRunPanel: React.FC<{
               );
             })}
           </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
