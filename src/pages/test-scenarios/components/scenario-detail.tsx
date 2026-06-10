@@ -782,7 +782,7 @@ const LastRunPanel: React.FC<{
     lastRunAt?: string;
     runDurationMs?: number;
     videoUrl?: string;
-    stepResults?: { stepIndex: number; status: string; error?: string }[];
+    stepResults?: { stepIndex: number; status: string; error?: string; screenshot?: string }[];
     log?: string;
     errorMessage?: string;
     failedStepIndex?: number;
@@ -790,6 +790,18 @@ const LastRunPanel: React.FC<{
 }> = ({ test }) => {
   const isPass = test.status === "pass";
   const isFail = test.status === "fail";
+  const [preview, setPreview] = useState<{ src: string; type: "image" | "video" } | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const openPreview = (src: string, type: "image" | "video") => {
+    setPreview({ src, type });
+    setPreviewOpen(true);
+  };
+
+  const closePreview = (open: boolean) => {
+    setPreviewOpen(open);
+    if (!open) setTimeout(() => setPreview(null), 200);
+  };
 
   const timeAgo = test.lastRunAt
     ? (() => {
@@ -872,21 +884,16 @@ const LastRunPanel: React.FC<{
             </div>
           </div>
         </div>
+        {test.videoUrl && (
+          <button
+            onClick={() => openPreview(test.videoUrl!, "video")}
+            className="inline-flex items-center gap-1 text-[10px] font-medium underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View Recording
+          </button>
+        )}
       </div>
-
-      {/* Video */}
-      {test.videoUrl && (
-        <div className="px-4 py-3 border-b border-border">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Recording
-          </p>
-          <video
-            src={test.videoUrl}
-            controls
-            className="w-full rounded-lg bg-zinc-900 max-h-[200px]"
-          />
-        </div>
-      )}
 
       <GeneratedAutomationSteps steps={test.steps} />
 
@@ -896,30 +903,54 @@ const LastRunPanel: React.FC<{
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Step Results
           </p>
-          <div className="space-y-1.5">
-            {test.stepResults.map((sr) => (
-              <div
-                key={sr.stepIndex}
-                className={cn(
-                  "flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs",
-                  sr.status === "success"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-700",
-                )}
-              >
-                <span className="font-mono text-[10px] w-5">
-                  {sr.stepIndex + 1}
-                </span>
-                <span className="flex-1">
-                  {sr.status === "success" ? "Passed" : "Failed"}
-                </span>
-                {sr.error && (
-                  <span className="text-[10px] opacity-80 truncate max-w-[200px]">
-                    {sr.error}
-                  </span>
-                )}
-              </div>
-            ))}
+          <div className="space-y-2">
+            {test.stepResults.map((sr) => {
+              const screenshotSrc = sr.screenshot
+                ? sr.screenshot.startsWith("http") || sr.screenshot.startsWith("data:")
+                  ? sr.screenshot
+                  : `data:image/png;base64,${sr.screenshot}`
+                : null;
+              return (
+                <div
+                  key={sr.stepIndex}
+                  className={cn(
+                    "rounded-md overflow-hidden border text-xs",
+                    sr.status === "success" ? "border-emerald-100" : "border-red-100",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-2.5 py-1.5",
+                      sr.status === "success"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-700",
+                    )}
+                  >
+                    <span className="font-mono text-[10px] w-5 shrink-0">{sr.stepIndex + 1}</span>
+                    {sr.status === "success" ? (
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                    ) : (
+                      <XCircle className="w-3 h-3 shrink-0" />
+                    )}
+                    <span className="flex-1 font-medium">
+                      {sr.status === "success" ? "Passed" : "Failed"}
+                    </span>
+                    {sr.error && (
+                      <span className="text-[10px] opacity-80 truncate max-w-[160px]">{sr.error}</span>
+                    )}
+                    {screenshotSrc && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openPreview(screenshotSrc, "image"); }}
+                        className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        View Evidence
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -952,6 +983,38 @@ const LastRunPanel: React.FC<{
           )}
         </div>
       )}
+
+      {/* Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={closePreview}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+          <DialogHeader className="px-4 py-3 border-b border-border">
+            <DialogTitle className="text-sm font-medium">
+              {preview?.type === "video" ? "Recording" : "Evidence"}
+            </DialogTitle>
+          </DialogHeader>
+          <div
+            className="flex items-center justify-center bg-muted/40"
+            style={preview?.type === "video" ? { width: "100%", height: 480 } : undefined}
+          >
+            {preview?.type === "video" ? (
+              <video
+                src={preview.src}
+                controls
+                autoPlay
+                className="w-full h-full rounded-lg object-contain"
+              />
+            ) : preview ? (
+              <div className="p-4">
+                <img
+                  src={preview.src}
+                  alt="Evidence screenshot"
+                  className="max-w-full max-h-[70vh] rounded-lg object-contain"
+                />
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
