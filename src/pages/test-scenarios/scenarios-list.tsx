@@ -26,6 +26,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { cn } from "@/lib/utils";
 import type { ScenarioImportStatus } from "@/api/test-scenario";
@@ -77,6 +93,10 @@ export const TestScenariosPage: React.FC<{
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncConfirmOpen, setSyncConfirmOpen] = useState(false);
+  const [syncRowConfirmOpen, setSyncRowConfirmOpen] = useState(false);
+  const [syncRowTargetId, setSyncRowTargetId] = useState<string | null>(null);
+  const [syncingScenarioId, setSyncingScenarioId] = useState<string | null>(null);
   const [dismissedDashboardKey, setDismissedDashboardKey] = useState<string | null>(null);
   const refetchedTerminalImportKeyRef = useRef<string | null>(null);
 
@@ -130,11 +150,32 @@ export const TestScenariosPage: React.FC<{
     }
   };
 
-  const handleSync = async () => {
+  const syncScenarioMutation = useMutation({
+    mutationFn: ({ scenarioId, projectId }: { scenarioId: string; projectId: string }) =>
+      testScenarioApi.syncScenario(scenarioId, projectId),
+    onSuccess: () => {
+      toast.success("Scenario synced successfully");
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to sync scenario");
+    },
+    onSettled: () => {
+      setSyncingScenarioId(null);
+    },
+  });
+
+  const handleSync = () => {
     if (!activeProjectId) {
       toast.error("Select a project before syncing scenarios");
       return;
     }
+    setSyncConfirmOpen(true);
+  };
+
+  const confirmSync = async () => {
+    if (!activeProjectId) return;
+    setSyncConfirmOpen(false);
     setIsSyncing(true);
     try {
       const result = await testScenarioApi.syncScenarios(activeProjectId);
@@ -151,10 +192,21 @@ export const TestScenariosPage: React.FC<{
     }
   };
 
+  const confirmRowSync = () => {
+    if (!activeProjectId || !syncRowTargetId) return;
+    setSyncRowConfirmOpen(false);
+    setSyncingScenarioId(syncRowTargetId);
+    syncScenarioMutation.mutate({
+      scenarioId: syncRowTargetId,
+      projectId: activeProjectId,
+    });
+    setSyncRowTargetId(null);
+  };
+
   const renderSyncScenariosButton = () => (
     <Button
       variant="ghost"
-      className="hover:bg-accent border text-foreground rounded-full gap-2 px-4 h-10"
+      className="hover:bg-accent border text-foreground rounded-md gap-2 px-4 h-10"
       onClick={(e) => {
         e.stopPropagation();
         handleSync();
@@ -171,7 +223,7 @@ export const TestScenariosPage: React.FC<{
       ) : (
         <RefreshCw className="w-4 h-4" />
       )}
-      Sync from specs
+      Sync All from Specs
     </Button>
   );
 
@@ -382,6 +434,7 @@ export const TestScenariosPage: React.FC<{
     selectedIds.size > 0 && selectedIds.size < filteredItems.length;
 
   return (
+    <TooltipProvider>
     <div className="flex flex-col h-full bg-background relative">
       {/* Header & Filters */}
       <div
@@ -485,6 +538,7 @@ export const TestScenariosPage: React.FC<{
                   <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
                   <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Cases</th>
                   <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
+                  <th className="pb-3 w-32 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -495,6 +549,7 @@ export const TestScenariosPage: React.FC<{
                     <td className="py-3.5 pr-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
                     <td className="py-3.5 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
                     <td className="py-3.5 pl-4 text-right"><Skeleton className="h-4 w-20 ml-auto" /></td>
+                    <td className="py-3.5"></td>
                   </tr>
                 ))}
               </tbody>
@@ -522,6 +577,7 @@ export const TestScenariosPage: React.FC<{
                   <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
                   <th className="pb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Cases</th>
                   <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Updated</th>
+                  <th className="pb-3 w-32 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -615,6 +671,33 @@ export const TestScenariosPage: React.FC<{
                         <span className="whitespace-nowrap text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
                         </span>
+                      </td>
+                      <td className="py-2.5 pl-1 text-center" onClick={(e) => e.stopPropagation()}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                if (!activeProjectId) {
+                                  toast.error("Select a project before syncing");
+                                  return;
+                                }
+                                setSyncRowTargetId(item.id);
+                                setSyncRowConfirmOpen(true);
+                              }}
+                              disabled={syncingScenarioId === item.id}
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:opacity-100 hover:text-foreground hover:bg-accent transition-all disabled:opacity-50"
+                            >
+                              {syncingScenarioId === item.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            Sync from spec
+                          </TooltipContent>
+                        </Tooltip>
                       </td>
                     </tr>
                   );
@@ -838,6 +921,48 @@ export const TestScenariosPage: React.FC<{
         projectId={activeProjectId ?? undefined}
         projectName={projectName}
       />
+
+      {/* Sync all confirmation dialog */}
+      <AlertDialog open={syncConfirmOpen} onOpenChange={setSyncConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sync all scenarios from specs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will re-fetch all markdown test scenarios from the project's
+              specs repository and update them. Existing automations, notes, and
+              manual test results will be preserved. This may take a moment
+              depending on the number of scenarios.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSync}>
+              Sync all scenarios
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Per-row sync confirmation dialog */}
+      <AlertDialog open={syncRowConfirmOpen} onOpenChange={setSyncRowConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sync this scenario from spec?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will re-fetch the scenario's markdown source file from the
+              specs repository and re-parse it. Existing automations, notes,
+              and manual test results will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRowSync}>
+              Sync scenario
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 };
