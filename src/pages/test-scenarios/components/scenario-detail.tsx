@@ -3039,6 +3039,20 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   onDeleteTestCase,
 }) => {
   const [scenario, setScenario] = useState<TestScenario>(initialScenario);
+
+  // Sync local state from server data when the route refetches
+  // (e.g. after invalidateQueries following E2E generation completion).
+  // This ensures the generated layout shows up without requiring a manual
+  // page refresh. Only sync when the scenario IDs match (same scenario)
+  // to avoid overwriting optimistic local updates on a different scenario.
+  React.useEffect(() => {
+    if (initialScenario.id === scenario.id && initialScenario.updatedAt !== scenario.updatedAt) {
+      setScenario(initialScenario);
+    }
+    // We intentionally depend on initialScenario to pick up route refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialScenario]);
+
   const nestedInProject = Boolean(projectId);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
