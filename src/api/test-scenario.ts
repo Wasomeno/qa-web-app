@@ -170,6 +170,17 @@ export const testScenarioApi = {
     };
   }, 
 
+  syncScenario: async (
+    scenarioId: string,
+    projectId: string,
+  ): Promise<TestScenario> => {
+    const response = await api.post<TestScenario>(
+      `/projects/${projectId}/test-scenarios/${scenarioId}/sync`,
+    );
+    if (!response.success) throw new Error(response.error);
+    return response.data!;
+  },
+
   syncScenarios: async (projectId: string): Promise<ScenarioImportStartResponse> => {
     const response = await api.post<ScenarioImportStartResponse>(
       `/projects/${projectId}/test-scenarios/sync`,
