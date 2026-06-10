@@ -666,15 +666,28 @@ const AutomationCategorySelect: React.FC<{
 // ─────────────────────────────────────────────
 const GeneratedAutomationSteps: React.FC<{
   steps?: NonNullable<TestCase["automationTest"]>["steps"];
-}> = ({ steps }) => {
+  status?: "pass" | "fail" | "other";
+}> = ({ steps, status }) => {
   const [open, setOpen] = useState(false);
   if (!steps || steps.length === 0) return null;
 
+  const hoverClass = status === "pass"
+    ? "hover:bg-emerald-50/60"
+    : status === "fail"
+      ? "hover:bg-red-50/60"
+      : "hover:bg-muted/40";
+
+  const borderClass = status === "pass"
+    ? "border-emerald-100/60"
+    : status === "fail"
+      ? "border-red-100/60"
+      : "border-border";
+
   return (
-    <div className="border-b border-border">
+    <div className={cn("border-b", borderClass)}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+        className={cn("w-full flex items-center justify-between px-4 py-3 text-left transition-colors", hoverClass)}
       >
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           Generated Steps
@@ -916,14 +929,17 @@ const LastRunPanel: React.FC<{
         )}
       </div>
 
-      <GeneratedAutomationSteps steps={test.steps} />
+      <GeneratedAutomationSteps steps={test.steps} status={isPass ? "pass" : isFail ? "fail" : "other"} />
 
       {/* Step Results */}
       {test.stepResults && test.stepResults.length > 0 && (
-        <div className="border-b border-border">
+        <div className={cn("border-b", isPass ? "border-emerald-100/60" : isFail ? "border-red-100/60" : "border-border")}>
           <button
             onClick={() => setStepResultsOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+            className={cn(
+              "w-full flex items-center justify-between px-4 py-3 text-left transition-colors",
+              isPass ? "hover:bg-emerald-50/60" : isFail ? "hover:bg-red-50/60" : "hover:bg-muted/40",
+            )}
           >
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Step Results
