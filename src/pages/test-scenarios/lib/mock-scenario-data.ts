@@ -1,4 +1,4 @@
-import { RecordingStep, TestStepResult } from '@/types/recording';
+import type { RecordingStep } from '@/types/recording';
 import type {
   Priority,
   ProcessingStatus,
@@ -18,10 +18,8 @@ export interface AutomationTest {
   steps?: RecordingStep[];
   videoUrl?: string;
   screenshotUrl?: string;     // Thumbnail of last state (pass or fail screenshot)
-  stepResults?: TestStepResult[];
   log?: string;
   errorMessage?: string;      // Error excerpt for failed runs
-  failedStepIndex?: number;   // Which step failed (1-based)
 }
 
 export interface TestStep {
@@ -217,7 +215,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             lastRunAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
             runDurationMs: 15400,
             errorMessage: 'Email delivery timeout: Expected confirmation email within 60s, but inbox remained empty after 120s.',
-            failedStepIndex: 4,
           },
           steps: [
             { id: 'st-003-1', order: 1, action: 'Click "Forgot password?" on login page', expected: 'Password reset form appears' },
@@ -670,7 +667,6 @@ const scenarioEcommerce: TestScenarioV2 = {
             lastRunAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
             runDurationMs: 4800,
             errorMessage: 'Coupon service returned 500 Internal Server Error on POST /api/coupons/apply. Response: {"error":"service_unavailable"}.',
-            failedStepIndex: 3,
           },
           steps: [
             { id: 'st-022-1', order: 1, action: 'Add item to cart and go to cart page', expected: 'Cart page loaded with items' },
