@@ -124,6 +124,10 @@ export interface RecordingStep {
   apiEndpoint?: string;
   apiPayload?: string;
   apiHeaders?: string;
+  // Execution result fields (populated after running)
+  resultStatus?: string;
+  resultError?: string;
+  resultScreenshot?: string;
 }
 
 export interface TestRecording {
