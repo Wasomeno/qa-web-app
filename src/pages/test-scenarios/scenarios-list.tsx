@@ -814,10 +814,10 @@ export const TestScenariosPage: React.FC<{
 
       {/* Test Context Dialog */}
       <Dialog open={testContextOpen} onOpenChange={setTestContextOpen}>
-        <DialogContent className="max-w-2xl h-[520px] flex flex-col">
+        <DialogContent className="max-w-4xl h-[676px] flex flex-col">
           <DialogHeader>
             <div className="flex items-start justify-between gap-4 pr-8">
-              <div>
+              <div className="space-y-3">
                 <DialogTitle>Project Test Context</DialogTitle>
                 <DialogDescription>
                   Project-level knowledge base used when generating API and E2E
