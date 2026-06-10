@@ -667,7 +667,8 @@ const AutomationCategorySelect: React.FC<{
 const GeneratedAutomationSteps: React.FC<{
   steps?: NonNullable<TestCase["automationTest"]>["steps"];
   status?: "pass" | "fail" | "other";
-}> = ({ steps, status }) => {
+  onOpenPreview?: (src: string, type: "image" | "video") => void;
+}> = ({ steps, status, onOpenPreview }) => {
   const [open, setOpen] = useState(false);
   if (!steps || steps.length === 0) return null;
 
@@ -682,6 +683,8 @@ const GeneratedAutomationSteps: React.FC<{
     : status === "fail"
       ? "border-red-100/60"
       : "border-border";
+
+  const hasResults = steps.some((s) => s.resultStatus);
 
   return (
     <div className={cn("border-b", borderClass)}>
@@ -705,10 +708,24 @@ const GeneratedAutomationSteps: React.FC<{
             className="overflow-hidden"
           >
       <div className="px-4 pb-3 space-y-1.5">
-        {steps.map((step, idx) => (
+        {steps.map((step, idx) => {
+          const isStepPass = step.resultStatus === "success" || step.resultStatus === "pass";
+          const isStepFail = step.resultStatus === "failure" || step.resultStatus === "fail";
+          const screenshotSrc = step.resultScreenshot
+            ? step.resultScreenshot.startsWith("http") || step.resultScreenshot.startsWith("data:")
+              ? step.resultScreenshot
+              : `data:image/png;base64,${step.resultScreenshot}`
+            : null;
+
+          return (
           <div
             key={idx}
-            className="flex items-start gap-2 text-xs bg-card rounded-md px-2.5 py-2 border border-border"
+            className={cn(
+              "flex items-start gap-2 text-xs rounded-md px-2.5 py-2 border",
+              hasResults && isStepPass && "border-emerald-100 bg-emerald-50/30",
+              hasResults && isStepFail && "border-red-100 bg-red-50/30",
+              !hasResults && "bg-card border-border",
+            )}
           >
             <span className="shrink-0 font-mono text-[10px] text-muted-foreground w-4 mt-0.5">
               {idx + 1}
@@ -796,9 +813,45 @@ const GeneratedAutomationSteps: React.FC<{
                   )}
                 </>
               )}
+
+              {/* Inline result status for this step */}
+              {hasResults && (
+                <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-border/40">
+                  {isStepPass && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Passed
+                    </span>
+                  )}
+                  {isStepFail && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-700">
+                      <XCircle className="w-3 h-3" />
+                      Failed
+                    </span>
+                  )}
+                  {step.resultError && (
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                      {step.resultError}
+                    </span>
+                  )}
+                  {screenshotSrc && onOpenPreview && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onOpenPreview(screenshotSrc, "image"); }}
+                      className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity ml-auto"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Evidence
+                    </button>
+                  )}
+                  {isStepFail && !step.resultError && !screenshotSrc && (
+                    <span className="text-[10px] text-red-500 ml-auto">Error</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
           </motion.div>
         )}
@@ -815,17 +868,16 @@ const LastRunPanel: React.FC<{
     lastRunAt?: string;
     runDurationMs?: number;
     videoUrl?: string;
-    stepResults?: { stepIndex: number; status: string; error?: string; screenshot?: string }[];
     log?: string;
     errorMessage?: string;
-    failedStepIndex?: number;
   };
 }> = ({ test }) => {
   const isPass = test.status === "pass";
   const isFail = test.status === "fail";
   const [preview, setPreview] = useState<{ src: string; type: "image" | "video" } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [stepResultsOpen, setStepResultsOpen] = useState(false);
+
+  const failedStepIndex = test.steps?.findIndex((s) => s.resultStatus === "failure") ?? -1;
 
   const openPreview = (src: string, type: "image" | "video") => {
     setPreview({ src, type });
@@ -929,87 +981,7 @@ const LastRunPanel: React.FC<{
         )}
       </div>
 
-      <GeneratedAutomationSteps steps={test.steps} status={isPass ? "pass" : isFail ? "fail" : "other"} />
-
-      {/* Step Results */}
-      {test.stepResults && test.stepResults.length > 0 && (
-        <div className={cn("border-b", isPass ? "border-emerald-100/60" : isFail ? "border-red-100/60" : "border-border")}>
-          <button
-            onClick={() => setStepResultsOpen((v) => !v)}
-            className={cn(
-              "w-full flex items-center justify-between px-4 py-3 text-left transition-colors",
-              isPass ? "hover:bg-emerald-50/60" : isFail ? "hover:bg-red-50/60" : "hover:bg-muted/40",
-            )}
-          >
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Step Results
-              <span className="ml-2 font-normal normal-case tracking-normal opacity-60">{test.stepResults.length}</span>
-            </p>
-            <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200", stepResultsOpen ? "rotate-0" : "-rotate-90")} />
-          </button>
-          <AnimatePresence initial={false}>
-            {stepResultsOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="overflow-hidden"
-              >
-          <div className="px-4 pb-3 space-y-2">
-            {test.stepResults.map((sr) => {
-              const screenshotSrc = sr.screenshot
-                ? sr.screenshot.startsWith("http") || sr.screenshot.startsWith("data:")
-                  ? sr.screenshot
-                  : `data:image/png;base64,${sr.screenshot}`
-                : null;
-              return (
-                <div
-                  key={sr.stepIndex}
-                  className={cn(
-                    "rounded-md overflow-hidden border text-xs",
-                    sr.status === "success" ? "border-emerald-100" : "border-red-100",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-2.5 py-1.5",
-                      sr.status === "success"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-red-50 text-red-700",
-                    )}
-                  >
-                    <span className="font-mono text-[10px] w-5 shrink-0">{sr.stepIndex + 1}</span>
-                    {sr.status === "success" ? (
-                      <CheckCircle2 className="w-3 h-3 shrink-0" />
-                    ) : (
-                      <XCircle className="w-3 h-3 shrink-0" />
-                    )}
-                    <span className="flex-1 font-medium">
-                      {sr.status === "success" ? "Passed" : "Failed"}
-                    </span>
-                    {sr.error && (
-                      <span className="text-[10px] opacity-80 truncate max-w-[160px]">{sr.error}</span>
-                    )}
-                    {screenshotSrc && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openPreview(screenshotSrc, "image"); }}
-                        className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        View Evidence
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
+      <GeneratedAutomationSteps steps={test.steps} status={isPass ? "pass" : isFail ? "fail" : "other"} onOpenPreview={openPreview} />
 
       {/* Log */}
       {test.log && (
@@ -1032,9 +1004,9 @@ const LastRunPanel: React.FC<{
           <p className="text-sm text-red-800 leading-relaxed">
             {test.errorMessage}
           </p>
-          {test.failedStepIndex !== undefined && (
+          {failedStepIndex !== -1 && (
             <p className="text-xs text-red-600 mt-1.5">
-              Failed at step {test.failedStepIndex + 1}
+              Failed at step {failedStepIndex + 1}
             </p>
           )}
         </div>
