@@ -457,7 +457,7 @@ export const TestScenariosPage: React.FC<{
                     : "Review and manage AI-generated test scenarios"}
               </p>
             </div>
-            <div className="shrink-0 pt-1">
+            <div className="shrink-0 pt-1 flex items-center gap-2">
               <AnimatePresence mode="wait">
                 {selectedIds.size === 0 && !hideScenarioControls && (
                   <motion.div
@@ -496,24 +496,26 @@ export const TestScenariosPage: React.FC<{
                 extraOptions={{ allProjects: true }}
               />
             )}
+          </div>
+          <div className="flex items-center gap-2">
             {activeProjectId && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setTestContextOpen(true)}
-                className="h-10 gap-1.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent"
+                className="hover:bg-accent border text-foreground rounded-md gap-2 px-4 h-10"
                 title="View project test context"
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-4 h-4" />
                 Test Context
               </Button>
             )}
+            {hideHeader && (
+              <div className="shrink-0">
+                {renderSyncScenariosButton()}
+              </div>
+            )}
           </div>
-          {hideHeader && (
-            <div className="shrink-0">
-              {renderSyncScenariosButton()}
-            </div>
-          )}
         </div>
         )}
       </div>
