@@ -1014,7 +1014,7 @@ const LastRunPanel: React.FC<{
 
       {/* Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={closePreview}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden">
           <DialogHeader className="px-4 py-3 border-b border-border">
             <DialogTitle className="text-sm font-medium">
               {preview?.type === "video" ? "Recording" : "Evidence"}
@@ -1022,7 +1022,7 @@ const LastRunPanel: React.FC<{
           </DialogHeader>
           <div
             className="flex items-center justify-center bg-muted/40"
-            style={preview?.type === "video" ? { width: "100%", height: 480 } : undefined}
+            style={preview?.type === "video" ? { width: "100%", height: 624 } : undefined}
           >
             {preview?.type === "video" ? (
               <video
@@ -1036,7 +1036,7 @@ const LastRunPanel: React.FC<{
                 <img
                   src={preview.src}
                   alt="Evidence screenshot"
-                  className="max-w-full max-h-[70vh] rounded-lg object-contain"
+                  className="max-w-full max-h-[91vh] rounded-lg object-contain"
                 />
               </div>
             ) : null}
