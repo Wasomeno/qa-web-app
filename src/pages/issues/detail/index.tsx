@@ -15,6 +15,7 @@ import {
   ClipboardList,
   GitPullRequest,
   CircleDot,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +37,7 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePinnedIssues } from "@/hooks/use-pinned-issues";
+import { FixIssueModal } from "@/pages/issues/components/fix-issue-modal";
 import { useSession } from "@/contexts/session-context";
 import { useGetIssue } from "../hooks/use-get-issue";
 import { useGetIssueComments } from "../hooks/use-get-issue-comments";
@@ -227,6 +229,7 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
   >(null);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isFixModalOpen, setIsFixModalOpen] = useState(false);
   const { togglePin, isPinned } = usePinnedIssues();
 
   const [description, setDescription] = useState(
@@ -891,6 +894,28 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
                     </p>
                   </TooltipContent>
                 </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ duration: 0.1 }}
+                      onClick={() => setIsFixModalOpen(true)}
+                      disabled={currentIssue.state === "closed"}
+                      className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        currentIssue.state === "closed"
+                          ? "opacity-50 cursor-not-allowed text-muted-foreground"
+                          : "text-muted-foreground hover:bg-purple-100 hover:text-purple-600",
+                      )}
+                    >
+                      <Wrench className="w-4 h-4" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Fix with Agent</p>
+                  </TooltipContent>
+                </Tooltip>
               </TooltipProvider>
             </div>
           </div>
@@ -1115,6 +1140,14 @@ export const IssueDetailPage: React.FC<IssueDetailPageProps> = ({
           )}
         </div>
       </div>
+
+      <FixIssueModal
+        issue={currentIssue}
+        isOpen={isFixModalOpen}
+        onClose={() => setIsFixModalOpen(false)}
+        portalContainer={portalContainer}
+        appProjectId={propProjectId ? String(propProjectId) : undefined}
+      />
     </motion.div>
   );
 };
