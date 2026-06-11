@@ -67,6 +67,11 @@ export interface ProjectSelectProps {
    * This is useful when you have the complete project data from an API response.
    */
   projectDetails?: ProjectDetails | GitLabProject | null;
+  /**
+   * Called when the selected project's full details are resolved (either found in list or fetched by ID).
+   * Useful for consumers that need the full project object (e.g. default_branch) without a second fetch.
+   */
+  onProjectResolved?: (project: GitLabProject) => void;
 }
 
 const isMultiValue = (v: unknown): v is (number | string)[] =>
@@ -85,6 +90,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
   stopPropagation,
   projectName,
   projectDetails,
+  onProjectResolved,
 }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,6 +145,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
     const foundInList = projects.find(p => p.id.toString() === selectedId);
     if (foundInList) {
       setFetchedSelectedProject(null);
+      onProjectResolved?.(foundInList);
       return;
     }
 
@@ -154,6 +161,7 @@ export const ProjectSelect: React.FC<ProjectSelectProps> = ({
       .then(response => {
         if (!cancelled && response.data?.project) {
           setFetchedSelectedProject(response.data.project);
+          onProjectResolved?.(response.data.project);
         }
       })
       .catch(error => {
