@@ -38,6 +38,7 @@ interface ProjectBoardViewProps {
   projectId?: number | string;
   onPinIssue?: (issue: BoardIssue) => void;
   onOpenIssue?: (issue: BoardIssue) => void;
+  onFixIssue?: (issue: BoardIssue) => void;
   density?: "comfortable" | "compact";
 }
 
@@ -74,6 +75,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
   projectId,
   onPinIssue,
   onOpenIssue,
+  onFixIssue,
   density = "comfortable",
 }) => {
   const queryClient = useQueryClient();
@@ -376,6 +378,7 @@ export const ProjectBoardView: React.FC<ProjectBoardViewProps> = ({
                     issue={issue}
                     onPin={onPinIssue}
                     onClick={onOpenIssue}
+                    onFixIssue={onFixIssue}
                     density={density}
                   />
                 ))}

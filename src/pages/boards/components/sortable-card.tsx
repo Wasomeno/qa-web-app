@@ -8,6 +8,7 @@ interface SortableCardProps {
   issue: BoardIssue;
   onPin?: (issue: BoardIssue) => void;
   onClick?: (issue: BoardIssue) => void;
+  onFixIssue?: (issue: BoardIssue) => void;
   density?: 'comfortable' | 'compact';
 }
 
@@ -15,6 +16,7 @@ export const SortableCard: React.FC<SortableCardProps> = ({
   issue,
   onPin,
   onClick,
+  onFixIssue,
   density,
 }) => {
   const {
@@ -42,7 +44,7 @@ export const SortableCard: React.FC<SortableCardProps> = ({
       {...listeners}
       className={isDragging ? 'shadow-xl' : ''}
     >
-      <BoardCard issue={issue} onPin={onPin} onClick={onClick} density={density} />
+      <BoardCard issue={issue} onPin={onPin} onClick={onClick} onFixIssue={onFixIssue} density={density} />
     </div>
   );
 };

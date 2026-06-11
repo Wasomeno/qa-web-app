@@ -1,12 +1,13 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { BoardIssue } from '../mock-data';
-import { Pin, ExternalLink, Link2 } from 'lucide-react';
+import { Pin, ExternalLink, Link2, Wrench } from 'lucide-react';
 
 interface BoardCardProps {
   issue: BoardIssue;
   onPin?: (issue: BoardIssue) => void;
   onClick?: (issue: BoardIssue) => void;
+  onFixIssue?: (issue: BoardIssue) => void;
   density?: 'comfortable' | 'compact';
 }
 
@@ -23,6 +24,7 @@ export const BoardCard: React.FC<BoardCardProps> = ({
   issue,
   onPin,
   onClick,
+  onFixIssue,
   density = 'comfortable',
 }) => {
   const isCompact = density === 'compact';
@@ -131,6 +133,19 @@ export const BoardCard: React.FC<BoardCardProps> = ({
           title="Copy Link"
         >
           <Link2 className="w-3.5 h-3.5" />
+        </button>
+
+        <div className="w-px h-3 bg-border mx-0.5" />
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onFixIssue?.(issue);
+          }}
+          className="p-1 hover:bg-purple-100 rounded text-muted-foreground hover:text-purple-600 transition-colors"
+          title="Fix with Agent"
+        >
+          <Wrench className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

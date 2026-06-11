@@ -4,12 +4,13 @@ import { ProjectFilter } from "./components/project-filter";
 import { ProjectBoardView } from "./components/project-board-view";
 import { useGetProjectBoards } from "./hooks/use-get-project-boards";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProjectBoard } from "./mock-data";
+import { ProjectBoard, BoardIssue } from "./mock-data";
 import { updateIssue } from "@/api/issue";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { cn } from "@/lib/utils";
+import { FixIssueModal } from "@/pages/issues/components/fix-issue-modal";
 
 interface BoardsPageProps {
   portalContainer?: HTMLDivElement | null;
@@ -36,6 +37,8 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
     "boards-density",
     "comfortable",
   );
+
+  const [fixIssue, setFixIssue] = useState<BoardIssue | null>(null);
 
   const activeProjectId = projectId || selectedProjectId;
 
@@ -240,6 +243,7 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
                   project={mappedBoard}
                   projectId={activeProjectId}
                   density={density}
+                  onFixIssue={(issue) => setFixIssue(issue)}
                   onOpenIssue={(issue) => {
                     // Map BoardIssue to structure expected by IssueDetail
                     onNavigateToIssue?.({
@@ -295,6 +299,22 @@ export const BoardsPage: React.FC<BoardsPageProps> = ({
           )}
         </div>
       </div>
+      {fixIssue && (
+        <FixIssueModal
+          issue={{
+            id: Number(fixIssue.id),
+            iid: fixIssue.iid,
+            title: fixIssue.title,
+            project_id: fixIssue.projectId,
+            project_name: fixIssue.projectName,
+            state: "opened",
+          } as any}
+          isOpen={!!fixIssue}
+          onClose={() => setFixIssue(null)}
+          portalContainer={portalContainer}
+          appProjectId={activeProjectId?.toString()}
+        />
+      )}
     </div>
   );
 };
