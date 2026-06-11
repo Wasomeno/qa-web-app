@@ -102,6 +102,33 @@ export async function getFixSessions(
   return response.data.sessions || [];
 }
 
+// POST /agent/fix-sessions/:session_id/retry - Retry a failed fix session
+export async function retryFixSession(
+  sessionId: string,
+  projectId?: string,
+): Promise<{ session_id: string; message: string; previous_session_id: string }> {
+  const response = await api.post<{
+    sessionId: string;
+    message: string;
+    previousSessionId: string;
+  }>(
+    projectId
+      ? `/projects/${projectId}/fix-sessions/${sessionId}/retry`
+      : `/agent/fix-sessions/${sessionId}/retry`,
+    {},
+  );
+
+  if (!response.success || !response.data) {
+    throw new Error(response.error || "Failed to retry fix session");
+  }
+
+  return {
+    session_id: response.data.sessionId,
+    message: response.data.message,
+    previous_session_id: response.data.previousSessionId,
+  };
+}
+
 // DELETE /agent/fix-sessions/:session_id - Delete a fix session
 export async function deleteFixSession(
   sessionId: string,
