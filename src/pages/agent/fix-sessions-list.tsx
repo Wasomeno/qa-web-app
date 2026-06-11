@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useFixSessions, useDeleteFixSession } from "./hooks/use-fix-sessions";
+import { useFixSessions, useDeleteFixSession, useRetryFixSession } from "./hooks/use-fix-sessions";
 import { FixSession } from "@/types/agent-fix";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +16,7 @@ import {
   ExternalLink,
   CheckCircle2,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -74,7 +75,11 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
   const { pop } = useNavigation();
   const { sessions, isLoading, refetch } = useFixSessions(projectId);
   const deleteMutation = useDeleteFixSession();
+  const retryMutation = useRetryFixSession();
   const [sessionToDelete, setSessionToDelete] = useState<FixSession | null>(
+    null,
+  );
+  const [sessionToRetry, setSessionToRetry] = useState<FixSession | null>(
     null,
   );
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
@@ -84,6 +89,11 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
   const handleDeleteClick = (e: React.MouseEvent, session: FixSession) => {
     e.stopPropagation();
     setSessionToDelete(session);
+  };
+
+  const handleRetryClick = (e: React.MouseEvent, session: FixSession) => {
+    e.stopPropagation();
+    setSessionToRetry(session);
   };
 
   const handleConfirmDelete = async () => {
@@ -104,8 +114,32 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
     }
   };
 
+  const handleConfirmRetry = async () => {
+    if (sessionToRetry) {
+      try {
+        await retryMutation.mutateAsync({
+          sessionId: sessionToRetry.sessionId,
+          projectId,
+        });
+        toast.success("Fix agent retry started", {
+          description: `New session created for issue #${sessionToRetry.issueIid}`,
+        });
+      } catch (retryError: unknown) {
+        const message = retryError instanceof Error ? retryError.message : "Please try again";
+        toast.error("Failed to retry fix session", {
+          description: message,
+        });
+      }
+      setSessionToRetry(null);
+    }
+  };
+
   const handleCancelDelete = () => {
     setSessionToDelete(null);
+  };
+
+  const handleCancelRetry = () => {
+    setSessionToRetry(null);
   };
 
   // Helper to safely parse date and check validity
@@ -183,7 +217,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
         {/* Sessions List */}
         <div className="flex-1 flex flex-col min-w-0">
           <ScrollArea className="flex-1 [&>div>div[style]]:!block [&>div>div[style]]:h-full">
-            <div className="flex flex-col h-full px-4 md:px-8 pb-8">
+            <div className="flex flex-col h-full px-4 md:px-8 pt-2 pb-8">
               {isLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 4 }).map((_, i) => (
@@ -268,6 +302,28 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                                   {statusConfig.icon}
                                   <span>{statusConfig.label}</span>
                                 </div>
+
+                                {/* Retry Button - only for failed sessions */}
+                                {session.status === "error" && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                                        onClick={(e) =>
+                                          handleRetryClick(e, session)
+                                        }
+                                        disabled={retryMutation.isPending}
+                                      >
+                                        <RefreshCw className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p>Retry fix session</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
 
                                 {/* Delete Button */}
                                 <Tooltip>
@@ -354,7 +410,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 z-40"
+              className="fixed inset-0 z-40"
               onClick={() => setSelectedSessionId(null)}
             />
             {/* Panel */}
@@ -363,7 +419,7 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 436, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 bottom-0 w-full md:w-[436px] z-50 border-l border-border bg-background overflow-hidden flex flex-col shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 w-full md:w-[436px] z-50 border-l border-border bg-background overflow-hidden flex flex-col shadow-2xl"
             >
               <FixSessionDetailPanel
                 session={getSelectedSession()}
@@ -379,6 +435,25 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                       setSelectedSessionId(null);
                     } catch (error) {
                       toast.error("Failed to delete session");
+                    }
+                  }
+                }}
+                onRetry={async () => {
+                  const selectedSession = getSelectedSession();
+                  if (selectedSession && selectedSession.status === "error") {
+                    try {
+                      await retryMutation.mutateAsync({
+                        sessionId: selectedSession.sessionId,
+                        projectId,
+                      });
+                      toast.success("Fix agent retry started", {
+                        description: `New session created for issue #${selectedSession.issueIid}`,
+                      });
+                    } catch (retryErr: unknown) {
+                      const msg = retryErr instanceof Error ? retryErr.message : "Please try again";
+                      toast.error("Failed to retry fix session", {
+                        description: msg,
+                      });
                     }
                   }
                 }}
@@ -417,6 +492,40 @@ export const FixSessionsListPage: React.FC<FixSessionsListPageProps> = ({
                 </>
               ) : (
                 "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Retry Confirmation Dialog */}
+      <AlertDialog
+        open={!!sessionToRetry}
+        onOpenChange={(open) => !open && handleCancelRetry()}
+      >
+        <AlertDialogContent container={portalContainer}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Retry Fix Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create a new fix session for issue #{sessionToRetry?.issueIid} using the same configuration. The failed session will remain in the list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelRetry}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmRetry}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              disabled={retryMutation.isPending}
+            >
+              {retryMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                "Retry"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
