@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Wrench,
   FileCode,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +33,7 @@ interface FixSessionDetailPanelProps {
   session: FixSession | null;
   onClose: () => void;
   onDelete?: () => void;
+  onRetry?: () => void;
 }
 
 const getStepStatusIcon = (status: FixStep['status']) => {
@@ -146,6 +148,7 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
   session,
   onClose,
   onDelete,
+  onRetry,
 }) => {
   if (!session) {
     return (
@@ -386,6 +389,17 @@ export const FixSessionDetailPanel: React.FC<FixSessionDetailPanelProps> = ({
               >
                 <GitMerge className="w-4 h-4" />
                 View Merge Request
+              </Button>
+            )}
+            {session.status === 'error' && onRetry && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                size="sm"
+                onClick={onRetry}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry fix
               </Button>
             )}
             {onDelete && (
