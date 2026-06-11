@@ -10,19 +10,14 @@ import {
 } from "lucide-react";
 import { Issue } from "@/api/issue";
 import { useStartFixIssue } from "@/pages/agent/hooks/use-fix-sessions";
-import { getProjectBranches, GitLabBranch } from "@/api/project";
+import { getProjectBranches } from "@/api/project";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigation } from "@/contexts/navigation-context";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { BranchSelect } from "@/pages/specs/components/branch-select";
 import { ProjectSelect } from "@/components/project-select";
 import { GitLabProject } from "@/types/project";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/utils/useDebounce";
 import { toast } from "sonner";
 
 interface FixIssueModalProps {
@@ -45,41 +40,51 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
   );
   const [targetBranch, setTargetBranch] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [branchSearch, setBranchSearch] = useState("");
+  const debouncedBranchSearch = useDebounce(branchSearch, 300);
   const startFixMutation = useStartFixIssue();
   const { push } = useNavigation();
 
-  // Initialize with the issue's project
-  useEffect(() => {
-    if (isOpen && !selectedProject) {
-      setSelectedProject({
-        id: issue.project_id,
-        name: issue.project_name,
-        path_with_namespace: issue.project_name,
-      } as GitLabProject);
-    }
-  }, [isOpen, issue, selectedProject]);
+  // Resolved when ProjectSelect fetches/finds the full project — gives us default_branch for free
+  const [resolvedDefaultBranch, setResolvedDefaultBranch] = useState<string | undefined>();
+
+  const effectiveDefaultBranch =
+    selectedProject?.default_branch || resolvedDefaultBranch;
+
+  // Still waiting if the project object has no default_branch and ProjectSelect hasn't resolved it yet
+  const isWaitingForDefault =
+    !selectedProject?.default_branch && !resolvedDefaultBranch;
 
   // Fetch branches for selected project
   const { data: branchesData, isLoading: isLoadingBranches } = useQuery({
-    queryKey: ["project-branches", selectedProject?.id],
+    queryKey: ["project-branches", selectedProject?.id, debouncedBranchSearch],
     queryFn: async () => {
       if (!selectedProject?.id) return [];
-      const response = await getProjectBranches(selectedProject.id);
+      const response = await getProjectBranches(
+        selectedProject.id,
+        debouncedBranchSearch || undefined,
+      );
       return response.data?.branches || [];
     },
     enabled: isOpen && !!selectedProject?.id,
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 30000,
   });
 
   const branches = branchesData || [];
 
-  // Set default branch when branches are loaded
+  // Set default branch once both branches and project default_branch are resolved
   useEffect(() => {
-    if (branches.length > 0 && !targetBranch) {
-      const defaultBranch = branches.find((b) => b.default);
-      setTargetBranch(defaultBranch?.name || branches[0]?.name || "main");
+    if (branches.length > 0 && !targetBranch && !isWaitingForDefault) {
+      if (effectiveDefaultBranch) {
+        const found = branches.find((b) => b.name === effectiveDefaultBranch);
+        setTargetBranch(found?.name ?? effectiveDefaultBranch);
+      } else {
+        // Fallback if project details didn't return default_branch
+        const defaultBranch = branches.find((b) => b.default);
+        setTargetBranch(defaultBranch?.name || branches[0]?.name || "main");
+      }
     }
-  }, [branches, targetBranch]);
+  }, [branches, targetBranch, effectiveDefaultBranch, isWaitingForDefault]);
 
   const handleStartFix = async () => {
     if (!selectedProject) {
@@ -109,7 +114,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
           label: "View Sessions",
           onClick: () => {
             onClose();
-            push("agent-sessions" as any, { tab: "fix" });
+            push("fix-sessions");
           },
         },
       });
@@ -149,6 +154,8 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
     if (!isOpen) {
       setSelectedProject(null);
       setTargetBranch("");
+      setBranchSearch("");
+      setResolvedDefaultBranch(undefined);
       setIsSubmitting(false);
     }
   }, [isOpen]);
@@ -235,8 +242,13 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                     value={selectedProject?.id || null}
                     onSelect={(project) => {
                       setSelectedProject(project);
-                      setTargetBranch(""); // Reset branch when project changes
+                      setTargetBranch("");
+                      setBranchSearch("");
+                      setResolvedDefaultBranch(undefined);
                     }}
+                    onProjectResolved={(project) =>
+                      setResolvedDefaultBranch(project.default_branch)
+                    }
                     mode="single"
                     size="default"
                     placeholder="Select repository..."
@@ -261,37 +273,15 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                         Select a project first
                       </span>
                     </div>
-                  ) : isLoadingBranches ? (
-                    <div className="flex items-center gap-2 px-3 py-2.5 bg-muted rounded-lg border border-border">
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Loading branches...
-                      </span>
-                    </div>
                   ) : (
-                    <Select
+                    <BranchSelect
+                      branches={branches}
                       value={targetBranch}
-                      onValueChange={setTargetBranch}
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger className="w-full bg-background">
-                        <SelectValue placeholder="Select target branch" />
-                      </SelectTrigger>
-                      <SelectContent container={portalContainer}>
-                        {branches.map((branch) => (
-                          <SelectItem key={branch.name} value={branch.name}>
-                            <div className="flex items-center gap-2">
-                              <span>{branch.name}</span>
-                              {branch.default && (
-                                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-medium">
-                                  DEFAULT
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onSelect={setTargetBranch}
+                      onSearch={setBranchSearch}
+                      loading={isLoadingBranches}
+                      className="w-full min-w-0 justify-between text-left font-normal bg-background border border-border rounded-xl h-10 px-3 hover:bg-accent hover:text-foreground transition-all"
+                    />
                   )}
                   <p className="text-xs text-muted-foreground">
                     The branch to create the fix from
@@ -311,7 +301,7 @@ export const FixIssueModal: React.FC<FixIssueModalProps> = ({
                     <button
                       onClick={() => {
                         onClose();
-                        push("agent-sessions" as any, { tab: "fix" });
+                        push("fix-sessions");
                       }}
                       className="text-foreground hover:text-foreground font-medium underline"
                     >
