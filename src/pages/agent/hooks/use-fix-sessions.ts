@@ -5,6 +5,7 @@ import {
   getFixSessionDetails,
   startFixIssue,
   deleteFixSession,
+  retryFixSession,
 } from "@/api/agent-fix";
 import { FixSession } from "@/types/agent-fix";
 
@@ -88,6 +89,25 @@ export function useDeleteFixSession() {
     }) => deleteFixSession(sessionId, projectId),
     onSuccess: () => {
       // Invalidate sessions list to refresh
+      queryClient.invalidateQueries({ queryKey: ["fix-sessions"] });
+    },
+  });
+
+  return mutation;
+}
+
+export function useRetryFixSession() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      projectId,
+    }: {
+      sessionId: string;
+      projectId?: string;
+    }) => retryFixSession(sessionId, projectId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fix-sessions"] });
     },
   });
