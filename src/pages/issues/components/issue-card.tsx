@@ -7,7 +7,7 @@ import {
   Palette,
   MessageSquare,
   Link2,
-  Sparkles,
+  Wrench,
   ClipboardList,
 } from 'lucide-react';
 import { PinColor, PinnedIssueMeta } from '@/types/issues';
@@ -313,7 +313,7 @@ const withIssueActions = (variant: 'default' | 'pinned') => {
           title="Fix with Agent"
           disabled={issue.state === 'closed'}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Wrench className="w-3.5 h-3.5" />
         </button>
       </>
     );
