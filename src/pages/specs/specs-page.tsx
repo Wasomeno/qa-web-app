@@ -17,10 +17,12 @@ import { CommitHistory } from "./components/commit-history";
 import { BranchSelect } from "./components/branch-select";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { History, FolderTree, X, Menu } from "lucide-react";
+import { CheckSquare2, History, FolderTree, X, Menu, Sparkles } from "lucide-react";
 import type { GitLabProject } from "@/types/project";
+import type { FileTreeNode } from "@/api/specs";
+import { FSDIssuePanel } from "./components/fsd-issue-panel";
 
-type SidePanel = "none" | "history";
+type SidePanel = "none" | "history" | "fsdIssues";
 
 /** Read/write per-project branch preference from localStorage */
 function getStoredBranch(projectId: string): string | null {
@@ -62,12 +64,15 @@ export function SpecsPage({
 
   // Load stored branch when project changes
   useEffect(() => {
-    if (selectedProjectId) {
-      setSelectedBranch(getStoredBranch(selectedProjectId));
-    } else {
-      setSelectedBranch(null);
-    }
-    setBranchSearch("");
+    const timer = window.setTimeout(() => {
+      if (selectedProjectId) {
+        setSelectedBranch(getStoredBranch(selectedProjectId));
+      } else {
+        setSelectedBranch(null);
+      }
+      setBranchSearch("");
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [selectedProjectId]);
 
   const [activeFile, setActiveFile] = useState<string | null>(null);
@@ -80,9 +85,19 @@ export function SpecsPage({
   const isMobile = useIsMobile();
   const [mobileFileTreeOpen, setMobileFileTreeOpen] = useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
+  const [mobileFSDIssuesOpen, setMobileFSDIssuesOpen] = useState(false);
+  const [fsdSelectionMode, setFsdSelectionMode] = useState(false);
+  const [selectedFSDPaths, setSelectedFSDPaths] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [previewRequestId, setPreviewRequestId] = useState(0);
 
   const projectId = scopedProjectId || selectedProjectId || undefined;
   const branchLookupProjectId = branchProjectId || projectId;
+  const fsdGenerationEnabled = !!scopedProjectId;
+  const displayProjectName = scopedProjectId
+    ? projectName
+    : selectedProjectName;
 
   // --- Fetch branches (search-aware) ---
   const { data: branches = [], isLoading: branchesLoading } =
@@ -110,12 +125,24 @@ export function SpecsPage({
     }
   }, [projectId, effectiveBranch, loadRoot]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSelectedFSDPaths(new Set());
+      setPreviewRequestId(0);
+      setSidePanel((prev) => (prev === "fsdIssues" ? "none" : prev));
+      setMobileFSDIssuesOpen(false);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [projectId, effectiveBranch]);
+
   const handleProjectSelect = (project: GitLabProject | null) => {
     setSelectedProjectId(project?.id.toString() ?? null);
     setSelectedProjectName(project?.name ?? null);
     setSelectedBranch(null);
     setActiveFile(null);
     setSelectedCommitSha(null);
+    setSelectedFSDPaths(new Set());
+    setFsdSelectionMode(false);
   };
 
   const handleBranchSelect = useCallback(
@@ -168,12 +195,49 @@ export function SpecsPage({
     setSidePanel((prev) => (prev === "history" ? "none" : "history"));
   }, []);
 
+  const selectedFSDPathList = React.useMemo(
+    () => Array.from(selectedFSDPaths).sort((a, b) => a.localeCompare(b)),
+    [selectedFSDPaths],
+  );
+
+  const isSelectableFSD = useCallback((node: FileTreeNode) => {
+    return node.type === "blob" && /\.(md|markdown)$/i.test(node.name);
+  }, []);
+
+  const toggleFSDPath = useCallback((path: string) => {
+    setSelectedFSDPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  }, []);
+
+  const clearFSDSelection = useCallback(() => {
+    setSelectedFSDPaths(new Set());
+  }, []);
+
+  const resetFSDWorkflow = useCallback(() => {
+    setSelectedFSDPaths(new Set());
+    setFsdSelectionMode(false);
+    setPreviewRequestId(0);
+    setSidePanel((prev) => (prev === "fsdIssues" ? "none" : prev));
+    setMobileFSDIssuesOpen(false);
+  }, []);
+
+  const handleStartFSDGeneration = useCallback(() => {
+    if (!fsdGenerationEnabled || selectedFSDPaths.size === 0) return;
+    setSidePanel("fsdIssues");
+    setMobileFSDIssuesOpen(true);
+    setPreviewRequestId((prev) => prev + 1);
+  }, [fsdGenerationEnabled, selectedFSDPaths.size]);
+
   const handleSelectCommit = useCallback((sha: string) => {
     setSelectedCommitSha(sha);
   }, []);
 
   // --- Empty state: no project selected ---
-  if (!selectedProjectId) {
+  if (!projectId) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4">
         <motion.div
@@ -210,6 +274,7 @@ export function SpecsPage({
   }
 
   const activeFileName = activeFile?.split("/").pop();
+  const selectedFSDCount = selectedFSDPaths.size;
 
   // Shared file tree sidebar content
   const fileTreeSidebarContent = (
@@ -245,6 +310,52 @@ export function SpecsPage({
           size="compact"
           className="w-full"
         />
+        {fsdGenerationEnabled && (
+          <div className="rounded-lg border border-border/60 bg-background p-2.5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={fsdSelectionMode ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setFsdSelectionMode((prev) => !prev)}
+                className="h-8 flex-1 justify-start px-2.5 text-xs"
+              >
+                <CheckSquare2 className="h-3.5 w-3.5" />
+                Select FSDs
+              </Button>
+            </div>
+            {fsdSelectionMode && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-muted-foreground">
+                    {selectedFSDCount === 0
+                      ? "Markdown files only"
+                      : `${selectedFSDCount} selected`}
+                  </span>
+                  {selectedFSDCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearFSDSelection}
+                      className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleStartFSDGeneration}
+                  disabled={selectedFSDCount === 0}
+                  className="h-8 w-full justify-center px-2 text-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Generate issue drafts
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <FileTree
         nodes={tree}
@@ -256,14 +367,31 @@ export function SpecsPage({
         loading={treeLoading}
         onRefresh={handleRefresh}
         className="flex-1"
+        selectionMode={fsdSelectionMode}
+        selectedPaths={selectedFSDPaths}
+        onToggleSelect={toggleFSDPath}
+        isSelectableFile={isSelectableFSD}
       />
     </>
+  );
+
+  const fsdIssuePanelContent = (
+    <FSDIssuePanel
+      key={`${projectId}-${effectiveBranch}`}
+      projectId={projectId}
+      selectedPaths={selectedFSDPathList}
+      branch={effectiveBranch}
+      previewRequestId={previewRequestId}
+      onClearSelection={clearFSDSelection}
+      onCreateSuccess={resetFSDWorkflow}
+      className="h-full"
+    />
   );
 
   return (
     <div className="flex h-full bg-background">
       {/* ── Desktop File Tree Sidebar ── */}
-      <div className="hidden md:flex w-[260px] shrink-0 border-r border-border/40 flex-col bg-muted/10">
+      <div className="hidden md:flex w-[300px] shrink-0 border-r border-border/40 flex-col bg-muted/10">
         {fileTreeSidebarContent}
       </div>
 
@@ -292,7 +420,7 @@ export function SpecsPage({
           </Button>
           <div className="flex items-center gap-1 min-w-0 text-[13px]">
             <span className="text-muted-foreground/50 font-medium truncate">
-              {selectedProjectName}
+              {displayProjectName}
             </span>
             <span className="text-muted-foreground/30 shrink-0">/</span>
             <span className="text-xs text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded font-mono shrink-0">
@@ -324,7 +452,7 @@ export function SpecsPage({
         <div className="hidden md:flex items-center justify-between px-5 py-2 border-b border-border/40 bg-muted/10 shrink-0">
           <div className="flex items-center gap-1.5 text-[13px] min-w-0">
             <span className="text-muted-foreground/50 font-medium">
-              {selectedProjectName}
+              {displayProjectName}
             </span>
             <span className="text-muted-foreground/30">/</span>
             <span className="text-xs text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded font-mono">
@@ -395,6 +523,17 @@ export function SpecsPage({
                   />
                 </motion.div>
               )}
+              {sidePanel === "fsdIssues" && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 420, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="shrink-0 border-l border-border/40 overflow-hidden h-full"
+                >
+                  {fsdIssuePanelContent}
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </div>
@@ -415,6 +554,15 @@ export function SpecsPage({
             loadingDetail={commitDetailLoading}
             className="h-full"
           />
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={mobileFSDIssuesOpen} onOpenChange={setMobileFSDIssuesOpen}>
+        <SheetContent
+          side="right"
+          className="p-0 w-full sm:max-w-md flex flex-col"
+        >
+          {fsdIssuePanelContent}
         </SheetContent>
       </Sheet>
     </div>

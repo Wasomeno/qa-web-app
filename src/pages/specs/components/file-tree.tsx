@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown,
@@ -11,6 +11,8 @@ import {
   FileImage,
   FileType,
   Loader2,
+  CheckSquare2,
+  Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FileTreeNode } from '@/api/specs';
@@ -28,6 +30,10 @@ interface FileTreeProps {
   loading?: boolean;
   onRefresh?: () => void;
   className?: string;
+  selectionMode?: boolean;
+  selectedPaths?: Set<string>;
+  onToggleSelect?: (path: string) => void;
+  isSelectableFile?: (node: FileTreeNode) => boolean;
 }
 
 function getFileIcon(name: string) {
@@ -56,6 +62,30 @@ function getFileIcon(name: string) {
   }
 }
 
+function filterFileTreeNodes(nodes: FileTreeNode[], query: string): FileTreeNode[] {
+  if (!query) return nodes;
+  const lower = query.toLowerCase();
+  return nodes
+    .map((node) => {
+      if (node.type === 'tree') {
+        const filteredChildren = filterFileTreeNodes(node.children || [], query);
+        const nameMatch = node.name.toLowerCase().includes(lower);
+        if (nameMatch || filteredChildren.length > 0) {
+          return { ...node, children: filteredChildren };
+        }
+        return null;
+      }
+      if (
+        node.name.toLowerCase().includes(lower) ||
+        node.path.toLowerCase().includes(lower)
+      ) {
+        return node;
+      }
+      return null;
+    })
+    .filter(Boolean) as FileTreeNode[];
+}
+
 export function FileTree({
   nodes,
   activePath,
@@ -66,6 +96,10 @@ export function FileTree({
   loading,
   onRefresh,
   className,
+  selectionMode = false,
+  selectedPaths = new Set(),
+  onToggleSelect,
+  isSelectableFile,
 }: FileTreeProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,36 +124,9 @@ export function FileTree({
     [onExpand, isLoaded]
   );
 
-  const filterNodes = useCallback(
-    (nodes: FileTreeNode[], query: string): FileTreeNode[] => {
-      if (!query) return nodes;
-      const lower = query.toLowerCase();
-      return nodes
-        .map((node) => {
-          if (node.type === 'tree') {
-            const filteredChildren = filterNodes(node.children || [], query);
-            const nameMatch = node.name.toLowerCase().includes(lower);
-            if (nameMatch || filteredChildren.length > 0) {
-              return { ...node, children: filteredChildren };
-            }
-            return null;
-          }
-          if (
-            node.name.toLowerCase().includes(lower) ||
-            node.path.toLowerCase().includes(lower)
-          ) {
-            return node;
-          }
-          return null;
-        })
-        .filter(Boolean) as FileTreeNode[];
-    },
-    []
-  );
-
   const filteredNodes = useMemo(
-    () => filterNodes(nodes, searchQuery),
-    [nodes, searchQuery, filterNodes]
+    () => filterFileTreeNodes(nodes, searchQuery),
+    [nodes, searchQuery]
   );
 
   const fileCount = useMemo(() => {
@@ -170,6 +177,10 @@ export function FileTree({
             onSelect={onSelect}
             loadingPaths={loadingPaths}
             depth={0}
+            selectionMode={selectionMode}
+            selectedPaths={selectedPaths}
+            onToggleSelect={onToggleSelect}
+            isSelectableFile={isSelectableFile}
           />
         )}
       </div>
@@ -200,6 +211,10 @@ function TreeNodeList({
   onSelect,
   loadingPaths,
   depth,
+  selectionMode,
+  selectedPaths,
+  onToggleSelect,
+  isSelectableFile,
 }: {
   nodes: FileTreeNode[];
   activePath: string | null;
@@ -208,6 +223,10 @@ function TreeNodeList({
   onSelect: (path: string) => void;
   loadingPaths?: Set<string>;
   depth: number;
+  selectionMode: boolean;
+  selectedPaths: Set<string>;
+  onToggleSelect?: (path: string) => void;
+  isSelectableFile?: (node: FileTreeNode) => boolean;
 }) {
   return (
     <div>
@@ -221,6 +240,10 @@ function TreeNodeList({
           onSelect={onSelect}
           loadingPaths={loadingPaths}
           depth={depth}
+          selectionMode={selectionMode}
+          selectedPaths={selectedPaths}
+          onToggleSelect={onToggleSelect}
+          isSelectableFile={isSelectableFile}
         />
       ))}
     </div>
@@ -235,6 +258,10 @@ function TreeNodeItem({
   onSelect,
   loadingPaths,
   depth,
+  selectionMode,
+  selectedPaths,
+  onToggleSelect,
+  isSelectableFile,
 }: {
   node: FileTreeNode;
   activePath: string | null;
@@ -243,27 +270,38 @@ function TreeNodeItem({
   onSelect: (path: string) => void;
   loadingPaths?: Set<string>;
   depth: number;
+  selectionMode: boolean;
+  selectedPaths: Set<string>;
+  onToggleSelect?: (path: string) => void;
+  isSelectableFile?: (node: FileTreeNode) => boolean;
 }) {
   const isExpanded = expandedPaths.has(node.path);
   const isActive = activePath === node.path;
   const isDir = node.type === 'tree';
   const isLoadingChildren = loadingPaths?.has(node.path) ?? false;
   const hasChildren = node.children && node.children.length > 0;
+  const canSelect = !isDir && selectionMode && (isSelectableFile?.(node) ?? true);
+  const isSelected = canSelect && selectedPaths.has(node.path);
 
   return (
-    <div>
+    <div className="py-0.5">
       <button
         className={cn(
-          'flex items-center w-full text-left py-[5px] text-[13px] rounded-md mx-1 transition-all duration-150 group relative overflow-hidden',
-          isActive
+          'flex h-8 items-center w-full text-left py-1 text-[13px] rounded-md mx-1.5 transition-colors duration-150 group relative overflow-hidden',
+          isSelected
+            ? 'bg-muted/80 text-foreground font-semibold ring-1 ring-border/70'
+            : isActive
             ? 'bg-muted text-foreground/90 font-medium'
-            : 'text-foreground/70 hover:bg-muted/60 hover:text-foreground'
+            : 'text-foreground/70 hover:bg-muted/60 hover:text-foreground',
+          selectionMode && !isDir && !canSelect && 'opacity-45'
         )}
-        style={{ width: `calc(100% - 8px)`, paddingLeft: `${depth * 14 + 10}px` }}
+        style={{ width: `calc(100% - 12px)`, paddingLeft: `${depth * 14 + 10}px` }}
         onClick={() => {
           if (isDir) onToggle(node.path);
+          else if (canSelect) onToggleSelect?.(node.path);
           else onSelect(node.path);
         }}
+        aria-pressed={canSelect ? isSelected : undefined}
       >
         {/* Active indicator */}
         {isActive && (
@@ -297,8 +335,22 @@ function TreeNodeItem({
           </>
         ) : (
           <>
-            <span className="mr-1 h-4 w-4 shrink-0" />
-            <span className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center">
+            {selectionMode ? (
+              <span className="mr-2 flex h-4 w-4 shrink-0 items-center justify-center">
+                {canSelect ? (
+                  isSelected ? (
+                    <CheckSquare2 className="h-3.5 w-3.5 text-primary" />
+                  ) : (
+                    <Square className="h-3.5 w-3.5 text-muted-foreground/55" />
+                  )
+                ) : (
+                  <span className="h-3.5 w-3.5" />
+                )}
+              </span>
+            ) : (
+              <span className="mr-1.5 h-4 w-4 shrink-0" />
+            )}
+            <span className="mr-2 flex h-4 w-4 shrink-0 items-center justify-center">
               {getFileIcon(node.name)}
             </span>
           </>
@@ -323,6 +375,10 @@ function TreeNodeItem({
               onSelect={onSelect}
               loadingPaths={loadingPaths}
               depth={depth + 1}
+              selectionMode={selectionMode}
+              selectedPaths={selectedPaths}
+              onToggleSelect={onToggleSelect}
+              isSelectableFile={isSelectableFile}
             />
           </motion.div>
         )}
