@@ -8,9 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FolderKanban } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import { ProjectAgentPanel } from "@/pages/agent/project-agent-panel";
 
 const SECTION_META: Record<string, { label: string; description: string }> = {
-  overview: { label: "Overview", description: "Project overview and quick actions" },
+  overview: { label: "Overview", description: "Project status and recent activity" },
   boards: { label: "Boards", description: "Move issues across board columns and workflow labels" },
   specs: { label: "Specs", description: "Browse and edit specs in the specs repository" },
   "test-scenarios": { label: "Test Scenarios", description: "Review and manage AI-generated test scenarios" },
@@ -83,7 +84,6 @@ function ProjectHeader() {
 }
 
 function ProjectLayoutInner() {
-  const location = useLocation();
   const { id } = Route.useParams();
   const { setProject } = useProjectSidebar();
 
@@ -93,17 +93,16 @@ function ProjectLayoutInner() {
   });
   const project = data?.data;
 
-  // Set project context for sidebar
+  // Keep the sidebar aligned with the canonical project payload once loaded.
   useEffect(() => {
-    if (project) {
-      setProject({
-        projectId: project.id,
-        projectName: project.name,
-        issueRepoName: project.issueRepoName,
-        specsRepoName: project.specsRepoName,
-      });
-    }
-    return () => setProject(null);
+    if (!project) return;
+
+    setProject({
+      projectId: project.id,
+      projectName: project.name,
+      issueRepoName: project.issueRepoName,
+      specsRepoName: project.specsRepoName,
+    });
   }, [project, setProject]);
 
   if (isLoading) {
@@ -137,6 +136,7 @@ function ProjectLayoutInner() {
       <div className="min-h-0 flex-1 overflow-hidden">
         <Outlet />
       </div>
+      <ProjectAgentPanel key={project.id} project={project} />
     </div>
   );
 }
