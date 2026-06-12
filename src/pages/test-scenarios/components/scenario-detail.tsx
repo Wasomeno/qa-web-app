@@ -86,7 +86,6 @@ import { DescriptionEditor } from "@/pages/issues/create/components/description-
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { uploadService } from "@/services/upload";
 import { useStreamEvents, StreamEvent } from "@/pages/agent/hooks/use-stream-events";
-import { TestScenarioChatAgent } from "./test-scenario-chat-agent";
 import {
   Popover,
   PopoverTrigger,
@@ -595,7 +594,16 @@ function hasPendingAutomationGeneration(scenario: TestScenario): boolean {
     scenario.processingStatus === "generating" ||
     scenario.sections?.some((section) =>
       section.testCases.some(
-        (testCase) => testCase.processingStatus === "generating" || testCase.automationTest?.status === "running",
+        (testCase) =>
+          testCase.processingStatus === "generating" ||
+          testCase.automationTest?.status === "running" ||
+          // Keep polling when status is "idle" (generation complete) but
+          // automation steps haven't been populated yet by the server.
+          // Without this, polling stops and the UI falls back to "configure"
+          // step, requiring a manual refresh to see generated steps.
+          (testCase.automationTest?.status === "idle" &&
+            testCase.automationStatus === "idle" &&
+            !hasGeneratedE2EAutomation(testCase)),
       ),
     ),
   );
@@ -1135,25 +1143,27 @@ const PipelineSteps: React.FC<{
       {steps.map((step, i) => {
         const state =
           i < idx ? "done" : i === idx ? "active" : "pending";
+        const connectorState =
+          i < idx ? "done" : i === idx ? "active" : "pending";
         return (
           <React.Fragment key={step.key}>
             {i > 0 && (
               <div
                 className={cn(
-                  "h-px flex-1 mx-1.5",
-                  state === "done" || state === "active"
-                    ? "bg-muted"
-                    : "bg-muted",
+                  "h-px flex-1 mx-1.5 transition-colors",
+                  connectorState === "done" && "bg-success-300",
+                  connectorState === "active" && "bg-accent-300",
+                  connectorState === "pending" && "bg-muted",
                 )}
               />
             )}
             <div className="flex items-center gap-1.5 shrink-0">
               <div
                 className={cn(
-                  "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-colors",
-                  state === "done" && "bg-zinc-900 text-white",
-                  state === "active" && "bg-zinc-900 text-white ring-2 ring-foreground/20",
-                  state === "pending" && "bg-muted text-muted-foreground",
+                  "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold border transition-colors",
+                  state === "done" && "border-success-200 bg-success-50 text-success-700",
+                  state === "active" && "border-accent-300 bg-accent-50 text-accent-700 ring-2 ring-accent-100",
+                  state === "pending" && "border-border bg-muted text-muted-foreground",
                 )}
               >
                 {state === "done" ? (
@@ -1165,8 +1175,8 @@ const PipelineSteps: React.FC<{
               <span
                 className={cn(
                   "text-[11px] font-medium whitespace-nowrap transition-colors",
-                  state === "done" && "text-foreground",
-                  state === "active" && "text-foreground font-semibold",
+                  state === "done" && "text-success-700",
+                  state === "active" && "text-accent-700 font-semibold",
                   state === "pending" && "text-muted-foreground",
                 )}
               >
@@ -1468,7 +1478,7 @@ const E2EAutomationPanel: React.FC<{
     ? "generate"
     : testCase.automationTest?.status === "running" && !isGenerated
       ? "generate"
-      : isGenerated || hasRunResult
+      : isGenerated || hasRunResult || testCase.automationStatus === "idle"
         ? "review"
         : "configure";
 
@@ -3043,10 +3053,10 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   // Sync local state from server data when the route refetches
   // (e.g. after invalidateQueries following E2E generation completion).
   // This ensures the generated layout shows up without requiring a manual
-  // page refresh. Only sync when the scenario IDs match (same scenario)
-  // to avoid overwriting optimistic local updates on a different scenario.
+  // page refresh, even when the scenario-level updatedAt hasn't changed
+  // (e.g. nested test case data updated via PATCH).
   React.useEffect(() => {
-    if (initialScenario.id === scenario.id && initialScenario.updatedAt !== scenario.updatedAt) {
+    if (initialScenario.id === scenario.id) {
       setScenario(initialScenario);
     }
     // We intentionally depend on initialScenario to pick up route refetches.
@@ -3736,12 +3746,6 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
         </main>
       </div>
 
-      {/* 48px icon nav + 300px test-cases aside = 348px content area offset */}
-      <TestScenarioChatAgent
-        projectId={projectId || scenario.projectId}
-        projectName={projectName || scenario.projectName}
-        leftOffset={348}
-      />
     </div>
   );
 };

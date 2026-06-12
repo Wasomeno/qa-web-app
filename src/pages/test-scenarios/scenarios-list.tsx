@@ -47,7 +47,6 @@ import { cn } from "@/lib/utils";
 import type { ScenarioImportStatus } from "@/api/test-scenario";
 
 import { ScenarioImportDashboard } from "./components/generation-dashboard";
-import { TestScenarioChatAgent } from "./components/test-scenario-chat-agent";
 
 const SCENARIOS_PER_PAGE = 10;
 const isActiveImportState = (state: ScenarioImportStatus['state']) =>
@@ -98,6 +97,7 @@ export const TestScenariosPage: React.FC<{
   const [syncRowTargetId, setSyncRowTargetId] = useState<string | null>(null);
   const [syncingScenarioId, setSyncingScenarioId] = useState<string | null>(null);
   const [dismissedDashboardKey, setDismissedDashboardKey] = useState<string | null>(null);
+  const [hasSeenActiveImport, setHasSeenActiveImport] = useState(false);
   const refetchedTerminalImportKeyRef = useRef<string | null>(null);
 
   // Use local project state for this page
@@ -285,13 +285,21 @@ export const TestScenariosPage: React.FC<{
   const importStatus = sseImportStatus ?? importStatusData ?? idleImportStatus;
   const isImportActive = isActiveImportState(importStatus.state);
   const isImportTerminal = isTerminalImportState(importStatus.state);
+  const importTerminalKey = isImportTerminal
+    ? `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`
+    : null;
   const isScenarioSyncPending =
     scenarioSync === 'started' && !isImportTerminal;
+  const shouldShowTerminalImport =
+    isImportTerminal &&
+    !!importTerminalKey &&
+    dismissedDashboardKey !== importTerminalKey &&
+    (scenarioSync === 'started' || hasSeenActiveImport);
   const shouldShowImportDashboard =
     isSyncing ||
     isScenarioSyncPending ||
     isImportActive ||
-    isImportTerminal;
+    shouldShowTerminalImport;
   const dashboardImportStatus: ScenarioImportStatus =
     (isSyncing || isScenarioSyncPending) && importStatus.state === 'idle'
       ? {
@@ -304,7 +312,7 @@ export const TestScenariosPage: React.FC<{
   const dashboardKey = shouldShowImportDashboard
     ? importStatus.state === 'idle'
       ? `placeholder:${activeProjectId ?? 'all'}:${isScenarioSyncPending ? 'started' : ''}:${isSyncing ? 'syncing' : ''}`
-      : `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`
+      : importTerminalKey ?? `${importStatus.state}:${importStatus.updatedAt}`
     : null;
   const showDashboard =
     dashboardKey !== null && dismissedDashboardKey !== dashboardKey;
@@ -332,6 +340,7 @@ export const TestScenariosPage: React.FC<{
   const handleDismissImportDashboard = useCallback(() => {
     syncState?.reset?.();
     setDismissedDashboardKey(dashboardKey);
+    setHasSeenActiveImport(false);
     clearScenarioSyncMarker();
   }, [clearScenarioSyncMarker, dashboardKey, syncState]);
 
@@ -406,13 +415,23 @@ export const TestScenariosPage: React.FC<{
     });
   }, [scenarios, activeProjectId, projectId]);
 
+  useEffect(() => {
+    if (isSyncing || isScenarioSyncPending || isImportActive) {
+      setHasSeenActiveImport(true);
+    }
+  }, [isImportActive, isScenarioSyncPending, isSyncing]);
+
   // Refetch the paginated list once when backend import finishes.
   useEffect(() => {
     if (!isImportTerminal) {
       return;
     }
 
-    const terminalKey = `${importStatus.state}:${importStatus.completedAt ?? importStatus.updatedAt}`;
+    const terminalKey = importTerminalKey;
+    if (!terminalKey) {
+      return;
+    }
+
     if (refetchedTerminalImportKeyRef.current !== terminalKey) {
       refetchedTerminalImportKeyRef.current = terminalKey;
       refetch();
@@ -421,6 +440,7 @@ export const TestScenariosPage: React.FC<{
     clearScenarioSyncMarker();
   }, [
     clearScenarioSyncMarker,
+    importTerminalKey,
     importStatus.completedAt,
     importStatus.state,
     importStatus.updatedAt,
@@ -918,11 +938,6 @@ export const TestScenariosPage: React.FC<{
           </div>
         </DialogContent>
       </Dialog>
-
-      <TestScenarioChatAgent
-        projectId={activeProjectId ?? undefined}
-        projectName={projectName}
-      />
 
       {/* Sync all confirmation dialog */}
       <AlertDialog open={syncConfirmOpen} onOpenChange={setSyncConfirmOpen}>
