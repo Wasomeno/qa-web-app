@@ -22,13 +22,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton:
             "group-[.toast]:bg-transparent group-[.toast]:text-[rgba(11,18,32,0.45)] group-[.toast]:hover:text-[#0b1220]",
           success:
-            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#10b981]",
+            "border-l-4 border-l-[#10b981] [&_[data-icon]]:text-success-500",
           error:
-            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#334155]",
+            "border-l-4 border-l-[#334155] [&_[data-icon]]:text-error-600",
           info:
-            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#3bb2f6]",
+            "border-l-4 border-l-[#3bb2f6]",
           warning:
-            "group-[.toast]:border-l-4 group-[.toast]:border-l-[#f59e0b]",
+            "border-l-4 border-l-[#f59e0b] [&_[data-icon]]:text-warning-500",
         },
       }}
       {...props}
