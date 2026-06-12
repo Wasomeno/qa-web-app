@@ -6,14 +6,12 @@ import {
   Activity,
   AlertTriangle,
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   BarChart3,
   CheckCircle,
   ChevronDown,
   ChevronRight,
   ClipboardList,
-  FileText,
   FolderKanban,
   GitPullRequest,
   Info,
@@ -21,7 +19,6 @@ import {
   Minus,
   Plus,
   RefreshCw,
-  SquareKanban,
   Trash2,
   Video,
   Wrench,
@@ -38,6 +35,7 @@ import {
   listAppProjects,
 } from "@/api/project";
 import { AppProject, GitLabProject, ProjectDashboard } from "@/types/project";
+import { useProjectSidebar } from "@/contexts/project-sidebar-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,6 +87,15 @@ const DEFAULT_TEST_CONTEXT_TEMPLATE = `# Project Test Context
 - Cases the automation generator should explicitly cover:
 `;
 
+function toProjectSidebarState(project: AppProject) {
+  return {
+    projectId: project.id,
+    projectName: project.name,
+    issueRepoName: project.issueRepoName,
+    specsRepoName: project.specsRepoName,
+  };
+}
+
 function formatDate(value?: string) {
   if (!value) return "Unknown";
   return new Date(value).toLocaleDateString("en-US", {
@@ -107,6 +114,7 @@ function CreateProjectDialog({
 }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { setProject } = useProjectSidebar();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [issueRepo, setIssueRepo] = useState<GitLabProject | null>(null);
@@ -136,6 +144,7 @@ function CreateProjectDialog({
       setTestContextMarkdown("");
       setShowTestContext(false);
       if (created?.id) {
+        setProject(toProjectSidebarState(created));
         navigate({
           to: "/projects/$id",
           params: { id: created.id },
@@ -289,12 +298,20 @@ function CreateProjectDialog({
 
 export function ProjectsPage() {
   const navigate = useNavigate();
+  const { setProject } = useProjectSidebar();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["app-projects"],
     queryFn: listAppProjects,
   });
   const projects = data?.data?.projects ?? [];
+  const openProject = (project: AppProject) => {
+    setProject(toProjectSidebarState(project));
+    navigate({
+      to: "/projects/$id",
+      params: { id: project.id },
+    });
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
@@ -377,12 +394,7 @@ export function ProjectsPage() {
                 {projects.map((project) => (
                   <tr
                     key={project.id}
-                    onClick={() =>
-                      navigate({
-                        to: "/projects/$id" as any,
-                        params: { id: project.id } as any,
-                      })
-                    }
+                    onClick={() => openProject(project)}
                     className="border-b border-border/50 cursor-pointer transition-colors hover:bg-accent/50 group"
                   >
                     <td className="py-4 pr-4">
@@ -511,11 +523,10 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
     ? { direction: (dashboard.issuesToday.closed > 0 ? "down" : "flat") as "down" | "flat", label: `${dashboard.issuesToday.closed} closed` }
     : undefined;
 
-  const handleNavigate = (tab: string) => {
+  const openSettings = () => {
     navigate({
-      to: "/projects/$id" as any,
-      params: { id: project.id } as any,
-      search: { tab } as any,
+      to: "/projects/$id/settings",
+      params: { id: project.id },
     });
   };
 
@@ -539,7 +550,7 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
                 </span>
               ) : (
                 <button
-                  onClick={() => handleNavigate("settings")}
+                  onClick={openSettings}
                   className="inline-flex items-center rounded-full bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground ring-1 ring-inset ring-border transition-colors hover:text-foreground"
                 >
                   Add context
@@ -614,11 +625,9 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
         />
       </div>
 
-      {/* Band 3: Two-column work area */}
-      <div className="grid gap-6 lg:grid-cols-5">
-
-        {/* Left: Recent activity feed (3/5 width) */}
-        <div className="rounded-xl border border-border bg-card shadow-sm lg:col-span-3">
+      {/* Band 3: Recent activity */}
+      <div>
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
             {activityLoading && (
@@ -703,49 +712,6 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
               </p>
             </div>
           )}
-        </div>
-
-        {/* Right: Quick actions grid (2/5 width) */}
-        <div className="rounded-xl border border-border bg-card shadow-sm lg:col-span-2">
-          <div className="border-b border-border px-5 py-3.5">
-            <h3 className="text-sm font-semibold text-foreground">Navigate</h3>
-          </div>
-          <div className="divide-y divide-border/50">
-            {[
-              { icon: GitPullRequest, label: "Issues", tab: "issues", desc: "Browse open issues and boards" },
-              { icon: ClipboardList, label: "Test Scenarios", tab: "test-scenarios", desc: scenarioSync === 'started' ? "Currently syncing" : "Review AI-generated scenarios" },
-              { icon: Video, label: "Recordings", tab: "recordings", desc: "Review browser recordings" },
-              { icon: Wrench, label: "Fix Sessions", tab: "fix-sessions", desc: "Track AI-assisted fixes" },
-              { icon: SquareKanban, label: "Boards", tab: "boards", desc: "Move issues across columns" },
-              { icon: FileText, label: "Specs", tab: "specs", desc: "Browse specs repository" },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.tab}
-                  onClick={() => handleNavigate(item.tab)}
-                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-accent/50 group"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground/60 transition-colors group-hover:bg-foreground/5">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground/80 transition-colors group-hover:text-foreground">
-                      {item.label}
-                      {item.tab === "test-scenarios" && scenarioSync === 'started' && (
-                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                          Syncing
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-muted-foreground/60">{item.desc}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/60" />
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>

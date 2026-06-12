@@ -26,7 +26,7 @@ function ProjectIndexRoute() {
   useEffect(() => {
     setHeader({
       title: "Overview",
-      description: "Project overview and quick actions",
+      description: "Project status and recent activity",
     });
   }, [setHeader]);
 

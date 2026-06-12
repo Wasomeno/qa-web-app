@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Pin,
   FolderKanban,
-  Home,
   LogOut,
   Loader2,
   SquareKanban,
@@ -18,8 +17,6 @@ import { useSession } from "@/contexts/session-context";
 import { useLogout } from "@/hooks/use-logout";
 import { useProjectSidebar } from "@/contexts/project-sidebar-context";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import {
@@ -70,10 +67,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Workspace",
     items: [
-      { id: "home", path: "/", label: "Home", icon: Home, exact: true },
       {
         id: "projects",
-        path: "/projects",
+        path: "/",
         label: "Projects",
         icon: FolderKanban,
       },
@@ -101,6 +97,9 @@ const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
 ];
 
 function isRouteActive(locationPath: string, item: NavItem): boolean {
+  if (item.id === "projects") {
+    return locationPath === "/" || locationPath === "/projects" || locationPath.startsWith("/projects/");
+  }
   if (item.exact) return locationPath === item.path;
   return locationPath === item.path || locationPath.startsWith(item.path + "/");
 }
@@ -119,10 +118,18 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   const session = useSession();
   const user = session?.user;
   const logoutMutation = useLogout();
-  const { project } = useProjectSidebar();
+  const { project, setProject } = useProjectSidebar();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
-  const projectBase = project ? `/projects/${project.projectId}` : "";
+  const isProjectDetailPath = /^\/projects\/[^/]+/.test(location.pathname);
+  const activeProject = isProjectDetailPath ? project : null;
+  const projectBase = activeProject ? `/projects/${activeProject.projectId}` : "";
+
+  useEffect(() => {
+    if (!isProjectDetailPath) {
+      setProject(null);
+    }
+  }, [isProjectDetailPath, setProject]);
 
   return (
     <div ref={setContainer} className="fixed inset-0 flex flex-col bg-background">
@@ -133,7 +140,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           portalContainer={container}
         >
           <Sidebar collapsible="icon">
-            {project ? (
+            {activeProject ? (
               /* ─── Project Context Sidebar ─── */
               <>
                 <SidebarHeader className="px-3 py-3">
@@ -152,7 +159,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   {/* Project name — visible when expanded */}
                   <div className="mt-3 group-data-[collapsible=icon]:hidden">
                     <h2 className="truncate text-sm font-semibold text-foreground">
-                      {project.projectName}
+                      {activeProject.projectName}
                     </h2>
                   </div>
                   {/* Collapsed state — just icon */}
@@ -171,7 +178,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                   <SidebarGroup className="py-1.5">
                     <div className="px-3 pb-1.5 pt-1 group-data-[collapsible=icon]:hidden">
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {project.projectName}
+                        {activeProject.projectName}
                       </span>
                     </div>
                     <SidebarGroupContent>
@@ -197,12 +204,12 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                                     if (item.id === 'overview') {
                                       navigate({
                                         to: "/projects/$id" as any,
-                                        params: { id: project.projectId } as any,
+                                        params: { id: activeProject.projectId } as any,
                                       } as any);
                                     } else {
                                       navigate({
                                         to: `/projects/$id${item.path}` as any,
-                                        params: { id: project.projectId } as any,
+                                        params: { id: activeProject.projectId } as any,
                                       } as any);
                                     }
                                   }}
