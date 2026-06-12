@@ -262,6 +262,7 @@ const ProjectAgentThread: React.FC<ProjectAgentThreadProps> = ({
     sessionId,
     initialMessages,
     onMessagesChange,
+    appProjectId: project.id,
   });
 
   useEffect(() => {

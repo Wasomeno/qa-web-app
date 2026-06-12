@@ -11,6 +11,8 @@ interface UseAgentOptions {
   onMessagesChange?: (messages: Message[]) => void;
   /** API endpoint for the chat request. Defaults to /api/agent/chat */
   endpoint?: string;
+  /** App project ID to scope the agent to a specific project */
+  appProjectId?: string;
 }
 
 export const useAgent = (options?: UseAgentOptions) => {
@@ -128,6 +130,7 @@ export const useAgent = (options?: UseAgentOptions) => {
           body: JSON.stringify({
             input: content,
             session_id: sessionId,
+            app_project_id: options?.appProjectId || undefined,
             attachments: base64Attachments.length > 0 ? base64Attachments : undefined,
           }),
         });
@@ -249,7 +252,7 @@ export const useAgent = (options?: UseAgentOptions) => {
         activeSessionIdRef.current = null;
       }
     },
-    [sessionId, options?.endpoint]
+    [sessionId, options?.endpoint, options?.appProjectId]
   );
 
   // Reset messages and clear the cache for this session
