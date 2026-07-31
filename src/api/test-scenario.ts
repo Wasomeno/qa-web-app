@@ -10,8 +10,6 @@ import {
 export interface GenerateAutomationRequest {
   category: AutomationCategory;
   testCaseIds: string[];
-  backendRepoId?: string;
-  frontendRepoId?: string;
 }
 
 export interface GenerateAutomationResponse {
@@ -20,9 +18,23 @@ export interface GenerateAutomationResponse {
   jobId?: string;
   id?: string;
   testCaseIds?: string[];
-  backendRepoId?: string;
   prompts?: Array<{ testCaseId: string; prompt: string }>;
   updated?: number;
+}
+
+export interface GenerateScenarioAutomationsPayload {
+  force?: boolean;
+}
+
+export interface GenerateScenarioAutomationsResponse {
+  message: "scenario automation generation started";
+  id: string;
+  apiCount: number;
+  e2eCount: number;
+  manualSkipped: number;
+  unassignedSkipped: number;
+  e2eJobId: string;
+  force: boolean;
 }
 
 export type ScenarioImportState = 'idle' | 'syncing' | 'importing' | 'completed' | 'error';
@@ -252,6 +264,22 @@ export const testScenarioApi = {
     const response = await api.post<GenerateAutomationResponse>(
       `/projects/${projectId}/test-scenarios/${id}/automations`,
       { body: JSON.stringify(params) },
+    );
+    if (!response.success) throw new Error(response.error);
+    return response.data!;
+  },
+
+  generateScenarioAutomations: async (
+    id: string,
+    projectId: string,
+    payload: GenerateScenarioAutomationsPayload = {},
+  ): Promise<GenerateScenarioAutomationsResponse> => {
+    const response = await api.post<GenerateScenarioAutomationsResponse>(
+      `/projects/${projectId}/test-scenarios/${id}/automations/generate`,
+      {
+        credentials: "include",
+        body: JSON.stringify(payload),
+      },
     );
     if (!response.success) throw new Error(response.error);
     return response.data!;

@@ -81,7 +81,6 @@ import {
   ManualTestStatus,
 } from "@/types/test-scenario";
 import { testScenarioApi } from "@/api/test-scenario";
-import { ProjectSelect } from "@/components/project-select";
 import { DescriptionEditor } from "@/pages/issues/create/components/description-editor";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { uploadService } from "@/services/upload";
@@ -539,10 +538,12 @@ const CATEGORY_META: Record<
   },
 };
 
-function inferAutomationCategory(testCase: TestCase): AutomationCategory {
+type AutomationCategorySelection = AutomationCategory | null;
+
+function inferAutomationCategory(testCase: TestCase): AutomationCategorySelection {
   const cat = testCase.automationType || testCase.automationTest?.category;
   if (cat === 'api' || cat === 'e2e' || cat === 'manual') return cat;
-  return 'manual';
+  return null;
 }
 
 type AutomationCategoryUpdateResult = Awaited<
@@ -622,6 +623,51 @@ function getAutomationGenerationPollKey(scenario: TestScenario): string {
   return `${scenario.processingStatus || "idle"}:${statuses}`;
 }
 
+function getScenarioAutomationCounts(scenario: TestScenario) {
+  return (scenario.sections ?? []).reduce(
+    (counts, section) => {
+      section.testCases.forEach((testCase) => {
+        const category = inferAutomationCategory(testCase);
+        if (category === "api") counts.api += 1;
+        else if (category === "e2e") counts.e2e += 1;
+        else if (category === "manual") counts.manual += 1;
+        else counts.unassigned += 1;
+      });
+      return counts;
+    },
+    { api: 0, e2e: 0, manual: 0, unassigned: 0 },
+  );
+}
+
+function markScenarioAutomationGenerationStarted(
+  scenario: TestScenario,
+): TestScenario {
+  const startedAt = new Date().toISOString();
+  return {
+    ...scenario,
+    processingStatus: "generating",
+    sections: (scenario.sections ?? []).map((section) => ({
+      ...section,
+      testCases: section.testCases.map((testCase) => {
+        if (inferAutomationCategory(testCase) !== "e2e") return testCase;
+        return {
+          ...testCase,
+          processingStatus: "generating",
+          automationType: "e2e",
+          automationTest: {
+            id: testCase.automationTest?.id || `auto-pending-${testCase.id}`,
+            name: testCase.automationTest?.name || `${testCase.code}_E2E`,
+            ...testCase.automationTest,
+            category: "e2e",
+            status: "running",
+            lastRunAt: startedAt,
+          },
+        };
+      }),
+    })),
+  };
+}
+
 function hasGeneratedE2EAutomation(testCase: TestCase): boolean {
   return Boolean(
     testCase.automationTest?.category === "e2e" &&
@@ -634,16 +680,25 @@ function getAutomationStepKey(index: number): string {
 }
 
 const AutomationCategorySelect: React.FC<{
-  value: AutomationCategory;
-  onChange: (category: AutomationCategory) => void;
+  value: AutomationCategorySelection;
+  onChange: (category: AutomationCategorySelection) => void;
   disabled?: boolean;
 }> = ({ value, onChange, disabled = false }) => {
-  const meta = CATEGORY_META[value] ?? { label: value, icon: null, description: '', classes: 'bg-muted text-foreground border-border' };
+  const meta = value
+    ? CATEGORY_META[value]
+    : {
+        label: "Not assigned",
+        icon: <AlertCircle className="w-3.5 h-3.5" />,
+        description: "",
+        classes: "bg-muted text-muted-foreground border-border",
+      };
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <Select
-        value={value}
-        onValueChange={(v) => onChange(v as AutomationCategory)}
+        value={value ?? "unassigned"}
+        onValueChange={(v) =>
+          onChange(v === "unassigned" ? null : (v as AutomationCategory))
+        }
         disabled={disabled}
       >
         <SelectTrigger
@@ -660,6 +715,7 @@ const AutomationCategorySelect: React.FC<{
           </div>
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="unassigned">Not assigned</SelectItem>
           <SelectItem value="api">API Test</SelectItem>
           <SelectItem value="e2e">End to End</SelectItem>
           <SelectItem value="manual">Manual</SelectItem>
@@ -1058,7 +1114,7 @@ const AutomationCategoryPanel: React.FC<{
   projectId?: string;
   sectionId: string;
   testCase: TestCase;
-  category: AutomationCategory;
+  category: AutomationCategorySelection;
   onUpdate: (tc: TestCase) => void;
   runState?: TestRunState | null;
   onRunStateChange?: React.Dispatch<React.SetStateAction<TestRunState | null>>;
@@ -1072,23 +1128,18 @@ const AutomationCategoryPanel: React.FC<{
   runState,
   onRunStateChange,
 }) => {
-  const [backendRepoId, setBackendRepoId] = useState(
-    testCase.automationTest?.repoId || "",
-  );
-  const [frontendRepoId, setFrontendRepoId] = useState(
-    testCase.automationTest?.repoId || "",
-  );
-
-  React.useEffect(() => {
-    const repoId = testCase.automationTest?.repoId || "";
-    if (testCase.automationTest?.category === "api") setBackendRepoId(repoId);
-    if (testCase.automationTest?.category === "e2e") setFrontendRepoId(repoId);
-  }, [testCase.automationTest?.repoId, testCase.automationTest?.category]);
-
   if (!projectId) {
     return (
       <div className="rounded-xl border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
         Project context is required before automation can be configured.
+      </div>
+    );
+  }
+
+  if (!category) {
+    return (
+      <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        Assign API, End to End, or Manual before generating scenario automations.
       </div>
     );
   }
@@ -1099,8 +1150,6 @@ const AutomationCategoryPanel: React.FC<{
         scenarioId={scenarioId}
         projectId={projectId}
         testCase={testCase}
-        backendRepoId={backendRepoId}
-        setBackendRepoId={setBackendRepoId}
         onUpdate={onUpdate}
       />
     );
@@ -1113,8 +1162,6 @@ const AutomationCategoryPanel: React.FC<{
         projectId={projectId}
         sectionId={sectionId}
         testCase={testCase}
-        frontendRepoId={frontendRepoId}
-        setFrontendRepoId={setFrontendRepoId}
         onUpdate={onUpdate}
         runState={runState}
         onRunStateChange={onRunStateChange}
@@ -1194,15 +1241,11 @@ const APIAutomationPanel: React.FC<{
   scenarioId: string;
   projectId: string;
   testCase: TestCase;
-  backendRepoId: string;
-  setBackendRepoId: (value: string) => void;
   onUpdate: (tc: TestCase) => void;
 }> = ({
   scenarioId,
   projectId,
   testCase,
-  backendRepoId,
-  setBackendRepoId,
   onUpdate,
 }) => {
   const queryClient = useQueryClient();
@@ -1215,7 +1258,6 @@ const APIAutomationPanel: React.FC<{
       testScenarioApi.generateAutomation(scenarioId, projectId, {
         category: "api",
         testCaseIds: [testCase.id],
-        backendRepoId,
       }),
     onSuccess: (result) => {
       const nextPrompt =
@@ -1229,7 +1271,6 @@ const APIAutomationPanel: React.FC<{
           id: testCase.automationTest?.id || `api-prompt-${testCase.id}`,
           name: `${testCase.code} API test prompt`,
           category: "api",
-          repoId: backendRepoId,
           prompt: nextPrompt,
           status: "idle",
           lastRunAt: new Date().toISOString(),
@@ -1261,14 +1302,14 @@ const APIAutomationPanel: React.FC<{
       {/* Pipeline Header */}
       <PipelineSteps
         steps={[
-          { key: "configure", label: "Configure" },
-          { key: "generate", label: "Generate" },
+          { key: "configure", label: "Generate" },
+          { key: "generate", label: "Generating" },
           { key: "review", label: "Review" },
         ]}
         current={pipelineStep}
       />
 
-      {/* Step 1: Configure */}
+      {/* Step 1: Generate */}
       <AnimatePresence mode="wait">
         {pipelineStep === "configure" && (
           <motion.div
@@ -1284,30 +1325,15 @@ const APIAutomationPanel: React.FC<{
                 Backend prompt
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                Select the backend repo. The result is a compact prompt for a
-                developer's local coding agent.
+                Generate a compact prompt for a developer's local coding agent.
               </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Backend repository
-              </label>
-              <ProjectSelect
-                value={backendRepoId ? Number(backendRepoId) : null}
-                onSelect={(project) =>
-                  setBackendRepoId(project ? String(project.id) : "")
-                }
-                placeholder="Select a project..."
-                className="h-10 rounded-lg"
-              />
             </div>
 
             <div className="flex justify-end">
               <Button
                 size="sm"
                 className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
-                disabled={!backendRepoId}
+                disabled={mutation.isPending}
                 onClick={() => mutation.mutate()}
               >
                 <Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -1334,7 +1360,7 @@ const APIAutomationPanel: React.FC<{
               Generating prompt
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Analyzing backend repo structure…
+              Building the API automation prompt…
             </p>
           </motion.div>
         )}
@@ -1363,7 +1389,7 @@ const APIAutomationPanel: React.FC<{
                   variant="outline"
                   size="sm"
                   className="h-8 rounded-lg text-xs border-border text-muted-foreground hover:bg-muted"
-                  disabled={!backendRepoId || mutation.isPending}
+                  disabled={mutation.isPending}
                   onClick={() => mutation.mutate()}
                 >
                   {mutation.isPending ? (
@@ -1402,8 +1428,6 @@ const E2EAutomationPanel: React.FC<{
   projectId: string;
   sectionId: string;
   testCase: TestCase;
-  frontendRepoId: string;
-  setFrontendRepoId: (value: string) => void;
   onUpdate: (tc: TestCase) => void;
   runState?: TestRunState | null;
   onRunStateChange?: React.Dispatch<React.SetStateAction<TestRunState | null>>;
@@ -1412,8 +1436,6 @@ const E2EAutomationPanel: React.FC<{
   projectId,
   sectionId,
   testCase,
-  frontendRepoId,
-  setFrontendRepoId,
   onUpdate,
   runState,
   onRunStateChange,
@@ -1437,7 +1459,6 @@ const E2EAutomationPanel: React.FC<{
       testScenarioApi.generateAutomation(scenarioId, projectId, {
         category: "e2e",
         testCaseIds: [testCase.id],
-        frontendRepoId,
       }),
     onSuccess: () => {
       onUpdate({
@@ -1447,7 +1468,6 @@ const E2EAutomationPanel: React.FC<{
           id: testCase.automationTest?.id || `auto-pending-${testCase.id}`,
           name: `${testCase.code}_E2E`,
           category: "e2e",
-          repoId: frontendRepoId,
           status: "running",
         },
       });
@@ -1487,14 +1507,14 @@ const E2EAutomationPanel: React.FC<{
       {/* Pipeline Header */}
       <PipelineSteps
         steps={[
-          { key: "configure", label: "Configure" },
-          { key: "generate", label: "Generate" },
+          { key: "configure", label: "Generate" },
+          { key: "generate", label: "Generating" },
           { key: "review", label: "Run" },
         ]}
         current={pipelineStep}
       />
 
-      {/* Step 1: Configure */}
+      {/* Step 1: Generate */}
       <AnimatePresence mode="wait">
         {pipelineStep === "configure" && (
           <motion.div
@@ -1510,30 +1530,16 @@ const E2EAutomationPanel: React.FC<{
                 Browser automation
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                Select the frontend repo. Generation runs in the background and
-                saves executable steps.
+                Generate browser automation in the background and save
+                executable steps.
               </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Frontend repository
-              </label>
-              <ProjectSelect
-                value={frontendRepoId ? Number(frontendRepoId) : null}
-                onSelect={(project) =>
-                  setFrontendRepoId(project ? String(project.id) : "")
-                }
-                placeholder="Select a project..."
-                className="h-10 rounded-lg"
-              />
             </div>
 
             <div className="flex justify-end">
               <Button
                 size="sm"
                 className="h-9 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 px-4 text-xs shadow-sm"
-                disabled={!frontendRepoId}
+                disabled={mutation.isPending}
                 onClick={() => mutation.mutate()}
               >
                 <Play className="mr-1.5 h-3.5 w-3.5" />
@@ -1564,7 +1570,7 @@ const E2EAutomationPanel: React.FC<{
             <p className="text-xs text-muted-foreground mt-1">
               {mutation.isPending
                 ? "Preparing the generation pipeline."
-                : "Analyzing frontend repo and generating Playwright steps."}
+                : "Generating Playwright steps."}
             </p>
           </motion.div>
         )}
@@ -1594,7 +1600,7 @@ const E2EAutomationPanel: React.FC<{
                   variant="outline"
                   size="sm"
                   className="h-8 rounded-lg border-border text-muted-foreground hover:bg-muted px-3 text-xs"
-                  disabled={!frontendRepoId || mutation.isPending || isRunningThisTest}
+                  disabled={mutation.isPending || isRunningThisTest}
                   onClick={() => mutation.mutate()}
                 >
                   {mutation.isPending ? (
@@ -2557,7 +2563,7 @@ const SortableTestCase: React.FC<{
   onUpdate: (tc: TestCase, options?: { persist?: boolean }) => void;
   onAutomationCategoryChange: (
     testCase: TestCase,
-    category: AutomationCategory,
+    category: AutomationCategorySelection,
   ) => Promise<void>;
   runState: TestRunState | null;
   onRunStateChange: React.Dispatch<React.SetStateAction<TestRunState | null>>;
@@ -2574,7 +2580,7 @@ const SortableTestCase: React.FC<{
   onRunStateChange,
 }) => {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<AutomationCategory>(
+  const [selectedCategory, setSelectedCategory] = useState<AutomationCategorySelection>(
     inferAutomationCategory(testCase),
   );
 
@@ -2604,7 +2610,7 @@ const SortableTestCase: React.FC<{
   );
 
   const categoryMutation = useMutation({
-    mutationFn: (category: AutomationCategory) =>
+    mutationFn: (category: AutomationCategorySelection) =>
       onAutomationCategoryChange(testCase, category),
     onMutate: (category) => {
       setSelectedCategory(category);
@@ -2622,7 +2628,7 @@ const SortableTestCase: React.FC<{
     },
   });
 
-  const handleCategoryChange = (category: AutomationCategory) => {
+  const handleCategoryChange = (category: AutomationCategorySelection) => {
     if (categoryMutation.isPending || category === selectedCategory) return;
     categoryMutation.mutate(category);
   };
@@ -3048,21 +3054,9 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
   onAddTestCase,
   onDeleteTestCase,
 }) => {
+  const queryClient = useQueryClient();
   const [scenario, setScenario] = useState<TestScenario>(initialScenario);
-
-  // Sync local state from server data when the route refetches
-  // (e.g. after invalidateQueries following E2E generation completion).
-  // This ensures the generated layout shows up without requiring a manual
-  // page refresh, even when the scenario-level updatedAt hasn't changed
-  // (e.g. nested test case data updated via PATCH).
-  React.useEffect(() => {
-    if (initialScenario.id === scenario.id) {
-      setScenario(initialScenario);
-    }
-    // We intentionally depend on initialScenario to pick up route refetches.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialScenario]);
-
+  const previousScenarioIdRef = useRef(initialScenario.id);
   const nestedInProject = Boolean(projectId);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -3076,8 +3070,84 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     null,
   );
 
+  // Sync local state from server data when the route refetches or the router
+  // reuses this component for a different scenario id. The previous guard only
+  // synced when ids already matched, which let a reused detail view keep the
+  // prior scenario and post generation requests to the wrong scenario.
+  React.useEffect(() => {
+    const scenarioChanged = previousScenarioIdRef.current !== initialScenario.id;
+    previousScenarioIdRef.current = initialScenario.id;
+
+    setScenario(initialScenario);
+
+    if (scenarioChanged) {
+      setSelectedTestCaseId(null);
+      setExpandedIds(new Set());
+      setPage(1);
+      setRunState(null);
+    }
+  }, [initialScenario]);
+
   const ITEMS_PER_PAGE = 10;
+  const scenarioId = initialScenario.id;
   const sections = scenario.sections ?? [];
+  const scenarioProjectId = projectId || initialScenario.projectId || scenario.projectId;
+  const scenarioAutomationCounts = useMemo(
+    () => getScenarioAutomationCounts(scenario),
+    [scenario],
+  );
+  const generationTargetCount =
+    scenarioAutomationCounts.api + scenarioAutomationCounts.e2e;
+
+  const generateScenarioAutomationsMutation = useMutation({
+    mutationFn: () => {
+      if (!scenarioProjectId) {
+        throw new Error("Project context is required before automation generation.");
+      }
+      return testScenarioApi.generateScenarioAutomations(
+        scenarioId,
+        scenarioProjectId,
+        {},
+      );
+    },
+    onSuccess: (result) => {
+      if (result.id && result.id !== scenarioId) {
+        toast.error(
+          `Generation response was for ${result.id}, expected ${scenarioId}`,
+        );
+        queryClient.invalidateQueries({
+          queryKey: nestedInProject
+            ? ["test-scenario", projectId, scenarioId]
+            : ["test-scenario", scenarioId],
+        });
+        return;
+      }
+
+      if (result.e2eCount > 0) {
+        setScenario((prev) => markScenarioAutomationGenerationStarted(prev));
+      }
+      toast.success(
+        `Generation started: ${result.apiCount} API, ${result.e2eCount} E2E`,
+      );
+      if (result.manualSkipped || result.unassignedSkipped) {
+        toast.message(
+          `Skipped ${result.manualSkipped} manual and ${result.unassignedSkipped} unassigned test cases`,
+        );
+      }
+      queryClient.invalidateQueries({
+        queryKey: nestedInProject
+          ? ["test-scenario", projectId, scenarioId]
+          : ["test-scenario", scenarioId],
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to start scenario automation generation",
+      );
+    },
+  });
 
   // Flatten all test cases from all sections into one list
   const allTestCases = useMemo(
@@ -3123,7 +3193,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     const refreshScenario = async () => {
       try {
         const latest = await testScenarioApi.getScenario(
-          scenario.id,
+          scenarioId,
           projectId,
         );
         if (!cancelled) setScenario(latest);
@@ -3140,7 +3210,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
       window.clearInterval(interval);
     };
   }, [
-    scenario.id,
+    scenarioId,
     projectId,
     isAutomationGenerationPending,
     automationGenerationPollKey,
@@ -3275,7 +3345,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     async (
       sectionId: string,
       testCase: TestCase,
-      category: AutomationCategory,
+      category: AutomationCategorySelection,
     ) => {
       const result = onUpdateTestCaseAutomationCategory
         ? await onUpdateTestCaseAutomationCategory(
@@ -3284,7 +3354,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
             category,
           )
         : await testScenarioApi.updateTestCaseAutomationCategory(
-            scenario.id,
+            scenarioId,
             testCase.id,
             category,
             {
@@ -3307,7 +3377,7 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
     [
       onUpdateTestCaseAutomationCategory,
       projectId,
-      scenario.id,
+      scenarioId,
       updateTestCase,
     ],
   );
@@ -3371,9 +3441,26 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
           <Button
             size="sm"
             className="h-8 px-4 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs"
+            disabled={
+              generateScenarioAutomationsMutation.isPending ||
+              !scenarioProjectId ||
+              generationTargetCount === 0
+            }
+            title={
+              !scenarioProjectId
+                ? "Project context is required"
+                : generationTargetCount === 0
+                  ? "Assign API or End to End categories first"
+                  : `Generate ${generationTargetCount} assigned automation${generationTargetCount === 1 ? "" : "s"}`
+            }
+            onClick={() => generateScenarioAutomationsMutation.mutate()}
           >
-            <Play className="w-3.5 h-3.5 mr-1.5" />
-            Run Scenario
+            {generateScenarioAutomationsMutation.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            Generate Automations
           </Button>
         </div>
       </header>
@@ -3651,8 +3738,8 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               {/* Automation Category Panel */}
               <div className="mb-6">
                 <AutomationCategoryPanel
-                  scenarioId={scenario.id}
-                  projectId={projectId || scenario.projectId}
+                  scenarioId={scenarioId}
+                  projectId={scenarioProjectId}
                   sectionId={(selectedTestCase as any)._sectionId}
                   testCase={selectedTestCase}
                   category={inferAutomationCategory(selectedTestCase)}
@@ -3668,7 +3755,8 @@ export const ScenarioDetail: React.FC<ScenarioDetailProps> = ({
               </div>
 
               {/* Execution Result (for non-manual types - Manual panel handles this above) */}
-              {inferAutomationCategory(selectedTestCase) !== "manual" && (
+              {inferAutomationCategory(selectedTestCase) &&
+                inferAutomationCategory(selectedTestCase) !== "manual" && (
                 <div className="mb-6">
                   <h3 className="text-sm font-semibold text-foreground mb-3">
                     Execution Result

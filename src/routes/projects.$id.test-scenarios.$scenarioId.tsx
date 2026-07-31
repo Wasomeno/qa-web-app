@@ -38,6 +38,7 @@ function ProjectTestScenarioDetailRoute() {
 
   return (
     <ScenarioDetail
+      key={`${projectId}:${scenarioId}`}
       scenario={scenario}
       projectId={projectId}
       onClose={() => router.history.back()}

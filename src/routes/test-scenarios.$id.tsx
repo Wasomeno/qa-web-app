@@ -66,6 +66,7 @@ function TestScenariosDetailRoute() {
 
   return (
     <ScenarioDetail
+      key={id}
       scenario={scenario}
       onClose={() => router.history.back()}
       onGenerate={(sectionIds) => generateMutation.mutate(sectionIds)}

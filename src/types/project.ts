@@ -34,6 +34,8 @@ export interface CreateAppProjectRequest {
   testContextMarkdown?: string;
   issueRepoId: number;
   specsRepoId: number;
+  frontendRepoId: number;
+  backendRepoId: number;
 }
 
 export interface ProjectTestContextResponse {

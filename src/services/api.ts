@@ -45,7 +45,7 @@ async function request<T>(
       init: {
         ...options,
         headers: finalHeaders,
-        credentials: 'omit', // Avoid tricky CORS issues during preflight unless strict cookie sessions are needed
+        credentials: options.credentials ?? 'omit', // Avoid tricky CORS issues unless a protected route needs cookies.
         body: finalBody,
       },
       responseType: 'json',

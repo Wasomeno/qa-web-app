@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -18,23 +18,20 @@ import {
   Loader2,
   Minus,
   Plus,
-  RefreshCw,
   Trash2,
   Video,
   Wrench,
-  CheckCircle as CheckCircleIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   createAppProject,
   deleteAppProject,
-  getAppProject,
   getAppProjectActivity,
   getProjectDashboard,
   listAppProjects,
 } from "@/api/project";
-import { AppProject, GitLabProject, ProjectDashboard } from "@/types/project";
+import { AppProject, GitLabProject } from "@/types/project";
 import { useProjectSidebar } from "@/contexts/project-sidebar-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,6 +116,8 @@ function CreateProjectDialog({
   const [description, setDescription] = useState("");
   const [issueRepo, setIssueRepo] = useState<GitLabProject | null>(null);
   const [specsRepo, setSpecsRepo] = useState<GitLabProject | null>(null);
+  const [frontendRepo, setFrontendRepo] = useState<GitLabProject | null>(null);
+  const [backendRepo, setBackendRepo] = useState<GitLabProject | null>(null);
   const [testContextMarkdown, setTestContextMarkdown] = useState("");
   const [showTestContext, setShowTestContext] = useState(false);
 
@@ -130,6 +129,8 @@ function CreateProjectDialog({
         testContextMarkdown: testContextMarkdown.trim() || undefined,
         issueRepoId: issueRepo!.id,
         specsRepoId: specsRepo!.id,
+        frontendRepoId: frontendRepo!.id,
+        backendRepoId: backendRepo!.id,
       }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["app-projects"] });
@@ -141,6 +142,8 @@ function CreateProjectDialog({
       setDescription("");
       setIssueRepo(null);
       setSpecsRepo(null);
+      setFrontendRepo(null);
+      setBackendRepo(null);
       setTestContextMarkdown("");
       setShowTestContext(false);
       if (created?.id) {
@@ -154,13 +157,18 @@ function CreateProjectDialog({
         });
       }
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to create project");
+    onError: (error: unknown) => {
+      toast.error((error as Error)?.message || "Failed to create project");
     },
   });
 
   const canSubmit =
-    name.trim() && issueRepo && specsRepo && !createMutation.isPending;
+    name.trim() &&
+    issueRepo &&
+    specsRepo &&
+    frontendRepo &&
+    backendRepo &&
+    !createMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -219,6 +227,31 @@ function CreateProjectDialog({
               />
               <p className="text-xs text-muted-foreground">
                 Specs, code context, and generated automation use this
+                repository.
+              </p>
+            </div>
+            <div className="grid gap-2 min-w-0">
+              <Label>Frontend repository</Label>
+              <ProjectSelect
+                value={frontendRepo?.id ?? null}
+                projectDetails={frontendRepo}
+                onSelect={(project) => setFrontendRepo(project)}
+                placeholder="Select GitLab repo"
+              />
+              <p className="text-xs text-muted-foreground">
+                Frontend automation and UI context will use this repository.
+              </p>
+            </div>
+            <div className="grid gap-2 min-w-0">
+              <Label>Backend repository</Label>
+              <ProjectSelect
+                value={backendRepo?.id ?? null}
+                projectDetails={backendRepo}
+                onSelect={(project) => setBackendRepo(project)}
+                placeholder="Select GitLab repo"
+              />
+              <p className="text-xs text-muted-foreground">
+                API automation and backend code context will use this
                 repository.
               </p>
             </div>
@@ -429,68 +462,118 @@ export function ProjectsPage() {
   );
 }
 
-function TrendIcon({ value }: { value: number }) {
-  if (value > 0) return <ArrowUp className="h-3 w-3 text-red-500" />;
-  if (value < 0) return <ArrowDown className="h-3 w-3 text-emerald-500" />;
+const statusDotColor = {
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  error: "bg-red-500",
+  neutral: "bg-muted-foreground/30",
+} as const;
+
+const statusFillColor = {
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  error: "bg-red-500",
+  neutral: "bg-muted-foreground/40",
+} as const;
+
+function MiniProgress({
+  value,
+  status,
+  className,
+}: {
+  value: number;
+  status: "success" | "warning" | "error" | "neutral";
+  className?: string;
+}) {
+  const width = Math.max(0, Math.min(100, value));
+  return (
+    <div className={cn("h-1.5 w-full overflow-hidden rounded-full bg-muted", className)}>
+      <div
+        className={cn("h-full rounded-full transition-all duration-500", statusFillColor[status])}
+        style={{ width: `${width}%` }}
+      />
+    </div>
+  );
+}
+
+function TrendArrow({ direction }: { direction: "up" | "down" | "flat" }) {
+  if (direction === "up") return <ArrowUp className="h-3 w-3 text-red-500" />;
+  if (direction === "down") return <ArrowDown className="h-3 w-3 text-emerald-500" />;
   return <Minus className="h-3 w-3 text-muted-foreground" />;
 }
 
-function HealthTileSkeleton() {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-      <Skeleton className="h-4 w-4 rounded" />
-      <Skeleton className="mt-3 h-7 w-16" />
-      <Skeleton className="mt-1.5 h-3 w-20" />
-    </div>
-  );
-}
+const routePaths = {
+  issues: "/projects/$id/issues",
+  "test-scenarios": "/projects/$id/test-scenarios",
+  recordings: "/projects/$id/recordings",
+  "fix-sessions": "/projects/$id/fix-sessions",
+} as const;
 
-function HealthTile({
+type RouteKey = keyof typeof routePaths;
+
+function MetricTile({
   icon: Icon,
   label,
   value,
+  caption,
+  bottom,
   status,
-  trend,
+  projectId,
+  to,
+  isLoading,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  value: string | number | React.ReactNode;
+  value?: string | number | React.ReactNode;
+  caption?: string | React.ReactNode;
+  bottom?: React.ReactNode;
   status?: "success" | "warning" | "error" | "neutral";
-  trend?: { direction: "up" | "down" | "flat"; label: string };
+  projectId: string;
+  to?: RouteKey;
+  isLoading?: boolean;
 }) {
-  const statusDot = status
-    ? {
-        success: "bg-emerald-500",
-        warning: "bg-amber-500",
-        error: "bg-red-500",
-        neutral: "bg-muted-foreground/30",
-      }[status]
-    : null;
-
-  return (
-    <div className="relative rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/30">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          {statusDot && <div className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />}
-          <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        </div>
-        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
-      </div>
-      <div className="mt-2 flex items-baseline gap-1.5">
-        <span className="text-2xl font-semibold tracking-tight text-foreground">
-          {value}
-        </span>
-      </div>
-      {trend && (
-        <div className="mt-1 flex items-center gap-1">
-          {trend.direction === "up" && <ArrowUp className="h-3 w-3 text-red-400" />}
-          {trend.direction === "down" && <ArrowDown className="h-3 w-3 text-emerald-400" />}
-          {trend.direction === "flat" && <Minus className="h-3 w-3 text-muted-foreground/50" />}
-          <span className="text-[11px] text-muted-foreground/70">{trend.label}</span>
-        </div>
+  const body = (
+    <div className="flex h-full flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-150">
+      {isLoading ? (
+        <>
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="mt-5 h-8 w-16" />
+          <Skeleton className="mt-5 h-1.5 w-full rounded-full" />
+        </>
+      ) : (
+        <>
+          <div className="flex items-start justify-between">
+            <Icon className="h-5 w-5 text-muted-foreground/60" />
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-xs font-medium text-muted-foreground">{label}</span>
+              {status && <div className={cn("h-2 w-2 shrink-0 rounded-full", statusDotColor[status])} />}
+            </div>
+          </div>
+          <div className="mt-5">
+            <div className="text-3xl font-semibold tracking-tight text-foreground">{value ?? "--"}</div>
+            {caption && <div className="mt-0.5 text-xs text-muted-foreground">{caption}</div>}
+          </div>
+          {bottom && <div className="mt-5">{bottom}</div>}
+        </>
       )}
     </div>
   );
+
+  if (to) {
+    return (
+      <Link
+        to={routePaths[to]}
+        params={{ id: projectId }}
+        className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+      >
+        <div className="rounded-xl transition-all duration-150 group-hover:border-primary/20 group-hover:bg-accent/30 group-hover:shadow-md">
+          {body}
+        </div>
+      </Link>
+    );
+  }
+
+  return body;
 }
 
 export function ProjectOverview({ project, scenarioSync }: { project: AppProject; scenarioSync?: 'started' }) {
@@ -510,6 +593,7 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
 
   const dashboard = dashboardData?.data;
   const loading = dashboardLoading;
+  const syncing = scenarioSync === 'started';
 
   const issuesStatus = !dashboard
     ? "neutral" as const
@@ -519,9 +603,29 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
         ? "neutral" as const
         : "success" as const;
 
-  const issuesTrend = dashboard && dashboard.issuesToday
-    ? { direction: (dashboard.issuesToday.closed > 0 ? "down" : "flat") as "down" | "flat", label: `${dashboard.issuesToday.closed} closed` }
-    : undefined;
+  const issuesTodayStatus = !dashboard
+    ? "neutral" as const
+    : dashboard.issuesToday.opened > 5
+      ? "warning" as const
+      : dashboard.issuesToday.opened > 0
+        ? "neutral" as const
+        : "success" as const;
+
+  const issuesTodayDirection = !dashboard
+    ? "flat" as const
+    : dashboard.issuesToday.opened > dashboard.issuesToday.closed
+      ? "up" as const
+      : dashboard.issuesToday.opened < dashboard.issuesToday.closed
+        ? "down" as const
+        : "flat" as const;
+
+  const passRateStatus = !dashboard?.passRate
+    ? "neutral" as const
+    : dashboard.passRate.value >= 80
+      ? "success" as const
+      : dashboard.passRate.value >= 50
+        ? "warning" as const
+        : "error" as const;
 
   const openSettings = () => {
     navigate({
@@ -530,18 +634,19 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
     });
   };
 
-  return (
-    <div className="space-y-6 p-4 md:p-8">
+  const SyncIcon = () => <Loader2 className="h-5 w-5 animate-spin text-amber-500" />;
 
-      {/* Band 1: Project identity bar -- compact, like GitHub repo header */}
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground/70 ring-1 ring-border">
-            <FolderKanban className="h-4 w-4" />
+  return (
+    <div className="space-y-8 p-5 md:p-10">
+      {/* Identity band */}
+      <section className="flex flex-col gap-4 rounded-xl border border-border bg-card px-6 py-5 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground/70 ring-1 ring-border">
+            <FolderKanban className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="truncate text-sm font-semibold text-foreground">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-base font-semibold text-foreground">
                 {project.name}
               </h2>
               {project.testContextMarkdown ? (
@@ -557,76 +662,106 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
                 </button>
               )}
             </div>
-            <p className="mt-0.5 max-w-lg truncate text-xs text-muted-foreground">
+            <p className="mt-0.5 max-w-2xl truncate text-xs text-muted-foreground">
               {project.description || "Shared QA workspace for issues, scenarios, and recordings."}
             </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-          <span className="hidden items-center gap-1.5 md:inline-flex">
-            <span className="font-mono text-foreground/60 text-[11px]">{project.issueRepoName}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="font-mono text-[11px] text-foreground/60">{project.issueRepoName}</span>
             <span className="text-muted-foreground/40">|</span>
-            <span className="font-mono text-foreground/60 text-[11px]">{project.specsRepoName}</span>
+            <span className="font-mono text-[11px] text-foreground/60">{project.specsRepoName}</span>
           </span>
         </div>
-      </div>
+      </section>
 
-      {/* Band 2: Health indicator row -- compact, status-driven, not clickable */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-        {/* Open Issues */}
-        <HealthTile
+      {/* Metric band */}
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+        <MetricTile
           icon={GitPullRequest}
           label="Open Issues"
-          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.openIssues ?? "--"}
+          projectId={project.id}
+          to="issues"
+          isLoading={loading}
+          value={dashboard?.openIssues ?? "--"}
           status={loading ? "neutral" : issuesStatus}
-          trend={loading ? undefined : dashboard ? { direction: "flat", label: dashboard.openIssues === 0 ? "All clear" : "Open issues" } : { direction: "flat", label: "No data" }}
+          caption={dashboard ? (dashboard.openIssues === 0 ? "All clear" : `${dashboard.openIssues} open`) : "No data"}
+          bottom={dashboard ? <MiniProgress value={Math.min((dashboard.openIssues / 20) * 100, 100)} status={issuesStatus} /> : undefined}
         />
-        {/* Test Scenarios */}
-        <HealthTile
-          icon={scenarioSync === 'started' ? Loader2 : ClipboardList}
+
+        <MetricTile
+          icon={syncing ? SyncIcon : ClipboardList}
           label="Test Scenarios"
-          value={scenarioSync === 'started' ? (
-            <span className="flex items-center gap-1.5">
-              <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-              <span className="text-lg font-normal text-muted-foreground">{loading ? "--" : dashboard?.testScenarios ?? "--"}</span>
+          projectId={project.id}
+          to="test-scenarios"
+          isLoading={loading && !syncing}
+          value={syncing ? (
+            <span className="flex items-center gap-2 text-2xl font-semibold">
+              <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
+              {dashboard?.testScenarios ?? "--"}
             </span>
-          ) : loading ? <Skeleton className="h-7 w-12" /> : dashboard?.testScenarios ?? "--"}
-          status={scenarioSync === 'started' ? "warning" : loading ? "neutral" : dashboard && dashboard.testScenarios > 0 ? "success" : "neutral"}
+          ) : dashboard?.testScenarios ?? "--"}
+          status={syncing ? "warning" : loading ? "neutral" : dashboard && dashboard.testScenarios > 0 ? "success" : "neutral"}
+          caption={syncing ? "Syncing…" : dashboard ? `${dashboard.testScenarios} total` : "No data"}
+          bottom={!syncing && dashboard ? <MiniProgress value={dashboard.testScenarios > 0 ? 100 : 0} status={dashboard.testScenarios > 0 ? "success" : "neutral"} /> : undefined}
         />
-        {/* Recordings */}
-        <HealthTile
+
+        <MetricTile
           icon={Video}
           label="Recordings"
-          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.recordings ?? "--"}
+          projectId={project.id}
+          to="recordings"
+          isLoading={loading}
+          value={dashboard?.recordings ?? "--"}
           status={loading ? "neutral" : dashboard && dashboard.recordings > 0 ? "success" : "neutral"}
+          caption={dashboard ? `${dashboard.recordings} captured` : "No data"}
+          bottom={dashboard ? <MiniProgress value={dashboard.recordings > 0 ? 100 : 0} status={dashboard.recordings > 0 ? "success" : "neutral"} /> : undefined}
         />
-        {/* Fix Sessions */}
-        <HealthTile
+
+        <MetricTile
           icon={Wrench}
           label="Fix Sessions"
-          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.fixSessions ?? "--"}
+          projectId={project.id}
+          to="fix-sessions"
+          isLoading={loading}
+          value={dashboard?.fixSessions ?? "--"}
           status={loading ? "neutral" : dashboard && dashboard.fixSessions > 0 ? "success" : "neutral"}
+          caption={dashboard ? `${dashboard.fixSessions} active` : "No data"}
+          bottom={dashboard ? <MiniProgress value={dashboard.fixSessions > 0 ? 100 : 0} status={dashboard.fixSessions > 0 ? "success" : "neutral"} /> : undefined}
         />
-        {/* Pass Rate */}
-        <HealthTile
+
+        <MetricTile
           icon={BarChart3}
           label="Pass Rate"
-          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard?.passRate ? `${dashboard.passRate.value}%` : "--"}
-          status={loading ? "neutral" : !dashboard?.passRate ? "neutral" : dashboard.passRate.value >= 80 ? "success" : dashboard.passRate.value >= 50 ? "warning" : "error"}
-          trend={loading ? undefined : dashboard?.passRate ? { direction: dashboard.passRate.trend, label: dashboard.passRate.trendLabel } : { direction: "flat", label: "No runs" }}
+          projectId={project.id}
+          isLoading={loading}
+          value={dashboard?.passRate ? `${dashboard.passRate.value}%` : "--"}
+          status={loading ? "neutral" : passRateStatus}
+          caption={dashboard?.passRate ? dashboard.passRate.trendLabel : "No runs"}
+          bottom={dashboard?.passRate ? <MiniProgress value={dashboard.passRate.value} status={passRateStatus} /> : undefined}
         />
-        {/* Issues Today */}
-        <HealthTile
+
+        <MetricTile
           icon={Activity}
           label="Issues Today"
-          value={loading ? <Skeleton className="h-7 w-12" /> : dashboard ? `+${dashboard.issuesToday.opened}` : "--"}
-          status={loading ? "neutral" : !dashboard ? "neutral" : dashboard.issuesToday.opened > 5 ? "warning" : dashboard.issuesToday.opened > 0 ? "neutral" : "success"}
-          trend={issuesTrend}
+          projectId={project.id}
+          to="issues"
+          isLoading={loading}
+          value={dashboard ? `+${dashboard.issuesToday.opened}` : "--"}
+          status={loading ? "neutral" : issuesTodayStatus}
+          caption={dashboard ? `${dashboard.issuesToday.closed} closed` : "No data"}
+          bottom={dashboard ? (
+            <div className="flex items-center gap-1.5">
+              <TrendArrow direction={issuesTodayDirection} />
+              <span className="text-xs text-muted-foreground">vs closed</span>
+            </div>
+          ) : undefined}
         />
-      </div>
+      </section>
 
-      {/* Band 3: Recent activity */}
-      <div>
+      {/* Recent activity */}
+      <section>
         <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
@@ -688,7 +823,7 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
                 }
 
                 return (
-                  <div key={a.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/30">
+                  <div key={a.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/50">
                     <div className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full", statusClass)}>
                       <span className="flex items-center justify-center text-white">{icon}</span>
                     </div>
@@ -713,7 +848,7 @@ export function ProjectOverview({ project, scenarioSync }: { project: AppProject
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -730,8 +865,8 @@ export function ProjectSettings({ project }: { project: AppProject }) {
       queryClient.invalidateQueries({ queryKey: ["app-projects"] });
       navigate({ to: "/projects" });
     },
-    onError: (error: any) =>
-      toast.error(error?.message || "Failed to delete project"),
+    onError: (error: unknown) =>
+      toast.error((error as Error)?.message || "Failed to delete project"),
   });
 
   return (
