@@ -1,0 +1,430 @@
+/* =============================================================================
+ * QA Webapp Design System
+ * Source of truth: public/qa-webapp.css
+ *
+ * This file is the bridge between the wireframe CSS (public/qa-webapp.css)
+ * and React component code. It does NOT redefine visual rules — it imports
+ * the wireframe CSS and adds a thin layer of:
+ *
+ *   1. CSS custom property aliases so we can use `var(--ds-*)` anywhere
+ *   2. Tailwind-aligned utility classes (`.ds-bg-bg`, `.ds-text-fg`, etc.)
+ *   3. Component classnames with a `ds-` prefix that match the wireframe
+ *      selectors one-to-one — so when you write `<div class="ds-app-shell">`
+ *      you get exactly the same chrome as `<div class="app-shell">`.
+ *
+ * When in doubt, use the wireframe class directly. The ds- aliases exist
+ * for two reasons: (1) explicit namespace so you know you are using the
+ * design system, and (2) collision-avoidance with the legacy Tailwind theme
+ * from the old FlowG app.
+ * ============================================================================= */
+
+@import url("/qa-webapp.css");
+
+/* -----------------------------------------------------------------------------
+ * 1. Token aliases
+ * The wireframe already defines its own variables on :root. We re-export
+ * them under a `ds-` prefix so component code can refer to the design
+ * system by name without colliding with anything else.
+ * -------------------------------------------------------------------------- */
+:root {
+  --ds-bg: var(--bg);
+  --ds-surface: var(--surface);
+  --ds-fg: var(--fg);
+  --ds-muted: var(--muted);
+  --ds-border: var(--border);
+  --ds-accent: var(--accent);
+  --ds-success: var(--success);
+  --ds-danger: var(--danger);
+  --ds-warn: var(--warn);
+  --ds-surface-hover: oklch(96% 0.005 250);
+  --ds-font-display: var(--font-display);
+  --ds-font-body: var(--font-body);
+  --ds-font-mono: var(--font-mono);
+  --ds-shell-w: var(--shell-w, 1280px);
+  --ds-sidebar-w: var(--sidebar-w, 240px);
+  --ds-sidebar-collapsed-w: var(--sidebar-collapsed-w, 56px);
+  --ds-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-easing-in: cubic-bezier(0.4, 0, 1, 1);
+  --ds-shadow-sm: 0 1px 0 oklch(98% 0.003 250),
+    0 24px 48px -16px oklch(20% 0.02 250 / 0.10),
+    0 8px 16px -8px oklch(20% 0.02 250 / 0.06);
+  --ds-shadow-md: 0 8px 24px -8px oklch(0% 0 0 / 0.18);
+  --ds-shadow-modal: 0 24px 80px -16px oklch(0% 0 0 / 0.28),
+    0 8px 24px -8px oklch(0% 0 0 / 0.12);
+}
+
+/* -----------------------------------------------------------------------------
+ * 2. Tailwind-aligned utility classes
+ * Use these when you want a Tailwind-style "bg-bg / text-fg" call but
+ * want it to resolve to the design system values. They are written as
+ * direct CSS so they work without the @tailwind utilities layer.
+ * -------------------------------------------------------------------------- */
+
+/* Surfaces */
+.ds-bg-bg { background-color: var(--ds-bg); }
+.ds-bg-surface { background-color: var(--ds-surface); }
+.ds-bg-surface-hover { background-color: var(--ds-surface-hover); }
+
+/* Foreground / text */
+.ds-text-fg { color: var(--ds-fg); }
+.ds-text-muted { color: var(--ds-muted); }
+.ds-text-accent { color: var(--ds-accent); }
+.ds-text-success { color: var(--ds-success); }
+.ds-text-danger { color: var(--ds-danger); }
+.ds-text-warn { color: var(--ds-warn); }
+
+/* Borders */
+.ds-border { border: 1px solid var(--ds-border); }
+.ds-border-t { border-top: 1px solid var(--ds-border); }
+.ds-border-b { border-bottom: 1px solid var(--ds-border); }
+.ds-border-l { border-left: 1px solid var(--ds-border); }
+.ds-border-r { border-right: 1px solid var(--ds-border); }
+
+/* Typography presets */
+.ds-text-display {
+  font-family: var(--ds-font-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.ds-text-title {
+  font-family: var(--ds-font-display);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.ds-text-body {
+  font-family: var(--ds-font-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+.ds-text-label {
+  font-family: var(--ds-font-body);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+}
+.ds-text-caption {
+  font-family: var(--ds-font-body);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 400;
+}
+.ds-text-eyebrow {
+  font-family: var(--ds-font-mono);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+.ds-text-mono {
+  font-family: var(--ds-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Radius */
+.ds-rounded-sm { border-radius: 0.375rem; } /* 6 */
+.ds-rounded-md { border-radius: 0.5rem; }   /* 8 */
+.ds-rounded-lg { border-radius: 0.625rem; }  /* 10 */
+.ds-rounded-xl { border-radius: 0.75rem; }   /* 12 */
+.ds-rounded-pill { border-radius: 9999px; }
+
+/* Shadows */
+.ds-shadow-sm { box-shadow: var(--ds-shadow-sm); }
+.ds-shadow-md { box-shadow: var(--ds-shadow-md); }
+.ds-shadow-modal { box-shadow: var(--ds-shadow-modal); }
+
+/* -----------------------------------------------------------------------------
+ * 3. Component aliases (`ds-app-shell`, `ds-sidebar`, ...)
+ * The names mirror the wireframe CSS one-to-one. Using a `ds-` prefix
+ * avoids accidentally matching legacy Tailwind components.
+ * -------------------------------------------------------------------------- */
+
+/* App shell */
+.ds-app-shell {
+  display: grid;
+  grid-template-columns: var(--ds-sidebar-w) 1fr;
+  min-height: 100vh;
+  background: var(--ds-bg);
+}
+
+/* Sidebar */
+.ds-sidebar {
+  border-right: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+/* Page head */
+.ds-page-head {
+  padding: 28px var(--ds-page-x, 40px) 20px;
+  border-bottom: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.ds-page-title {
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin: 0 0 4px;
+  color: var(--ds-fg);
+}
+.ds-page-subtitle {
+  color: var(--ds-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Panel */
+.ds-panel {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: 0.625rem;
+}
+.ds-panel-head {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ds-border);
+}
+.ds-panel-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ds-fg);
+}
+.ds-panel-body { padding: 16px 18px; }
+.ds-panel-meta {
+  margin-left: auto;
+  color: var(--ds-muted);
+  font-size: 0.6875rem;
+  font-family: var(--ds-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Stat strip */
+.ds-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.ds-stat {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: 0.625rem;
+  padding: 14px 16px;
+}
+.ds-stat-label {
+  font-family: var(--ds-font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ds-muted);
+  margin-bottom: 6px;
+}
+.ds-stat-value {
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-fg);
+}
+
+/* Pill (status chip) */
+.ds-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-family: var(--ds-font-mono);
+  letter-spacing: 0.02em;
+  border: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+  color: var(--ds-muted);
+  line-height: 1;
+}
+.ds-pill .ds-swatch {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ds-pill-success {
+  color: var(--ds-success);
+  border-color: oklch(88% 0.06 150);
+  background: oklch(97% 0.03 150);
+}
+.ds-pill-danger {
+  color: var(--ds-danger);
+  border-color: oklch(88% 0.06 25);
+  background: oklch(97% 0.03 25);
+}
+.ds-pill-warn {
+  color: var(--ds-warn);
+  border-color: oklch(88% 0.06 75);
+  background: oklch(97% 0.03 75);
+}
+
+/* Button */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  font-family: var(--ds-font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms var(--ds-easing), border-color 120ms var(--ds-easing),
+    color 120ms var(--ds-easing);
+  user-select: none;
+  line-height: 1;
+}
+.ds-btn-primary {
+  color: white;
+  background: var(--ds-fg);
+  border-color: var(--ds-fg);
+}
+.ds-btn-primary:hover { background: oklch(28% 0.012 250); border-color: oklch(28% 0.012 250); }
+.ds-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.ds-btn-secondary {
+  color: var(--ds-fg);
+  background: var(--ds-surface);
+  border-color: var(--ds-border);
+}
+.ds-btn-secondary:hover { border-color: var(--ds-fg); }
+.ds-btn-ghost {
+  color: var(--ds-fg);
+  background: transparent;
+}
+.ds-btn-ghost:hover { background: var(--ds-surface-hover); }
+
+/* Form field */
+.ds-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 0.375rem;
+  border: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+  color: var(--ds-fg);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 120ms var(--ds-easing);
+}
+.ds-field:hover { border-color: var(--ds-fg); }
+
+/* Project dot */
+.ds-project-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* Nav item */
+.ds-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 0.375rem;
+  color: var(--ds-muted);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms var(--ds-easing), color 120ms var(--ds-easing);
+  text-decoration: none;
+}
+.ds-nav-item:hover {
+  background: var(--ds-surface-hover);
+  color: var(--ds-fg);
+}
+.ds-nav-item.is-active {
+  background: var(--ds-surface-hover);
+  color: var(--ds-fg);
+  font-weight: 500;
+}
+.ds-nav-section-label {
+  font-family: var(--ds-font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ds-muted);
+  padding: 16px 8px 6px;
+}
+
+/* User chip */
+.ds-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: var(--ds-fg);
+  text-decoration: none;
+}
+.ds-user-chip:hover { background: var(--ds-surface-hover); }
+.ds-user-chip .ds-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: oklch(82% 0.05 250);
+  display: grid;
+  place-items: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--ds-fg);
+  font-family: var(--ds-font-mono);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ds-user-name { font-size: 0.75rem; font-weight: 500; color: var(--ds-fg); }
+.ds-user-handle { font-size: 0.6875rem; color: var(--ds-muted); font-family: var(--ds-font-mono); }
+
+/* Replay frame placeholder (used in run-detail) */
+.ds-replay-stage {
+  background: oklch(96% 0.005 250);
+  border-top: 1px solid var(--ds-border);
+  position: relative;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+/* Section spacing */
+.ds-page-body {
+  padding: 28px var(--ds-page-x, 40px) 64px;
+}

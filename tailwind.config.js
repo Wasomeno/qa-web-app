@@ -11,9 +11,13 @@ module.exports = {
       },
     },
     extend: {
+      // -------------------------------------------------------------------------
+      // Legacy / FlowG theme (kept for the index.css + shadcn primitives
+      // still in use by the legacy pages). Do not extend this when adding
+      // new design-system tokens — use the `qa` namespace below instead.
+      // -------------------------------------------------------------------------
       colors: {
         // Theme Management System
-        // Primary theme color (Ivory) - easily changeable
         'theme-primary': '#FFFFFF',
         'theme-border': 'rgba(11, 18, 32, 0.12)',
         'theme-text': '#0b1220',
@@ -32,7 +36,7 @@ module.exports = {
           400: '#94a3b8',
           500: '#64748b',
           600: '#475569',
-          700: '#334155', // Deep Slate
+          700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
           950: '#020617',
@@ -41,16 +45,16 @@ module.exports = {
         },
         secondary: {
           50: '#f8fafc',
-          100: '#f5f7fa', // Neutral-100 from palette
+          100: '#f5f7fa',
           200: '#e5e8ed',
-          300: '#d3d6db', // Neutral-300 from palette
+          300: '#d3d6db',
           400: '#9ca3af',
-          500: '#6b7078', // Neutral-500 from palette
+          500: '#6b7078',
           600: '#4b5563',
-          700: '#3d4046', // Neutral-700 from palette
+          700: '#3d4046',
           800: '#1f2937',
-          900: '#17181a', // Neutral-900 from palette
-          950: '#0b0b0c', // Neutral-950 from palette
+          900: '#17181a',
+          950: '#0b0b0c',
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
         },
@@ -68,7 +72,7 @@ module.exports = {
           200: '#bfe0ff',
           300: '#93d0ff',
           400: '#60b5fa',
-          500: '#3bb2f6', // Accent from palette
+          500: '#3bb2f6',
           600: '#2090d8',
           700: '#1a73af',
           800: '#1c5f90',
@@ -91,7 +95,7 @@ module.exports = {
           200: '#a7f3d0',
           300: '#6ee7b7',
           400: '#34d399',
-          500: '#10b981', // Success from palette
+          500: '#10b981',
           600: '#059669',
           700: '#047857',
           800: '#065f46',
@@ -104,7 +108,7 @@ module.exports = {
           200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
-          500: '#f59e0b', // Warning from palette
+          500: '#f59e0b',
           600: '#d97706',
           700: '#b45309',
           800: '#92400e',
@@ -118,7 +122,7 @@ module.exports = {
           300: '#fca5a5',
           400: '#f87171',
           500: '#ef4444',
-          600: '#dc2626', // Danger from palette
+          600: '#dc2626',
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d',
@@ -131,7 +135,7 @@ module.exports = {
           300: '#fca5a5',
           400: '#f87171',
           500: '#ef4444',
-          600: '#dc2626', // Danger from palette (alias for error)
+          600: '#dc2626',
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d',
@@ -147,53 +151,100 @@ module.exports = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+
+        // =======================================================================
+        // QA Webapp Design System (new design)
+        // Source of truth: public/qa-webapp.css (CSS custom properties).
+        // These keys expose the same oklch() values to Tailwind utilities so
+        // authors can use either the wireframe class names (e.g. `.app-shell`)
+        // OR the Tailwind utilities (e.g. `bg-qa-bg text-qa-fg rounded-qa-md`).
+        // Both styles resolve to the same color values.
+        // See AGENTS.md §3 for the full token reference.
+        // =======================================================================
+        qa: {
+          // Core surface / structural palette
+          bg: 'oklch(99% 0.002 240)',
+          surface: 'oklch(100% 0 0)',
+          fg: 'oklch(18% 0.012 250)',
+          muted: 'oklch(54% 0.012 250)',
+          border: 'oklch(92% 0.005 250)',
+          accent: 'oklch(58% 0.18 255)',
+          success: 'oklch(62% 0.15 150)',
+          danger: 'oklch(60% 0.18 25)',
+          warn: 'oklch(72% 0.14 75)',
+          // Surface variants
+          'surface-hover': 'oklch(96% 0.005 250)',
+          'muted-soft': 'oklch(94% 0.005 250)',
+          'muted-strong': 'oklch(86% 0.005 250)',
+          'fg-soft': 'oklch(38% 0.012 250)',
+          // Status tints (used by .pill-* backgrounds and form banners)
+          'success-tint': 'oklch(97% 0.03 150)',
+          'success-border': 'oklch(88% 0.06 150)',
+          'success-fg': 'oklch(38% 0.12 150)',
+          'danger-tint': 'oklch(97% 0.03 25)',
+          'danger-border': 'oklch(88% 0.06 25)',
+          'danger-fg': 'oklch(40% 0.16 25)',
+          'warn-tint': 'oklch(97% 0.03 75)',
+          'warn-border': 'oklch(88% 0.06 75)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Monaco', 'Consolas', 'monospace'],
+        // QA design system — 1:1 with --font-display / --font-body / --font-mono
+        display: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          "'SF Pro Display'",
+          'system-ui',
+          'sans-serif',
+        ],
+        body: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          "'SF Pro Text'",
+          'system-ui',
+          'sans-serif',
+        ],
+        'qa-mono': [
+          'ui-monospace',
+          "'SF Mono'",
+          'Menlo',
+          'monospace',
+        ],
       },
       fontSize: {
-        xs: [
-          '0.75rem',
-          {
-            lineHeight: '1rem',
-          },
-        ],
-        sm: [
-          '0.875rem',
-          {
-            lineHeight: '1.25rem',
-          },
-        ],
-        base: [
-          '1rem',
-          {
-            lineHeight: '1.5rem',
-          },
-        ],
-        lg: [
-          '1.125rem',
-          {
-            lineHeight: '1.75rem',
-          },
-        ],
-        xl: [
-          '1.25rem',
-          {
-            lineHeight: '1.75rem',
-          },
-        ],
-        '2xl': [
-          '1.5rem',
-          {
-            lineHeight: '2rem',
-          },
-        ],
+        xs: ['0.75rem', { lineHeight: '1rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['1rem', { lineHeight: '1.5rem' }],
+        lg: ['1.125rem', { lineHeight: '1.75rem' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        // QA design system — display ladder
+        'qa-display': ['1.5rem', { lineHeight: '2rem', fontWeight: '600', letterSpacing: '-0.02em' }],
+        'qa-title': ['1.125rem', { lineHeight: '1.75rem', fontWeight: '600', letterSpacing: '-0.005em' }],
+        'qa-body': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+        'qa-label': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500' }],
+        'qa-caption': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }],
+        'qa-mono': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+        'qa-eyebrow': ['0.6875rem', { lineHeight: '1rem', fontWeight: '500', letterSpacing: '0.08em' }],
+        // Hero sizes used on landing + profile
+        'qa-landing-display': ['3.25rem', { lineHeight: '1.08', fontWeight: '600', letterSpacing: '-0.025em' }],
+        'qa-page-title': ['1.5rem', { lineHeight: '2rem', fontWeight: '600', letterSpacing: '-0.02em' }],
+        'qa-stat-value': ['1.375rem', { lineHeight: '1.75rem', fontWeight: '600', letterSpacing: '-0.02em' }],
       },
       spacing: {
         18: '4.5rem',
         88: '22rem',
         128: '32rem',
+        // QA design system — shell sizing
+        'qa-shell': '1280px',
+        'qa-sidebar': '240px',
+        'qa-sidebar-collapsed': '56px',
+        'qa-stats-sticky': '100px',
+        'qa-page-x': '40px',
+        'qa-page-y': '28px',
+        'qa-page-y-bottom': '64px',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -201,18 +252,26 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
         xl: '0.75rem',
         '2xl': '1rem',
+        // QA design system — qa-webapp.css uses 6, 8, 10, 12, 999
+        'qa-sm': '0.375rem', // 6px  — buttons, fields, nav items
+        'qa-md': '0.5rem', //   8px  — dropdowns, project cards
+        'qa-lg': '0.625rem', // 10px — panels, stat blocks
+        'qa-xl': '0.75rem', //  12px — landing card, modal
+        'qa-pill': '9999px',
       },
       boxShadow: {
         sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        DEFAULT:
-          '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
         md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
         xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
         inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+        // QA design system — matches shadow vocabulary in qa-webapp.css
+        'qa-sm': '0 1px 0 oklch(98% 0.003 250), 0 24px 48px -16px oklch(20% 0.02 250 / 0.10), 0 8px 16px -8px oklch(20% 0.02 250 / 0.06)',
+        'qa-md': '0 8px 24px -8px oklch(0% 0 0 / 0.18)',
+        'qa-modal': '0 24px 80px -16px oklch(0% 0 0 / 0.28), 0 8px 24px -8px oklch(0% 0 0 / 0.12)',
       },
       animation: {
-        // Component animations with modern easing
         'fade-in': 'fadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1)',
         'fade-out': 'fadeOut 150ms cubic-bezier(0.4, 0, 1, 1)',
         'scale-in': 'scaleIn 200ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -225,7 +284,6 @@ module.exports = {
         'slide-out-to-left': 'slideOutToLeft 150ms cubic-bezier(0.4, 0, 1, 1)',
         'slide-in-from-right': 'slideInFromRight 200ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-out-to-right': 'slideOutToRight 150ms cubic-bezier(0.4, 0, 1, 1)',
-        // Variant durations
         'fade-in-fast': 'fadeIn 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         'fade-out-fast': 'fadeOut 100ms cubic-bezier(0.4, 0, 1, 1)',
         'scale-in-fast': 'scaleIn 150ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -234,69 +292,41 @@ module.exports = {
         'slide-out-slow': 'slideOutToRight 250ms cubic-bezier(0.4, 0, 1, 1)',
         'scale-in-slow': 'scaleIn 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'scale-out-slow': 'scaleOut 200ms cubic-bezier(0.4, 0, 1, 1)',
-        // Accordion
         'accordion-down': 'accordionDown 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'accordion-up': 'accordionUp 200ms cubic-bezier(0.4, 0, 1, 1)',
-        // Pulse
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        // QA design system
+        'qa-toast-in': 'qa-toast-in 180ms ease',
+        'qa-modal-in': 'qa-modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        fadeOut: {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
-        },
-        scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.95)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
-        },
-        scaleOut: {
-          '0%': { opacity: '1', transform: 'scale(1)' },
-          '100%': { opacity: '0', transform: 'scale(0.95)' },
-        },
-        slideInFromTop: {
-          '0%': { transform: 'translateY(-8px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideOutToTop: {
-          '0%': { transform: 'translateY(0)', opacity: '1' },
-          '100%': { transform: 'translateY(-8px)', opacity: '0' },
-        },
-        slideInFromBottom: {
-          '0%': { transform: 'translateY(8px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideOutToBottom: {
-          '0%': { transform: 'translateY(0)', opacity: '1' },
-          '100%': { transform: 'translateY(8px)', opacity: '0' },
-        },
-        slideInFromLeft: {
-          '0%': { transform: 'translateX(-8px)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        slideOutToLeft: {
-          '0%': { transform: 'translateX(0)', opacity: '1' },
-          '100%': { transform: 'translateX(-8px)', opacity: '0' },
-        },
-        slideInFromRight: {
-          '0%': { transform: 'translateX(8px)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        slideOutToRight: {
-          '0%': { transform: 'translateX(0)', opacity: '1' },
-          '100%': { transform: 'translateX(8px)', opacity: '0' },
-        },
-        accordionDown: {
-          from: { height: '0', opacity: '0' },
-          to: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
-        },
-        accordionUp: {
-          from: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
-          to: { height: '0', opacity: '0' },
-        },
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        fadeOut: { '0%': { opacity: '1' }, '100%': { opacity: '0' } },
+        scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+        scaleOut: { '0%': { opacity: '1', transform: 'scale(1)' }, '100%': { opacity: '0', transform: 'scale(0.95)' } },
+        slideInFromTop: { '0%': { transform: 'translateY(-8px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+        slideOutToTop: { '0%': { transform: 'translateY(0)', opacity: '1' }, '100%': { transform: 'translateY(-8px)', opacity: '0' } },
+        slideInFromBottom: { '0%': { transform: 'translateY(8px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+        slideOutToBottom: { '0%': { transform: 'translateY(0)', opacity: '1' }, '100%': { transform: 'translateY(8px)', opacity: '0' } },
+        slideInFromLeft: { '0%': { transform: 'translateX(-8px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+        slideOutToLeft: { '0%': { transform: 'translateX(0)', opacity: '1' }, '100%': { transform: 'translateX(-8px)', opacity: '0' } },
+        slideInFromRight: { '0%': { transform: 'translateX(8px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+        slideOutToRight: { '0%': { transform: 'translateX(0)', opacity: '1' }, '100%': { transform: 'translateX(8px)', opacity: '0' } },
+        accordionDown: { from: { height: '0', opacity: '0' }, to: { height: 'var(--radix-accordion-content-height)', opacity: '1' } },
+        accordionUp: { from: { height: 'var(--radix-accordion-content-height)', opacity: '1' }, to: { height: '0', opacity: '0' } },
+        // QA design system
+        'qa-toast-in': { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        'qa-modal-in': { from: { opacity: '0', transform: 'translateY(8px) scale(0.98)' }, to: { opacity: '1', transform: 'translateY(0) scale(1)' } },
+      },
+      transitionTimingFunction: {
+        'qa-out': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'qa-in': 'cubic-bezier(0.4, 0, 1, 1)',
+      },
+      transitionDuration: {
+        'qa-fast': '120ms',
+        'qa-base': '150ms',
+        'qa-slow': '200ms',
+        'qa-modal': '250ms',
       },
     },
   },

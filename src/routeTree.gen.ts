@@ -9,40 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestScenariosRouteImport } from './routes/test-scenarios'
+import { Route as TestsRouteImport } from './routes/tests'
 import { Route as SpecsRouteImport } from './routes/specs'
-import { Route as RecordingsRouteImport } from './routes/recordings'
-import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PinnedRouteImport } from './routes/pinned'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as FixSessionsRouteImport } from './routes/fix-sessions'
-import { Route as ChatSessionsRouteImport } from './routes/chat-sessions'
-import { Route as BoardsRouteImport } from './routes/boards'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AddProjectRouteImport } from './routes/add-project'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TestScenariosIndexRouteImport } from './routes/test-scenarios.index'
+import { Route as TestsIndexRouteImport } from './routes/tests.index'
 import { Route as SpecsIndexRouteImport } from './routes/specs.index'
-import { Route as RecordingsIndexRouteImport } from './routes/recordings.index'
-import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
-import { Route as ChatSessionsIndexRouteImport } from './routes/chat-sessions.index'
-import { Route as TestScenariosIdRouteImport } from './routes/test-scenarios.$id'
-import { Route as RecordingsIdRouteImport } from './routes/recordings.$id'
-import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
-import { Route as ChatSessionsSessionIdRouteImport } from './routes/chat-sessions.$sessionId'
-import { Route as ProjectsIdIndexRouteImport } from './routes/projects.$id.index'
+import { Route as TestsIdRouteImport } from './routes/tests.$id'
+import { Route as SpecsIdRouteImport } from './routes/specs.$id'
+import { Route as RunsIdRouteImport } from './routes/runs.$id'
 import { Route as ProjectsIdTestScenariosRouteImport } from './routes/projects.$id.test-scenarios'
 import { Route as ProjectsIdSpecsRouteImport } from './routes/projects.$id.specs'
-import { Route as ProjectsIdSettingsRouteImport } from './routes/projects.$id.settings'
-import { Route as ProjectsIdRecordingsRouteImport } from './routes/projects.$id.recordings'
-import { Route as ProjectsIdIssuesRouteImport } from './routes/projects.$id.issues'
-import { Route as ProjectsIdFixSessionsRouteImport } from './routes/projects.$id.fix-sessions'
-import { Route as ProjectsIdBoardsRouteImport } from './routes/projects.$id.boards'
-import { Route as ProjectsIdTestScenariosScenarioIdRouteImport } from './routes/projects.$id.test-scenarios.$scenarioId'
-import { Route as ProjectsIdIssuesIidRouteImport } from './routes/projects.$id.issues.$iid'
+import { Route as ProjectsIdTestScenariosIndexRouteImport } from './routes/projects.$id.test-scenarios.index'
+import { Route as ProjectsIdSpecsIndexRouteImport } from './routes/projects.$id.specs.index'
+import { Route as ProjectsIdTestScenariosIdRouteImport } from './routes/projects.$id.test-scenarios.$id'
+import { Route as ProjectsIdSpecsIdRouteImport } from './routes/projects.$id.specs.$id'
 
-const TestScenariosRoute = TestScenariosRouteImport.update({
-  id: '/test-scenarios',
-  path: '/test-scenarios',
+const TestsRoute = TestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpecsRoute = SpecsRouteImport.update({
@@ -50,24 +38,9 @@ const SpecsRoute = SpecsRouteImport.update({
   path: '/specs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecordingsRoute = RecordingsRouteImport.update({
-  id: '/recordings',
-  path: '/recordings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectsRoute = ProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PinnedRoute = PinnedRouteImport.update({
-  id: '/pinned',
-  path: '/pinned',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -75,19 +48,14 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FixSessionsRoute = FixSessionsRouteImport.update({
-  id: '/fix-sessions',
-  path: '/fix-sessions',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatSessionsRoute = ChatSessionsRouteImport.update({
-  id: '/chat-sessions',
-  path: '/chat-sessions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BoardsRoute = BoardsRouteImport.update({
-  id: '/boards',
-  path: '/boards',
+const AddProjectRoute = AddProjectRouteImport.update({
+  id: '/add-project',
+  path: '/add-project',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -95,308 +63,200 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TestScenariosIndexRoute = TestScenariosIndexRouteImport.update({
+const TestsIndexRoute = TestsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => TestScenariosRoute,
+  getParentRoute: () => TestsRoute,
 } as any)
 const SpecsIndexRoute = SpecsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SpecsRoute,
 } as any)
-const RecordingsIndexRoute = RecordingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => RecordingsRoute,
-} as any)
-const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ProjectsRoute,
-} as any)
-const ChatSessionsIndexRoute = ChatSessionsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ChatSessionsRoute,
-} as any)
-const TestScenariosIdRoute = TestScenariosIdRouteImport.update({
+const TestsIdRoute = TestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => TestScenariosRoute,
+  getParentRoute: () => TestsRoute,
 } as any)
-const RecordingsIdRoute = RecordingsIdRouteImport.update({
+const SpecsIdRoute = SpecsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => RecordingsRoute,
+  getParentRoute: () => SpecsRoute,
 } as any)
-const ProjectsIdRoute = ProjectsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ProjectsRoute,
-} as any)
-const ChatSessionsSessionIdRoute = ChatSessionsSessionIdRouteImport.update({
-  id: '/$sessionId',
-  path: '/$sessionId',
-  getParentRoute: () => ChatSessionsRoute,
-} as any)
-const ProjectsIdIndexRoute = ProjectsIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ProjectsIdRoute,
+const RunsIdRoute = RunsIdRouteImport.update({
+  id: '/runs/$id',
+  path: '/runs/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsIdTestScenariosRoute = ProjectsIdTestScenariosRouteImport.update({
-  id: '/test-scenarios',
-  path: '/test-scenarios',
-  getParentRoute: () => ProjectsIdRoute,
+  id: '/projects/$id/test-scenarios',
+  path: '/projects/$id/test-scenarios',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsIdSpecsRoute = ProjectsIdSpecsRouteImport.update({
-  id: '/specs',
-  path: '/specs',
-  getParentRoute: () => ProjectsIdRoute,
+  id: '/projects/$id/specs',
+  path: '/projects/$id/specs',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ProjectsIdSettingsRoute = ProjectsIdSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => ProjectsIdRoute,
-} as any)
-const ProjectsIdRecordingsRoute = ProjectsIdRecordingsRouteImport.update({
-  id: '/recordings',
-  path: '/recordings',
-  getParentRoute: () => ProjectsIdRoute,
-} as any)
-const ProjectsIdIssuesRoute = ProjectsIdIssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
-  getParentRoute: () => ProjectsIdRoute,
-} as any)
-const ProjectsIdFixSessionsRoute = ProjectsIdFixSessionsRouteImport.update({
-  id: '/fix-sessions',
-  path: '/fix-sessions',
-  getParentRoute: () => ProjectsIdRoute,
-} as any)
-const ProjectsIdBoardsRoute = ProjectsIdBoardsRouteImport.update({
-  id: '/boards',
-  path: '/boards',
-  getParentRoute: () => ProjectsIdRoute,
-} as any)
-const ProjectsIdTestScenariosScenarioIdRoute =
-  ProjectsIdTestScenariosScenarioIdRouteImport.update({
-    id: '/$scenarioId',
-    path: '/$scenarioId',
+const ProjectsIdTestScenariosIndexRoute =
+  ProjectsIdTestScenariosIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => ProjectsIdTestScenariosRoute,
   } as any)
-const ProjectsIdIssuesIidRoute = ProjectsIdIssuesIidRouteImport.update({
-  id: '/$iid',
-  path: '/$iid',
-  getParentRoute: () => ProjectsIdIssuesRoute,
+const ProjectsIdSpecsIndexRoute = ProjectsIdSpecsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsIdSpecsRoute,
+} as any)
+const ProjectsIdTestScenariosIdRoute =
+  ProjectsIdTestScenariosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ProjectsIdTestScenariosRoute,
+  } as any)
+const ProjectsIdSpecsIdRoute = ProjectsIdSpecsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ProjectsIdSpecsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/boards': typeof BoardsRoute
-  '/chat-sessions': typeof ChatSessionsRouteWithChildren
-  '/fix-sessions': typeof FixSessionsRoute
+  '/add-project': typeof AddProjectRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
-  '/projects': typeof ProjectsRouteWithChildren
-  '/recordings': typeof RecordingsRouteWithChildren
   '/specs': typeof SpecsRouteWithChildren
-  '/test-scenarios': typeof TestScenariosRouteWithChildren
-  '/chat-sessions/$sessionId': typeof ChatSessionsSessionIdRoute
-  '/projects/$id': typeof ProjectsIdRouteWithChildren
-  '/recordings/$id': typeof RecordingsIdRoute
-  '/test-scenarios/$id': typeof TestScenariosIdRoute
-  '/chat-sessions/': typeof ChatSessionsIndexRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/recordings/': typeof RecordingsIndexRoute
+  '/tests': typeof TestsRouteWithChildren
+  '/runs/$id': typeof RunsIdRoute
+  '/specs/$id': typeof SpecsIdRoute
+  '/tests/$id': typeof TestsIdRoute
   '/specs/': typeof SpecsIndexRoute
-  '/test-scenarios/': typeof TestScenariosIndexRoute
-  '/projects/$id/boards': typeof ProjectsIdBoardsRoute
-  '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
-  '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
-  '/projects/$id/recordings': typeof ProjectsIdRecordingsRoute
-  '/projects/$id/settings': typeof ProjectsIdSettingsRoute
-  '/projects/$id/specs': typeof ProjectsIdSpecsRoute
+  '/tests/': typeof TestsIndexRoute
+  '/projects/$id/specs': typeof ProjectsIdSpecsRouteWithChildren
   '/projects/$id/test-scenarios': typeof ProjectsIdTestScenariosRouteWithChildren
-  '/projects/$id/': typeof ProjectsIdIndexRoute
-  '/projects/$id/issues/$iid': typeof ProjectsIdIssuesIidRoute
-  '/projects/$id/test-scenarios/$scenarioId': typeof ProjectsIdTestScenariosScenarioIdRoute
+  '/projects/$id/specs/$id': typeof ProjectsIdSpecsIdRoute
+  '/projects/$id/test-scenarios/$id': typeof ProjectsIdTestScenariosIdRoute
+  '/projects/$id/specs/': typeof ProjectsIdSpecsIndexRoute
+  '/projects/$id/test-scenarios/': typeof ProjectsIdTestScenariosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/boards': typeof BoardsRoute
-  '/fix-sessions': typeof FixSessionsRoute
+  '/add-project': typeof AddProjectRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
-  '/chat-sessions/$sessionId': typeof ChatSessionsSessionIdRoute
-  '/recordings/$id': typeof RecordingsIdRoute
-  '/test-scenarios/$id': typeof TestScenariosIdRoute
-  '/chat-sessions': typeof ChatSessionsIndexRoute
-  '/projects': typeof ProjectsIndexRoute
-  '/recordings': typeof RecordingsIndexRoute
+  '/runs/$id': typeof RunsIdRoute
+  '/specs/$id': typeof SpecsIdRoute
+  '/tests/$id': typeof TestsIdRoute
   '/specs': typeof SpecsIndexRoute
-  '/test-scenarios': typeof TestScenariosIndexRoute
-  '/projects/$id/boards': typeof ProjectsIdBoardsRoute
-  '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
-  '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
-  '/projects/$id/recordings': typeof ProjectsIdRecordingsRoute
-  '/projects/$id/settings': typeof ProjectsIdSettingsRoute
-  '/projects/$id/specs': typeof ProjectsIdSpecsRoute
-  '/projects/$id/test-scenarios': typeof ProjectsIdTestScenariosRouteWithChildren
-  '/projects/$id': typeof ProjectsIdIndexRoute
-  '/projects/$id/issues/$iid': typeof ProjectsIdIssuesIidRoute
-  '/projects/$id/test-scenarios/$scenarioId': typeof ProjectsIdTestScenariosScenarioIdRoute
+  '/tests': typeof TestsIndexRoute
+  '/projects/$id/specs/$id': typeof ProjectsIdSpecsIdRoute
+  '/projects/$id/test-scenarios/$id': typeof ProjectsIdTestScenariosIdRoute
+  '/projects/$id/specs': typeof ProjectsIdSpecsIndexRoute
+  '/projects/$id/test-scenarios': typeof ProjectsIdTestScenariosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/boards': typeof BoardsRoute
-  '/chat-sessions': typeof ChatSessionsRouteWithChildren
-  '/fix-sessions': typeof FixSessionsRoute
+  '/add-project': typeof AddProjectRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/pinned': typeof PinnedRoute
   '/profile': typeof ProfileRoute
-  '/projects': typeof ProjectsRouteWithChildren
-  '/recordings': typeof RecordingsRouteWithChildren
   '/specs': typeof SpecsRouteWithChildren
-  '/test-scenarios': typeof TestScenariosRouteWithChildren
-  '/chat-sessions/$sessionId': typeof ChatSessionsSessionIdRoute
-  '/projects/$id': typeof ProjectsIdRouteWithChildren
-  '/recordings/$id': typeof RecordingsIdRoute
-  '/test-scenarios/$id': typeof TestScenariosIdRoute
-  '/chat-sessions/': typeof ChatSessionsIndexRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/recordings/': typeof RecordingsIndexRoute
+  '/tests': typeof TestsRouteWithChildren
+  '/runs/$id': typeof RunsIdRoute
+  '/specs/$id': typeof SpecsIdRoute
+  '/tests/$id': typeof TestsIdRoute
   '/specs/': typeof SpecsIndexRoute
-  '/test-scenarios/': typeof TestScenariosIndexRoute
-  '/projects/$id/boards': typeof ProjectsIdBoardsRoute
-  '/projects/$id/fix-sessions': typeof ProjectsIdFixSessionsRoute
-  '/projects/$id/issues': typeof ProjectsIdIssuesRouteWithChildren
-  '/projects/$id/recordings': typeof ProjectsIdRecordingsRoute
-  '/projects/$id/settings': typeof ProjectsIdSettingsRoute
-  '/projects/$id/specs': typeof ProjectsIdSpecsRoute
+  '/tests/': typeof TestsIndexRoute
+  '/projects/$id/specs': typeof ProjectsIdSpecsRouteWithChildren
   '/projects/$id/test-scenarios': typeof ProjectsIdTestScenariosRouteWithChildren
-  '/projects/$id/': typeof ProjectsIdIndexRoute
-  '/projects/$id/issues/$iid': typeof ProjectsIdIssuesIidRoute
-  '/projects/$id/test-scenarios/$scenarioId': typeof ProjectsIdTestScenariosScenarioIdRoute
+  '/projects/$id/specs/$id': typeof ProjectsIdSpecsIdRoute
+  '/projects/$id/test-scenarios/$id': typeof ProjectsIdTestScenariosIdRoute
+  '/projects/$id/specs/': typeof ProjectsIdSpecsIndexRoute
+  '/projects/$id/test-scenarios/': typeof ProjectsIdTestScenariosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/boards'
-    | '/chat-sessions'
-    | '/fix-sessions'
+    | '/add-project'
+    | '/dashboard'
     | '/login'
-    | '/pinned'
     | '/profile'
-    | '/projects'
-    | '/recordings'
     | '/specs'
-    | '/test-scenarios'
-    | '/chat-sessions/$sessionId'
-    | '/projects/$id'
-    | '/recordings/$id'
-    | '/test-scenarios/$id'
-    | '/chat-sessions/'
-    | '/projects/'
-    | '/recordings/'
+    | '/tests'
+    | '/runs/$id'
+    | '/specs/$id'
+    | '/tests/$id'
     | '/specs/'
-    | '/test-scenarios/'
-    | '/projects/$id/boards'
-    | '/projects/$id/fix-sessions'
-    | '/projects/$id/issues'
-    | '/projects/$id/recordings'
-    | '/projects/$id/settings'
+    | '/tests/'
     | '/projects/$id/specs'
     | '/projects/$id/test-scenarios'
-    | '/projects/$id/'
-    | '/projects/$id/issues/$iid'
-    | '/projects/$id/test-scenarios/$scenarioId'
+    | '/projects/$id/specs/$id'
+    | '/projects/$id/test-scenarios/$id'
+    | '/projects/$id/specs/'
+    | '/projects/$id/test-scenarios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/boards'
-    | '/fix-sessions'
+    | '/add-project'
+    | '/dashboard'
     | '/login'
-    | '/pinned'
     | '/profile'
-    | '/chat-sessions/$sessionId'
-    | '/recordings/$id'
-    | '/test-scenarios/$id'
-    | '/chat-sessions'
-    | '/projects'
-    | '/recordings'
+    | '/runs/$id'
+    | '/specs/$id'
+    | '/tests/$id'
     | '/specs'
-    | '/test-scenarios'
-    | '/projects/$id/boards'
-    | '/projects/$id/fix-sessions'
-    | '/projects/$id/issues'
-    | '/projects/$id/recordings'
-    | '/projects/$id/settings'
+    | '/tests'
+    | '/projects/$id/specs/$id'
+    | '/projects/$id/test-scenarios/$id'
     | '/projects/$id/specs'
     | '/projects/$id/test-scenarios'
-    | '/projects/$id'
-    | '/projects/$id/issues/$iid'
-    | '/projects/$id/test-scenarios/$scenarioId'
   id:
     | '__root__'
     | '/'
-    | '/boards'
-    | '/chat-sessions'
-    | '/fix-sessions'
+    | '/add-project'
+    | '/dashboard'
     | '/login'
-    | '/pinned'
     | '/profile'
-    | '/projects'
-    | '/recordings'
     | '/specs'
-    | '/test-scenarios'
-    | '/chat-sessions/$sessionId'
-    | '/projects/$id'
-    | '/recordings/$id'
-    | '/test-scenarios/$id'
-    | '/chat-sessions/'
-    | '/projects/'
-    | '/recordings/'
+    | '/tests'
+    | '/runs/$id'
+    | '/specs/$id'
+    | '/tests/$id'
     | '/specs/'
-    | '/test-scenarios/'
-    | '/projects/$id/boards'
-    | '/projects/$id/fix-sessions'
-    | '/projects/$id/issues'
-    | '/projects/$id/recordings'
-    | '/projects/$id/settings'
+    | '/tests/'
     | '/projects/$id/specs'
     | '/projects/$id/test-scenarios'
-    | '/projects/$id/'
-    | '/projects/$id/issues/$iid'
-    | '/projects/$id/test-scenarios/$scenarioId'
+    | '/projects/$id/specs/$id'
+    | '/projects/$id/test-scenarios/$id'
+    | '/projects/$id/specs/'
+    | '/projects/$id/test-scenarios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BoardsRoute: typeof BoardsRoute
-  ChatSessionsRoute: typeof ChatSessionsRouteWithChildren
-  FixSessionsRoute: typeof FixSessionsRoute
+  AddProjectRoute: typeof AddProjectRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
-  PinnedRoute: typeof PinnedRoute
   ProfileRoute: typeof ProfileRoute
-  ProjectsRoute: typeof ProjectsRouteWithChildren
-  RecordingsRoute: typeof RecordingsRouteWithChildren
   SpecsRoute: typeof SpecsRouteWithChildren
-  TestScenariosRoute: typeof TestScenariosRouteWithChildren
+  TestsRoute: typeof TestsRouteWithChildren
+  RunsIdRoute: typeof RunsIdRoute
+  ProjectsIdSpecsRoute: typeof ProjectsIdSpecsRouteWithChildren
+  ProjectsIdTestScenariosRoute: typeof ProjectsIdTestScenariosRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/test-scenarios': {
-      id: '/test-scenarios'
-      path: '/test-scenarios'
-      fullPath: '/test-scenarios'
-      preLoaderRoute: typeof TestScenariosRouteImport
+    '/tests': {
+      id: '/tests'
+      path: '/tests'
+      fullPath: '/tests'
+      preLoaderRoute: typeof TestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/specs': {
@@ -406,32 +266,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpecsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/recordings': {
-      id: '/recordings'
-      path: '/recordings'
-      fullPath: '/recordings'
-      preLoaderRoute: typeof RecordingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects': {
-      id: '/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof ProjectsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pinned': {
-      id: '/pinned'
-      path: '/pinned'
-      fullPath: '/pinned'
-      preLoaderRoute: typeof PinnedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -441,25 +280,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/fix-sessions': {
-      id: '/fix-sessions'
-      path: '/fix-sessions'
-      fullPath: '/fix-sessions'
-      preLoaderRoute: typeof FixSessionsRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat-sessions': {
-      id: '/chat-sessions'
-      path: '/chat-sessions'
-      fullPath: '/chat-sessions'
-      preLoaderRoute: typeof ChatSessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/boards': {
-      id: '/boards'
-      path: '/boards'
-      fullPath: '/boards'
-      preLoaderRoute: typeof BoardsRouteImport
+    '/add-project': {
+      id: '/add-project'
+      path: '/add-project'
+      fullPath: '/add-project'
+      preLoaderRoute: typeof AddProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -469,12 +301,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/test-scenarios/': {
-      id: '/test-scenarios/'
+    '/tests/': {
+      id: '/tests/'
       path: '/'
-      fullPath: '/test-scenarios/'
-      preLoaderRoute: typeof TestScenariosIndexRouteImport
-      parentRoute: typeof TestScenariosRoute
+      fullPath: '/tests/'
+      preLoaderRoute: typeof TestsIndexRouteImport
+      parentRoute: typeof TestsRoute
     }
     '/specs/': {
       id: '/specs/'
@@ -483,161 +315,119 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpecsIndexRouteImport
       parentRoute: typeof SpecsRoute
     }
-    '/recordings/': {
-      id: '/recordings/'
-      path: '/'
-      fullPath: '/recordings/'
-      preLoaderRoute: typeof RecordingsIndexRouteImport
-      parentRoute: typeof RecordingsRoute
-    }
-    '/projects/': {
-      id: '/projects/'
-      path: '/'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexRouteImport
-      parentRoute: typeof ProjectsRoute
-    }
-    '/chat-sessions/': {
-      id: '/chat-sessions/'
-      path: '/'
-      fullPath: '/chat-sessions/'
-      preLoaderRoute: typeof ChatSessionsIndexRouteImport
-      parentRoute: typeof ChatSessionsRoute
-    }
-    '/test-scenarios/$id': {
-      id: '/test-scenarios/$id'
+    '/tests/$id': {
+      id: '/tests/$id'
       path: '/$id'
-      fullPath: '/test-scenarios/$id'
-      preLoaderRoute: typeof TestScenariosIdRouteImport
-      parentRoute: typeof TestScenariosRoute
+      fullPath: '/tests/$id'
+      preLoaderRoute: typeof TestsIdRouteImport
+      parentRoute: typeof TestsRoute
     }
-    '/recordings/$id': {
-      id: '/recordings/$id'
+    '/specs/$id': {
+      id: '/specs/$id'
       path: '/$id'
-      fullPath: '/recordings/$id'
-      preLoaderRoute: typeof RecordingsIdRouteImport
-      parentRoute: typeof RecordingsRoute
+      fullPath: '/specs/$id'
+      preLoaderRoute: typeof SpecsIdRouteImport
+      parentRoute: typeof SpecsRoute
     }
-    '/projects/$id': {
-      id: '/projects/$id'
-      path: '/$id'
-      fullPath: '/projects/$id'
-      preLoaderRoute: typeof ProjectsIdRouteImport
-      parentRoute: typeof ProjectsRoute
-    }
-    '/chat-sessions/$sessionId': {
-      id: '/chat-sessions/$sessionId'
-      path: '/$sessionId'
-      fullPath: '/chat-sessions/$sessionId'
-      preLoaderRoute: typeof ChatSessionsSessionIdRouteImport
-      parentRoute: typeof ChatSessionsRoute
-    }
-    '/projects/$id/': {
-      id: '/projects/$id/'
-      path: '/'
-      fullPath: '/projects/$id/'
-      preLoaderRoute: typeof ProjectsIdIndexRouteImport
-      parentRoute: typeof ProjectsIdRoute
+    '/runs/$id': {
+      id: '/runs/$id'
+      path: '/runs/$id'
+      fullPath: '/runs/$id'
+      preLoaderRoute: typeof RunsIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/projects/$id/test-scenarios': {
       id: '/projects/$id/test-scenarios'
-      path: '/test-scenarios'
+      path: '/projects/$id/test-scenarios'
       fullPath: '/projects/$id/test-scenarios'
       preLoaderRoute: typeof ProjectsIdTestScenariosRouteImport
-      parentRoute: typeof ProjectsIdRoute
+      parentRoute: typeof rootRouteImport
     }
     '/projects/$id/specs': {
       id: '/projects/$id/specs'
-      path: '/specs'
+      path: '/projects/$id/specs'
       fullPath: '/projects/$id/specs'
       preLoaderRoute: typeof ProjectsIdSpecsRouteImport
-      parentRoute: typeof ProjectsIdRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/projects/$id/settings': {
-      id: '/projects/$id/settings'
-      path: '/settings'
-      fullPath: '/projects/$id/settings'
-      preLoaderRoute: typeof ProjectsIdSettingsRouteImport
-      parentRoute: typeof ProjectsIdRoute
-    }
-    '/projects/$id/recordings': {
-      id: '/projects/$id/recordings'
-      path: '/recordings'
-      fullPath: '/projects/$id/recordings'
-      preLoaderRoute: typeof ProjectsIdRecordingsRouteImport
-      parentRoute: typeof ProjectsIdRoute
-    }
-    '/projects/$id/issues': {
-      id: '/projects/$id/issues'
-      path: '/issues'
-      fullPath: '/projects/$id/issues'
-      preLoaderRoute: typeof ProjectsIdIssuesRouteImport
-      parentRoute: typeof ProjectsIdRoute
-    }
-    '/projects/$id/fix-sessions': {
-      id: '/projects/$id/fix-sessions'
-      path: '/fix-sessions'
-      fullPath: '/projects/$id/fix-sessions'
-      preLoaderRoute: typeof ProjectsIdFixSessionsRouteImport
-      parentRoute: typeof ProjectsIdRoute
-    }
-    '/projects/$id/boards': {
-      id: '/projects/$id/boards'
-      path: '/boards'
-      fullPath: '/projects/$id/boards'
-      preLoaderRoute: typeof ProjectsIdBoardsRouteImport
-      parentRoute: typeof ProjectsIdRoute
-    }
-    '/projects/$id/test-scenarios/$scenarioId': {
-      id: '/projects/$id/test-scenarios/$scenarioId'
-      path: '/$scenarioId'
-      fullPath: '/projects/$id/test-scenarios/$scenarioId'
-      preLoaderRoute: typeof ProjectsIdTestScenariosScenarioIdRouteImport
+    '/projects/$id/test-scenarios/': {
+      id: '/projects/$id/test-scenarios/'
+      path: '/'
+      fullPath: '/projects/$id/test-scenarios/'
+      preLoaderRoute: typeof ProjectsIdTestScenariosIndexRouteImport
       parentRoute: typeof ProjectsIdTestScenariosRoute
     }
-    '/projects/$id/issues/$iid': {
-      id: '/projects/$id/issues/$iid'
-      path: '/$iid'
-      fullPath: '/projects/$id/issues/$iid'
-      preLoaderRoute: typeof ProjectsIdIssuesIidRouteImport
-      parentRoute: typeof ProjectsIdIssuesRoute
+    '/projects/$id/specs/': {
+      id: '/projects/$id/specs/'
+      path: '/'
+      fullPath: '/projects/$id/specs/'
+      preLoaderRoute: typeof ProjectsIdSpecsIndexRouteImport
+      parentRoute: typeof ProjectsIdSpecsRoute
+    }
+    '/projects/$id/test-scenarios/$id': {
+      id: '/projects/$id/test-scenarios/$id'
+      path: '/$id'
+      fullPath: '/projects/$id/test-scenarios/$id'
+      preLoaderRoute: typeof ProjectsIdTestScenariosIdRouteImport
+      parentRoute: typeof ProjectsIdTestScenariosRoute
+    }
+    '/projects/$id/specs/$id': {
+      id: '/projects/$id/specs/$id'
+      path: '/$id'
+      fullPath: '/projects/$id/specs/$id'
+      preLoaderRoute: typeof ProjectsIdSpecsIdRouteImport
+      parentRoute: typeof ProjectsIdSpecsRoute
     }
   }
 }
 
-interface ChatSessionsRouteChildren {
-  ChatSessionsSessionIdRoute: typeof ChatSessionsSessionIdRoute
-  ChatSessionsIndexRoute: typeof ChatSessionsIndexRoute
+interface SpecsRouteChildren {
+  SpecsIdRoute: typeof SpecsIdRoute
+  SpecsIndexRoute: typeof SpecsIndexRoute
 }
 
-const ChatSessionsRouteChildren: ChatSessionsRouteChildren = {
-  ChatSessionsSessionIdRoute: ChatSessionsSessionIdRoute,
-  ChatSessionsIndexRoute: ChatSessionsIndexRoute,
+const SpecsRouteChildren: SpecsRouteChildren = {
+  SpecsIdRoute: SpecsIdRoute,
+  SpecsIndexRoute: SpecsIndexRoute,
 }
 
-const ChatSessionsRouteWithChildren = ChatSessionsRoute._addFileChildren(
-  ChatSessionsRouteChildren,
+const SpecsRouteWithChildren = SpecsRoute._addFileChildren(SpecsRouteChildren)
+
+interface TestsRouteChildren {
+  TestsIdRoute: typeof TestsIdRoute
+  TestsIndexRoute: typeof TestsIndexRoute
+}
+
+const TestsRouteChildren: TestsRouteChildren = {
+  TestsIdRoute: TestsIdRoute,
+  TestsIndexRoute: TestsIndexRoute,
+}
+
+const TestsRouteWithChildren = TestsRoute._addFileChildren(TestsRouteChildren)
+
+interface ProjectsIdSpecsRouteChildren {
+  ProjectsIdSpecsIdRoute: typeof ProjectsIdSpecsIdRoute
+  ProjectsIdSpecsIndexRoute: typeof ProjectsIdSpecsIndexRoute
+}
+
+const ProjectsIdSpecsRouteChildren: ProjectsIdSpecsRouteChildren = {
+  ProjectsIdSpecsIdRoute: ProjectsIdSpecsIdRoute,
+  ProjectsIdSpecsIndexRoute: ProjectsIdSpecsIndexRoute,
+}
+
+const ProjectsIdSpecsRouteWithChildren = ProjectsIdSpecsRoute._addFileChildren(
+  ProjectsIdSpecsRouteChildren,
 )
 
-interface ProjectsIdIssuesRouteChildren {
-  ProjectsIdIssuesIidRoute: typeof ProjectsIdIssuesIidRoute
-}
-
-const ProjectsIdIssuesRouteChildren: ProjectsIdIssuesRouteChildren = {
-  ProjectsIdIssuesIidRoute: ProjectsIdIssuesIidRoute,
-}
-
-const ProjectsIdIssuesRouteWithChildren =
-  ProjectsIdIssuesRoute._addFileChildren(ProjectsIdIssuesRouteChildren)
-
 interface ProjectsIdTestScenariosRouteChildren {
-  ProjectsIdTestScenariosScenarioIdRoute: typeof ProjectsIdTestScenariosScenarioIdRoute
+  ProjectsIdTestScenariosIdRoute: typeof ProjectsIdTestScenariosIdRoute
+  ProjectsIdTestScenariosIndexRoute: typeof ProjectsIdTestScenariosIndexRoute
 }
 
 const ProjectsIdTestScenariosRouteChildren: ProjectsIdTestScenariosRouteChildren =
   {
-    ProjectsIdTestScenariosScenarioIdRoute:
-      ProjectsIdTestScenariosScenarioIdRoute,
+    ProjectsIdTestScenariosIdRoute: ProjectsIdTestScenariosIdRoute,
+    ProjectsIdTestScenariosIndexRoute: ProjectsIdTestScenariosIndexRoute,
   }
 
 const ProjectsIdTestScenariosRouteWithChildren =
@@ -645,96 +435,17 @@ const ProjectsIdTestScenariosRouteWithChildren =
     ProjectsIdTestScenariosRouteChildren,
   )
 
-interface ProjectsIdRouteChildren {
-  ProjectsIdBoardsRoute: typeof ProjectsIdBoardsRoute
-  ProjectsIdFixSessionsRoute: typeof ProjectsIdFixSessionsRoute
-  ProjectsIdIssuesRoute: typeof ProjectsIdIssuesRouteWithChildren
-  ProjectsIdRecordingsRoute: typeof ProjectsIdRecordingsRoute
-  ProjectsIdSettingsRoute: typeof ProjectsIdSettingsRoute
-  ProjectsIdSpecsRoute: typeof ProjectsIdSpecsRoute
-  ProjectsIdTestScenariosRoute: typeof ProjectsIdTestScenariosRouteWithChildren
-  ProjectsIdIndexRoute: typeof ProjectsIdIndexRoute
-}
-
-const ProjectsIdRouteChildren: ProjectsIdRouteChildren = {
-  ProjectsIdBoardsRoute: ProjectsIdBoardsRoute,
-  ProjectsIdFixSessionsRoute: ProjectsIdFixSessionsRoute,
-  ProjectsIdIssuesRoute: ProjectsIdIssuesRouteWithChildren,
-  ProjectsIdRecordingsRoute: ProjectsIdRecordingsRoute,
-  ProjectsIdSettingsRoute: ProjectsIdSettingsRoute,
-  ProjectsIdSpecsRoute: ProjectsIdSpecsRoute,
-  ProjectsIdTestScenariosRoute: ProjectsIdTestScenariosRouteWithChildren,
-  ProjectsIdIndexRoute: ProjectsIdIndexRoute,
-}
-
-const ProjectsIdRouteWithChildren = ProjectsIdRoute._addFileChildren(
-  ProjectsIdRouteChildren,
-)
-
-interface ProjectsRouteChildren {
-  ProjectsIdRoute: typeof ProjectsIdRouteWithChildren
-  ProjectsIndexRoute: typeof ProjectsIndexRoute
-}
-
-const ProjectsRouteChildren: ProjectsRouteChildren = {
-  ProjectsIdRoute: ProjectsIdRouteWithChildren,
-  ProjectsIndexRoute: ProjectsIndexRoute,
-}
-
-const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
-  ProjectsRouteChildren,
-)
-
-interface RecordingsRouteChildren {
-  RecordingsIdRoute: typeof RecordingsIdRoute
-  RecordingsIndexRoute: typeof RecordingsIndexRoute
-}
-
-const RecordingsRouteChildren: RecordingsRouteChildren = {
-  RecordingsIdRoute: RecordingsIdRoute,
-  RecordingsIndexRoute: RecordingsIndexRoute,
-}
-
-const RecordingsRouteWithChildren = RecordingsRoute._addFileChildren(
-  RecordingsRouteChildren,
-)
-
-interface SpecsRouteChildren {
-  SpecsIndexRoute: typeof SpecsIndexRoute
-}
-
-const SpecsRouteChildren: SpecsRouteChildren = {
-  SpecsIndexRoute: SpecsIndexRoute,
-}
-
-const SpecsRouteWithChildren = SpecsRoute._addFileChildren(SpecsRouteChildren)
-
-interface TestScenariosRouteChildren {
-  TestScenariosIdRoute: typeof TestScenariosIdRoute
-  TestScenariosIndexRoute: typeof TestScenariosIndexRoute
-}
-
-const TestScenariosRouteChildren: TestScenariosRouteChildren = {
-  TestScenariosIdRoute: TestScenariosIdRoute,
-  TestScenariosIndexRoute: TestScenariosIndexRoute,
-}
-
-const TestScenariosRouteWithChildren = TestScenariosRoute._addFileChildren(
-  TestScenariosRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BoardsRoute: BoardsRoute,
-  ChatSessionsRoute: ChatSessionsRouteWithChildren,
-  FixSessionsRoute: FixSessionsRoute,
+  AddProjectRoute: AddProjectRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
-  PinnedRoute: PinnedRoute,
   ProfileRoute: ProfileRoute,
-  ProjectsRoute: ProjectsRouteWithChildren,
-  RecordingsRoute: RecordingsRouteWithChildren,
   SpecsRoute: SpecsRouteWithChildren,
-  TestScenariosRoute: TestScenariosRouteWithChildren,
+  TestsRoute: TestsRouteWithChildren,
+  RunsIdRoute: RunsIdRoute,
+  ProjectsIdSpecsRoute: ProjectsIdSpecsRouteWithChildren,
+  ProjectsIdTestScenariosRoute: ProjectsIdTestScenariosRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

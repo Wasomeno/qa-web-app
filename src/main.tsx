@@ -13,6 +13,7 @@ extractSessionIdFromUrl();
 import { routeTree } from './routeTree.gen';
 
 import './index.css';
+import './styles/qa-design-system.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
